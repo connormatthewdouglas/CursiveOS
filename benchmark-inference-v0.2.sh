@@ -25,7 +25,11 @@ PRESET_SCRIPT="${1:-./tao-os-presets-v0.5.sh}"
 MODEL="${2:-tinyllama}"
 PASSES=5          # cold-start calls per pass
 IDLE_SLEEP=15     # seconds to wait for GPU to drop to idle freq between calls
-SP="2633"
+if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+fi
+SP="$TAO_SUDO_PASS"
+export TAO_SUDO_PASS
 s() { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 
 LOG_DIR="$HOME/TAO-OS/logs"
@@ -90,6 +94,12 @@ run_pass() {
     gpu_freq=$(cat /sys/class/drm/card*/gt/gt0/rps_cur_freq_mhz 2>/dev/null | head -1 || echo N/A)
     log "  CPU gov:   $gov"
     log "  GPU freq:  ${gpu_freq} MHz (idle)"
+
+    # Discard warmup: first ever model load may include one-time shader compilation.
+    # Run and discard one call before starting measurements.
+    log "  Warmup call (discarded — flushes shader compilation)..."
+    sleep "$IDLE_SLEEP"
+    infer_cold > /dev/null 2>&1 || true
 
     log "  Running $PASSES cold-start calls (${IDLE_SLEEP}s idle gap between each)..."
     local load_sum=0 ttft_sum=0 cold_sum=0 tps_sum=0 i=1
