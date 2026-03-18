@@ -30,14 +30,19 @@ Getting Arc running AI inference on Ubuntu is a 6-step process most people never
 
 What it does: installs Intel compute-runtime (OpenCL 3.0), Level Zero, and Ollama with Vulkan backend configured for Arc. After running, your Arc A750 is doing inference.
 
-**Inference benchmark results (paired: baseline vs. presets):**
-| Model | Size | Hardware | Baseline | Tuned | Delta |
-|-------|------|----------|----------|-------|-------|
-| TinyLlama 1.1B | 637 MB | Arc A750 (Vulkan) | 68.75 tok/s | 68.07 tok/s | -0.98% (flat) |
+**Sustained throughput benchmark** (`benchmark-inference-v0.1.sh`, model already warm):
+| Model | Baseline | Tuned | Delta |
+|-------|----------|-------|-------|
+| TinyLlama 1.1B | 68.75 tok/s | 68.07 tok/s | -0.98% (flat — GPU-bound, CPU presets don't help) |
+
+**Cold-start latency benchmark** (`benchmark-inference-v0.2.sh`, model unloaded between calls):
+| Model | Baseline (GPU@600MHz idle) | Tuned (GPU@2000MHz pinned) | Delta |
+|-------|---------------------------|---------------------------|-------|
+| TinyLlama 1.1B | 1023.6ms | 1001.1ms | **-2.19% (-22ms per request)** |
+
+The cold-start result is what matters for mining: validators query miners unpredictably. Without the GPU min-freq preset, the GPU drops to 600 MHz and has to ramp up on every new request. Pinning it to 2000 MHz eliminates that ramp-up — 22ms faster per cold request, load 14.5ms faster, TTFT 7.8ms faster. At scale this is the difference between making the active set or not.
 
 **Larger model status:** Vulkan backend in ollama 0.18.1 has precision instability at 3B+ scale on Arc A750 — llama3.2:3b produces corrupted output, mistral:7b crashes with NaN assertion failure. Known upstream issue. Path forward: Intel SYCL/OpenVINO backend (in roadmap).
-
-**Why presets don't move inference delta yet:** TinyLlama runs 100% GPU-bound. CPU governor and C-state tweaks don't affect a pure Vulkan compute workload. GPU freq lock (min=2000 MHz) matters for workloads where the GPU idles between requests — relevant for real mining (gap between validator queries).
 
 #### Performance Preset Stack (`tao-os-presets-v0.5.sh`)
 
@@ -75,12 +80,16 @@ Runs baseline and tuned passes back-to-back in the same thermal window (ambient 
 ./benchmark-v0.9-paired.sh ./tao-os-presets-v0.5.sh
 ```
 
-**`benchmark-inference-v0.1.sh`** — AI inference benchmark.
-Uses the Ollama REST API for exact token counts and nanosecond timing. Paired test: auto-applies presets between passes.
+**`benchmark-inference-v0.1.sh`** — Sustained inference throughput (tok/s). Model stays warm, measures steady-state GPU compute. Good for comparing model backends.
 
 ```bash
 ./benchmark-inference-v0.1.sh ./tao-os-presets-v0.5.sh tinyllama
-./benchmark-inference-v0.1.sh ./tao-os-presets-v0.5.sh mistral
+```
+
+**`benchmark-inference-v0.2.sh`** — Cold-start latency benchmark. Forces model unload between calls, 15s GPU idle gap. Measures load_duration + TTFT — what validators actually wait for. This is where the GPU min-freq preset shows its impact.
+
+```bash
+./benchmark-inference-v0.2.sh ./tao-os-presets-v0.5.sh tinyllama
 ```
 
 ---
