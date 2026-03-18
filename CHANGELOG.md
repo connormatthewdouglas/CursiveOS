@@ -29,7 +29,7 @@
 
 | Version | Change |
 |---------|--------|
-| v1.0 | First external release — runs all 3 benchmarks, clean summary table, sudo prompt (no hardcoded PIN) |
+| v1.0 | First external release — runs all 3 benchmarks, clean summary table, sudo prompt (no hardcoded PIN), turbostat idle power measurement |
 
 ## Setup
 
