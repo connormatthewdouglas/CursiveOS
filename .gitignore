@@ -1,0 +1,3 @@
+# Ignore personal/output files
+*.txt
+logs/

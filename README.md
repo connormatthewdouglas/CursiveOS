@@ -20,8 +20,19 @@ Non-NVIDIA users: this project is for you too. Let's build the multi-vendor foun
 
 - v0.1: Safe CPU performance tweaks (AMD governor tested — measurable gains even idle).  
 - v0.2: Stacked tweaks + network ping test (AMD energy bias attempted, real before/after data).  
+- **benchmark-v0.6-vanilla.sh** (latest)  
+  Pure vanilla benchmark – measures mining simulation load (CPU + network) with **no system changes**.  
+  Features:  
+  - Progress updates every ~30s with CPU temp (auto-detects AMD Tctl/k10temp)  
+  - Hardware snapshot (CPU model, cores, RAM, kernel, distro, GPU)  
+  - Current governor & energy preference logged  
+  - % delta vs last run (saved in last_baseline.txt)  
+  - Clean, dated logs in ~/TAO-OS/logs/  
 
-Run them on your rig and compare. Higher events/sec + lower ping/jitter = more TAO potential when mining.
+  Run: `./benchmark-v0.6-vanilla.sh`  
+  Goal: Neutral, repeatable yardstick for TAO-OS optimizations.
+
+Preset applicator (temporary tweaks) coming next.
 
 ### Roadmap
 
