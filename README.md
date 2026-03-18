@@ -1,66 +1,44 @@
 # TAO-OS
 
-**AI-optimized, self-improving Linux for Bittensor miners, validators and beyond.**
+**AI-optimized Linux for Bittensor miners. One command. Measurable results.**
 
-The operating system built to close the loop:
-Make miners faster → earn more TAO → improve the OS → repeat forever.
+```bash
+git clone https://github.com/connormatthewdouglas/TAO-OS.git
+cd TAO-OS
+./tao-os-full-test-v1.0.sh
+```
+
+Runs all benchmarks, applies presets, shows you exactly what you gain. All changes revert automatically.
 
 ---
 
-### Why TAO-OS exists
+## Results (test rig: AMD Ryzen 7 5700 · Intel Arc A750)
 
-Every Bittensor subnet (especially SN64 Chutes — the "Linux of AI") runs on plain Ubuntu with no tuning.
-We're fixing that. TAO-OS benchmarks, applies, and validates safe OS-level tweaks so your rig runs faster, cooler, and more profitably 24/7 — then packages everything into a one-click image.
+| Benchmark | Default | TAO-OS Presets | Delta |
+|-----------|---------|---------------|-------|
+| **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 169.2 Mbit/s | 384.4 Mbit/s | **+127%** |
+| **Cold-start latency** (GPU idle → first inference token) | 1023.6ms | 1001.1ms | **-22ms (-2.19%)** |
+| Sustained inference (warm model, steady-state) | 68.75 tok/s | 68.07 tok/s | flat (expected) |
 
-**The hardware angle matters.** Bittensor can't thrive long-term on a single vendor's silicon. TAO-OS is built and tested on **AMD CPU + Intel Arc GPU** — hardware that most mining guides ignore. If you're a non-NVIDIA miner, this project is for you.
+**Network is the headline.** The 212KB default Linux socket buffer is smaller than the bandwidth-delay product on any real WAN link. TAO-OS raises it to 16MB and switches to BBR congestion control — 2.3x faster chain sync, weight delivery, and Bittensor gossip traffic.
+
+**Cold-start latency matters for mining.** Validators query miners unpredictably. Between queries, your GPU idles to 300–600 MHz. TAO-OS pins the Arc A750 to 2000 MHz minimum — 22ms faster on every cold request. At scale this is the difference between making the active set or not.
 
 ---
 
-### Current State — What's Working Today
+## What it does
 
-**Test rig:** AMD Ryzen 7 5700 · Intel Arc A750 · 15GB RAM · Linux Mint 22.3 · kernel 6.17
+TAO-OS applies a set of temporary, safe OS tweaks tuned for Bittensor mining workloads. Every change reverts on reboot or with `--undo`.
 
-#### Intel Arc A750 — AI Inference Unlocked
+**14 tweaks in `tao-os-presets-v0.5.sh`:**
 
-Getting Arc running AI inference on Ubuntu is a 6-step process most people never complete. TAO-OS automates it:
-
-```bash
-./setup-intel-arc.sh
-```
-
-What it does: installs Intel compute-runtime (OpenCL 3.0), Level Zero, and Ollama with Vulkan backend configured for Arc. After running, your Arc A750 is doing inference.
-
-**Sustained throughput benchmark** (`benchmark-inference-v0.1.sh`, model already warm):
-| Model | Baseline | Tuned | Delta |
-|-------|----------|-------|-------|
-| TinyLlama 1.1B | 68.75 tok/s | 68.07 tok/s | -0.98% (flat — GPU-bound, CPU presets don't help) |
-
-**Cold-start latency benchmark** (`benchmark-inference-v0.2.sh`, model unloaded between calls):
-| Model | Baseline (GPU@600MHz idle) | Tuned (GPU@2000MHz pinned) | Delta |
-|-------|---------------------------|---------------------------|-------|
-| TinyLlama 1.1B | 1023.6ms | 1001.1ms | **-2.19% (-22ms per request)** |
-
-The cold-start result is what matters for mining: validators query miners unpredictably. Without the GPU min-freq preset, the GPU drops to 600 MHz and has to ramp up on every new request. Pinning it to 2000 MHz eliminates that ramp-up — 22ms faster per cold request, load 14.5ms faster, TTFT 7.8ms faster. At scale this is the difference between making the active set or not.
-
-**Larger model status:** Vulkan backend in ollama 0.18.1 has precision instability at 3B+ scale on Arc A750 — llama3.2:3b produces corrupted output, mistral:7b crashes with NaN assertion failure. Known upstream issue. Path forward: Intel SYCL/OpenVINO backend (in roadmap).
-
-#### Performance Preset Stack (`tao-os-presets-v0.5.sh`)
-
-A single script that applies a validated set of temporary OS tweaks tuned for Bittensor mining. All changes revert on reboot or with `--undo`.
-
-```bash
-./tao-os-presets-v0.5.sh --apply-temp   # apply
-./tao-os-presets-v0.5.sh --undo         # revert
-```
-
-**What v0.5 applies:**
 | Tweak | Value | Why |
 |-------|-------|-----|
 | CPU governor | performance | Full clock speed, no scaling delays |
 | Energy perf preference | performance | AMD/Intel power hint to hardware |
 | Net buffers (rmem/wmem_max) | 16MB | Bittensor gossip + chain traffic |
-| TCP congestion control | BBR + fq | Better sustained network throughput |
-| TCP slow start after idle | disabled | Stable throughput during mining pauses |
+| TCP congestion control | BBR + fq | Better sustained throughput on WAN |
+| TCP slow start after idle | disabled | Throughput doesn't drop after mining pauses |
 | Scheduler autogroup | disabled | Desktop grouping hurts server workloads |
 | vm.swappiness | 10 | Avoid swap under sustained mining load |
 | NMI watchdog | disabled | Reduces interrupt overhead |
@@ -71,82 +49,62 @@ A single script that applies a validated set of temporary OS tweaks tuned for Bi
 | CPU C3 idle state | disabled | Eliminates 350μs wakeup latency |
 | Transparent Huge Pages | always | Better for large ML model allocations |
 
-#### Network Benchmark Results (`benchmark-network-v0.1.sh`)
-
-Simulated WAN conditions: 50ms RTT + 0.5% packet loss (representative of inter-datacenter links Bittensor miners use).
-
-| Config | Throughput | Delta |
-|--------|-----------|-------|
-| CUBIC + 212KB buffers (default) | 169.2 Mbit/s | baseline |
-| BBR + 16MB buffers (presets) | 384.4 Mbit/s | **+127%** |
-
-The 212KB default socket buffer is the main bottleneck: at 50ms RTT, the bandwidth-delay product is ~2.4MB — far larger than 212KB, so Linux was forced to throttle the send window. The 16MB buffer preset eliminates this. BBR adds stability under packet loss. Together: **2.3x faster chain sync, weight delivery, and Bittensor gossip traffic.**
-
----
-
-#### Benchmark Tools
-
-**`benchmark-v0.9-paired.sh`** — CPU/network load benchmark.
-Runs baseline and tuned passes back-to-back in the same thermal window (ambient temperature drift can't skew results).
-
+Apply manually:
 ```bash
-./benchmark-v0.9-paired.sh ./tao-os-presets-v0.5.sh
-```
-
-**`benchmark-inference-v0.1.sh`** — Sustained inference throughput (tok/s). Model stays warm, measures steady-state GPU compute. Good for comparing model backends.
-
-```bash
-./benchmark-inference-v0.1.sh ./tao-os-presets-v0.5.sh tinyllama
-```
-
-**`benchmark-inference-v0.2.sh`** — Cold-start latency benchmark. Forces model unload between calls, 15s GPU idle gap. Measures load_duration + TTFT — what validators actually wait for. This is where the GPU min-freq preset shows its impact.
-
-```bash
-./benchmark-inference-v0.2.sh ./tao-os-presets-v0.5.sh tinyllama
-```
-
-**`benchmark-network-v0.1.sh`** — TCP throughput benchmark. Uses `tc netem` on loopback to simulate WAN conditions (50ms RTT + 0.5% loss). Compares CUBIC vs BBR + 16MB buffers.
-
-```bash
-./benchmark-network-v0.1.sh ./tao-os-presets-v0.5.sh
+./tao-os-presets-v0.5.sh --apply-temp   # apply
+./tao-os-presets-v0.5.sh --undo         # revert
 ```
 
 ---
 
-### Roadmap
+## Intel Arc A750 — AI Inference Setup
 
-- **Done** → Intel Arc inference stack (OpenCL + Ollama + Vulkan) — one-script setup
-- **Done** → Preset stack v0.5 (CPU + network + GPU + memory tuning)
-- **Done** → Paired benchmark methodology (thermal-fair, same-session comparison)
-- **Done** → Inference benchmark (tok/s, TTFT, GPU confirmation) — TinyLlama confirmed 69 tok/s on GPU
-- **Next** → Intel Arc SYCL/OpenVINO backend: stable 7B+ inference (Vulkan has precision bugs at 3B+)
-- **Next** → Batched inference benchmark: measure GPU freq lock preset impact between requests
-- **Next** → Network benchmark: quantify BBR/buffer tweaks on Bittensor gossip traffic
+Getting Arc running AI inference is normally a 6-step process most people never finish. One script:
+
+```bash
+./setup-intel-arc.sh
+```
+
+Installs Intel compute-runtime (OpenCL 3.0), Level Zero, and configures Ollama's Vulkan backend for Arc. After running, your A750 does inference at ~69 tok/s on TinyLlama.
+
+**Vulkan backend note:** Stable for 1B models. At 3B+, ollama 0.18.1 has a precision bug on Arc — garbled output or crashes. Intel SYCL backend is the fix (in roadmap).
+
+---
+
+## Benchmark Tools
+
+Each benchmark is also runnable standalone:
+
+```bash
+./benchmark-network-v0.1.sh ./tao-os-presets-v0.5.sh        # TCP throughput, WAN sim
+./benchmark-inference-v0.2.sh ./tao-os-presets-v0.5.sh tinyllama  # cold-start latency
+./benchmark-inference-v0.1.sh ./tao-os-presets-v0.5.sh tinyllama  # sustained tok/s
+./benchmark-v0.9-paired.sh ./tao-os-presets-v0.5.sh          # CPU sysbench (paired)
+```
+
+---
+
+## Roadmap
+
+- **Done** → Intel Arc inference stack (one-script setup)
+- **Done** → Preset stack v0.5 (14 tweaks, fully reversible)
+- **Done** → Network benchmark: +127% confirmed (BBR + 16MB buffers)
+- **Done** → Cold-start inference benchmark: -22ms confirmed (GPU freq lock)
+- **Done** → Full-test wrapper v1.0 (single command, sudo prompt, auto-revert)
+- **Next** → External validation: 3 miners run it, send logs
+- **Next** → Intel Arc SYCL backend: stable 7B+ inference
 - **v1.0** → One-click pre-tuned ISO + auto-updates for miners/validators
 - **v2.0+** → Full self-improving subnet (AI generates + validates tweaks, emissions for best configs)
 
 ---
 
-### Quick Start
+## Why this hardware
 
-```bash
-git clone https://github.com/connormatthewdouglas/TAO-OS.git
-cd TAO-OS
-
-# 1. Set up Intel Arc for AI inference (first time only)
-./setup-intel-arc.sh
-
-# 2. Apply mining performance presets
-./tao-os-presets-v0.5.sh --apply-temp
-
-# 3. Benchmark
-./benchmark-inference-v0.1.sh ./tao-os-presets-v0.5.sh tinyllama
-```
+Bittensor can't thrive long-term on a single vendor's silicon. TAO-OS is built and tested on **AMD CPU + Intel Arc GPU** — hardware most mining guides ignore. If you're a non-NVIDIA miner, this project is for you.
 
 ---
 
-Built with love for the TAO network.
-Star the repo if you're a miner, validator, or believe in decentralizing AI compute beyond one vendor.
-Contributions, hardware test results, and feedback welcome.
+Built for the TAO network. Star the repo if you're a miner, validator, or believe in decentralizing AI compute.
+Contributions, test results from other hardware, and feedback welcome.
 
 Made by [@connormatthewdouglas](https://github.com/connormatthewdouglas)

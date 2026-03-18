@@ -101,10 +101,32 @@ Hardware philosophy: break NVIDIA dependency — develop and test on AMD CPU + I
 - tao-os-presets-v0.4: dropped CPU min-freq lock (caused thermal regression)
 - tao-os-presets-v0.5: current — all v0.4 tweaks + GPU SLPC, min/boost freq, C2/C3, THP
 
-## Roadmap (next steps)
-1. Intel SYCL backend for llama.cpp → stable 7B+ inference on Arc A750
-2. Batched inference benchmark → measure GPU freq lock impact between real mining requests
-3. Bittensor subnet validator test (SN64 Chutes actual mining, not simulated)
+## Active Roadmap
+
+### IMMEDIATE — Day 1 (execute before any external sharing)
+- [ ] Fix hardcoded `SP="2633"` across all scripts → prompt once, export `TAO_SUDO_PASS`
+- [ ] Rewrite README top — lead with +127% network win as headline number
+- [ ] Create `tao-os-full-test-v1.0.sh` — single command: all benchmarks, clean summary table
+- [ ] Add `CHANGELOG.md` — one-liner per version
+- [ ] Test wrapper 2× on machine
+
+### NEAR-TERM — Day 2-3
+- [ ] Run wrapper 3 more times, build personal data history
+- [ ] Add turbostat power draw logging to wrapper output
+
+### EXTERNAL VALIDATION — Day 4-7
+- [ ] Share repo + single command with 3 Bittensor miners
+- [ ] Require 2 runs each, collect logs
+- [ ] ≥3 confirmations → declare v1.0 milestone, reassess next phase
+
+### PARKED — after validation gate clears
+- Intel SYCL backend → stable 7B+ inference on Arc (do NOT start until ≥3 testers)
+- Batched inference benchmark (real mining request cadence)
+- SN64 Chutes live validator test
+
+## Kill Switches
+- If v1.0 wrapper is confusing after 30 min → drop back to separate scripts
+- If SYCL work exceeds 1 day → park it; validation gate comes first
 
 ## Rules / Design Principles
 - Benchmark tools: NEVER apply tweaks inside them. Vanilla/neutral only.

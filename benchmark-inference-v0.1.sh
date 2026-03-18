@@ -14,7 +14,11 @@ PRESET_SCRIPT="${1:-./tao-os-presets-v0.5.sh}"
 MODEL="${2:-tinyllama}"
 PASSES=5        # inference calls per pass (more = more stable average)
 WARMUP=1        # throwaway calls before measuring (GPU cold start)
-SP="2633"
+if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+fi
+SP="$TAO_SUDO_PASS"
+export TAO_SUDO_PASS
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 
 LOG_DIR="$HOME/TAO-OS/logs"

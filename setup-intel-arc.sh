@@ -7,7 +7,11 @@
 
 set -euo pipefail
 
-SP="2633"
+if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+fi
+SP="$TAO_SUDO_PASS"
+export TAO_SUDO_PASS
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 sc() { echo "$SP" | sudo -S bash -c "$1"; }
 
