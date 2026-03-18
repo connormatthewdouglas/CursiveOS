@@ -23,6 +23,8 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 
 **Network is the headline.** The 212KB default Linux socket buffer is smaller than the bandwidth-delay product on any real WAN link. TAO-OS raises it to 16MB and switches to BBR congestion control — 2.3x faster chain sync, weight delivery, and Bittensor gossip traffic.
 
+*More hardware results in [RESULTS.md](RESULTS.md). Add yours.*
+
 **Power tradeoff is real.** The preset stack adds ~8.4W at idle (disabled C-states keep CPU in C0 continuously). For 24/7 mining that's ~$8.76/year at $0.12/kWh — worth it given the network and latency gains, but worth knowing.
 
 **Cold-start latency matters for mining.** Validators query miners unpredictably. Between queries, your GPU idles to 300–600 MHz. TAO-OS pins the Arc A750 to 2000 MHz minimum — 22ms faster on every cold request. At scale this is the difference between making the active set or not.
@@ -108,6 +110,7 @@ Bittensor can't thrive long-term on a single vendor's silicon. TAO-OS is built a
 ---
 
 Built for the TAO network. Star the repo if you're a miner, validator, or believe in decentralizing AI compute.
-Contributions, test results from other hardware, and feedback welcome.
+
+**Got results?** Paste your table in [RESULTS.md](RESULTS.md) — open a PR or drop it in an issue.
 
 Made by [@connormatthewdouglas](https://github.com/connormatthewdouglas)
