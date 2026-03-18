@@ -19,8 +19,11 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 | **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 169.2 Mbit/s | 384.4 Mbit/s | **+127%** |
 | **Cold-start latency** (GPU idle → first inference token) | 1023.6ms | 1001.1ms | **-22ms (-2.19%)** |
 | Sustained inference (warm model, steady-state) | 68.75 tok/s | 68.07 tok/s | flat (expected) |
+| **Idle power draw** (C-states + governor) | 11.3W | 19.7W | +8.4W |
 
 **Network is the headline.** The 212KB default Linux socket buffer is smaller than the bandwidth-delay product on any real WAN link. TAO-OS raises it to 16MB and switches to BBR congestion control — 2.3x faster chain sync, weight delivery, and Bittensor gossip traffic.
+
+**Power tradeoff is real.** The preset stack adds ~8.4W at idle (disabled C-states keep CPU in C0 continuously). For 24/7 mining that's ~$8.76/year at $0.12/kWh — worth it given the network and latency gains, but worth knowing.
 
 **Cold-start latency matters for mining.** Validators query miners unpredictably. Between queries, your GPU idles to 300–600 MHz. TAO-OS pins the Arc A750 to 2000 MHz minimum — 22ms faster on every cold request. At scale this is the difference between making the active set or not.
 
