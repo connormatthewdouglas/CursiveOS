@@ -30,12 +30,14 @@ Getting Arc running AI inference on Ubuntu is a 6-step process most people never
 
 What it does: installs Intel compute-runtime (OpenCL 3.0), Level Zero, and Ollama with Vulkan backend configured for Arc. After running, your Arc A750 is doing inference.
 
-**First benchmark result:**
-| Model | Hardware | Tokens/sec |
-|-------|----------|-----------|
-| TinyLlama 1.1B | Intel Arc A750 (Vulkan) | ~69 tok/s |
+**Inference benchmark results (paired: baseline vs. presets):**
+| Model | Size | Hardware | Baseline | Tuned | Delta |
+|-------|------|----------|----------|-------|-------|
+| TinyLlama 1.1B | 637 MB | Arc A750 (Vulkan) | 68.75 tok/s | 68.07 tok/s | -0.98% (flat) |
 
-More models and larger benchmarks in progress.
+**Larger model status:** Vulkan backend in ollama 0.18.1 has precision instability at 3B+ scale on Arc A750 — llama3.2:3b produces corrupted output, mistral:7b crashes with NaN assertion failure. Known upstream issue. Path forward: Intel SYCL/OpenVINO backend (in roadmap).
+
+**Why presets don't move inference delta yet:** TinyLlama runs 100% GPU-bound. CPU governor and C-state tweaks don't affect a pure Vulkan compute workload. GPU freq lock (min=2000 MHz) matters for workloads where the GPU idles between requests — relevant for real mining (gap between validator queries).
 
 #### Performance Preset Stack (`tao-os-presets-v0.5.sh`)
 
@@ -88,9 +90,10 @@ Uses the Ollama REST API for exact token counts and nanosecond timing. Paired te
 - **Done** → Intel Arc inference stack (OpenCL + Ollama + Vulkan) — one-script setup
 - **Done** → Preset stack v0.5 (CPU + network + GPU + memory tuning)
 - **Done** → Paired benchmark methodology (thermal-fair, same-session comparison)
-- **Done** → Inference benchmark (tok/s, TTFT, GPU confirmation)
-- **Next** → Larger model benchmarks (7B+), quantify preset impact on real inference workloads
-- **Next** → Intel Arc OpenVINO / SYCL path for additional inference backends
+- **Done** → Inference benchmark (tok/s, TTFT, GPU confirmation) — TinyLlama confirmed 69 tok/s on GPU
+- **Next** → Intel Arc SYCL/OpenVINO backend: stable 7B+ inference (Vulkan has precision bugs at 3B+)
+- **Next** → Batched inference benchmark: measure GPU freq lock preset impact between requests
+- **Next** → Network benchmark: quantify BBR/buffer tweaks on Bittensor gossip traffic
 - **v1.0** → One-click pre-tuned ISO + auto-updates for miners/validators
 - **v2.0+** → Full self-improving subnet (AI generates + validates tweaks, emissions for best configs)
 

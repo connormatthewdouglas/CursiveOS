@@ -60,10 +60,13 @@ except Exception as e:
 }
 
 # ── Single inference call ────────────────────────────────────────────────────
+# num_predict: cap output tokens (reduces Vulkan workload, improves stability on Arc)
+# num_ctx: smaller context window = smaller KV cache
+# num_batch: smaller batch size = less peak VRAM pressure
 infer() {
-    curl -s http://localhost:11434/api/generate \
+    curl -s --max-time 120 http://localhost:11434/api/generate \
         -H "Content-Type: application/json" \
-        -d "{\"model\": \"$MODEL\", \"prompt\": \"$PROMPT\", \"stream\": false}"
+        -d "{\"model\": \"$MODEL\", \"prompt\": \"$PROMPT\", \"stream\": false, \"options\": {\"num_predict\": 100, \"num_ctx\": 1024, \"num_batch\": 128}}"
 }
 
 # ── Run a full pass (warmup + N measured calls) ──────────────────────────────
