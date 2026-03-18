@@ -104,15 +104,30 @@ Hardware philosophy: break NVIDIA dependency — develop and test on AMD CPU + I
 ## Active Roadmap
 
 ### IMMEDIATE — Day 1 (execute before any external sharing)
-- [ ] Fix hardcoded `SP="2633"` across all scripts → prompt once, export `TAO_SUDO_PASS`
-- [ ] Rewrite README top — lead with +127% network win as headline number
-- [ ] Create `tao-os-full-test-v1.0.sh` — single command: all benchmarks, clean summary table
-- [ ] Add `CHANGELOG.md` — one-liner per version
-- [ ] Test wrapper 2× on machine
+- [x] Fix hardcoded `SP="2633"` across all scripts → prompt once, export `TAO_SUDO_PASS`
+- [x] Rewrite README top — lead with +127% network win as headline number
+- [x] Create `tao-os-full-test-v1.0.sh` — single command: all benchmarks, clean summary table
+- [x] Add `CHANGELOG.md` — one-liner per version
+- [x] Test wrapper 2× on machine
 
 ### NEAR-TERM — Day 2-3
-- [ ] Run wrapper 3 more times, build personal data history
-- [ ] Add turbostat power draw logging to wrapper output
+- [x] Run wrapper 3 more times (5 total runs — data history built)
+- [x] Add turbostat power draw logging to wrapper output
+
+## Personal Data History (5 runs, 2026-03-18)
+| Run | Network delta | Cold-start delta | Power delta |
+|-----|--------------|-----------------|-------------|
+| 1   | +124%        | -2.19%          | N/A         |
+| 2   | +110%        | -2.15%          | N/A         |
+| 3   | +111%        | -1.21%          | +8.4W       |
+| 4   | +55% (CUBIC anomaly — high baseline) | -1.41% | +5.7W |
+| 5   | +123%        | ~-0.7%          | varies (thermal) |
+
+Key observations:
+- Network: BBR holds 380-390 Mbit/s consistently; CUBIC variance 140-248 Mbit/s skews delta
+- Cold-start: consistent -1 to -2.2% direction across all runs — GPU freq lock confirmed
+- Sustained inference: noisy within long sessions (thermal drift between baseline/tuned passes)
+- Power: real +5-8W cost when system is at normal operating temperature
 
 ### EXTERNAL VALIDATION — Day 4-7
 - [ ] Share repo + single command with 3 Bittensor miners
