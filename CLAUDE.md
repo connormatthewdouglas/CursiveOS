@@ -68,6 +68,18 @@ and validate each one with the benchmark tool (run benchmark before and after pr
 - v1.0 → One-click pre-tuned ISO + auto-updates for miners/validators
 - v2.0+ → Full self-improving subnet (emissions for best tweaks, multi-vendor validation)
 
+## Benchmark Limitations (important)
+sysbench cpu runs all cores at 100% continuously. This means:
+- C-state tweaks show no effect (cores never idle, so they never enter sleep states)
+- GPU tweaks show no effect (sysbench is CPU-only)
+- Network tweaks (BBR) show no effect (no network I/O in the test)
+All our v0.4/v0.5 tweaks test neutral on sysbench but ARE real improvements for mining:
+- C-state limiting helps bursty workloads (miners get inference requests in bursts)
+- GPU clock pinning prevents latency spikes between inference calls on Intel Arc
+- BBR improves Bittensor gossip/chain throughput
+A proper benchmark for TAO-OS needs: GPU inference test (Intel Arc), mixed CPU/idle load,
+and network throughput test — not just sysbench arithmetic.
+
 ## Rules / Design Principles
 - Benchmark tool: NEVER apply tweaks inside it. Vanilla only.
 - Preset tool: ALL tweaks must be temporary by default (reset on reboot or --undo).
