@@ -1,5 +1,5 @@
 # TAO-OS: AI-Optimized Linux for Bittensor Miners
-### Technical White Paper — v0.1 Draft (March 2026)
+### Technical White Paper — v0.2 (March 2026)
 
 ---
 
@@ -7,7 +7,7 @@
 
 TAO-OS is an open-source Linux optimization stack designed specifically for Bittensor miners and validators. By applying a set of temporary, fully-reversible OS-level tweaks, TAO-OS demonstrably improves the two metrics that determine mining profitability: network throughput and inference cold-start latency. In testing across two distinct hardware configurations, TAO-OS delivered **+129–300% network throughput** and **-2.9–15.8% cold-start latency** improvement with zero permanent system changes. Every tweak reverts on reboot or with a single command.
 
-The long-term vision: a self-improving subnet where miners submit OS optimizations, validators score real performance gains, and TAO emissions flow to the best configurations — making the entire network faster through competitive iteration.
+The long-term vision is far bolder: TAO-OS aims to become a full self-improving Linux distribution governed by a Bittensor subnet. Miners and contributors will be rewarded with TAO for optimizing every layer of the OS — creating the ultimate operating system for decentralized AI through a continuous, competitive, network-driven flywheel.
 
 ---
 
@@ -36,23 +36,33 @@ TAO-OS applies OS-level tweaks at runtime without modifying system files permane
 - **Temporary by default.** Every change reverts on reboot or with `--undo`. No permanent modifications.
 - **Benchmarked before shipping.** No tweak enters the preset stack without a paired before/after measurement.
 - **Hardware-aware.** The preset script detects available hardware features and skips inapplicable tweaks gracefully.
-- **Single command.** `./tao-os-full-test-v1.2.sh` runs all benchmarks, applies presets, measures the delta, and submits results to the hardware database automatically.
+- **Single command.** `./tao-os-full-test-v1.3.sh` runs all benchmarks, applies presets, measures the delta, and submits results to the hardware database automatically.
+
+### 2.1 Ultimate Vision — The Self-Improving Flywheel
+
+While the current focus is mining performance, the true north star of TAO-OS is a closed, self-reinforcing loop:
+
+Miners run TAO-OS → earn more TAO because they're faster → contributors discover and submit optimizations → validators objectively score real performance gains → the best improvements receive TAO emissions → the entire network gets a better OS → repeat.
+
+This loop eventually produces a complete custom Linux distribution: TAO-OS as a bootable ISO with pre-applied optimizations, a custom kernel, and dedicated package repositories. Once the flywheel gains momentum, the subnet expands to optimize every layer of the OS — inference efficiency, security, power efficiency, and desktop usability — establishing full self-sovereignty for the Bittensor ecosystem and decentralized computing as a whole.
 
 ---
 
 ## 3. Technical Implementation
 
-### 3.1 Preset Stack (v0.6 — 18 tweaks)
+### 3.1 Preset Stack (v0.7 — 25 tweaks)
 
-**Network (4 tweaks)**
+**Network (6 tweaks)**
 | Tweak | Value | Mechanism |
 |-------|-------|-----------|
 | Socket buffers (rmem/wmem_max) | 16MB | Allows TCP to fill the BDP on WAN links |
+| tcp_rmem / tcp_wmem | 4096 / 262144 / 16MB | Closes auto-tuner ceiling gap — rmem_max was set but TCP auto-tuner was silently capped lower |
 | TCP congestion control | BBR + fq | Better throughput under packet loss vs CUBIC |
 | TCP slow start after idle | disabled | Prevents throughput reset after mining pauses |
 | Scheduler autogroup | disabled | Removes desktop process grouping from server workloads |
+| net.core.netdev_max_backlog | 5000 | Prevents silent packet drops under heavy Bittensor P2P / gossip traffic |
 
-**CPU (5 tweaks)**
+**CPU (7 tweaks)**
 | Tweak | Value | Mechanism |
 |-------|-------|-----------|
 | CPU governor | performance | Full clock speed, eliminates scaling delays |
@@ -60,6 +70,8 @@ TAO-OS applies OS-level tweaks at runtime without modifying system files permane
 | AMD CPU boost | enabled | Ensures turbo boost not disabled by power profiles |
 | CPU C2 idle state | disabled | Eliminates 18μs wakeup latency spike |
 | CPU C3 idle state | disabled | Eliminates 350μs wakeup latency spike |
+| CPU C6 idle state | disabled (by name) | Cross-BIOS robust detection; eliminates ~1ms wakeup jitter on AMD hardware |
+| kernel.numa_balancing | 0 | Single NUMA node on Ryzen — NUMA balancing is pure overhead |
 
 **GPU — Intel Arc only (3 tweaks)**
 | Tweak | Value | Mechanism |
@@ -68,19 +80,26 @@ TAO-OS applies OS-level tweaks at runtime without modifying system files permane
 | GPU minimum frequency | 2000 MHz | Prevents drop to 300–600 MHz between requests |
 | GPU boost frequency | hardware max (2400 MHz) | Ensures peak throughput during inference |
 
-**Memory (3 tweaks)**
+**Memory (5 tweaks)**
 | Tweak | Value | Mechanism |
 |-------|-------|-----------|
 | vm.swappiness | 10 | Avoids swap under sustained mining load |
 | Transparent Huge Pages | always | Reduces TLB pressure for large ML model allocations |
 | THP defrag | madvise | Targeted defrag for ML workloads without stalling the system |
+| vm.compaction_proactiveness | 0 | Stops background THP compaction from causing latency spikes |
+| NMI watchdog | disabled | Reduces interrupt overhead |
 
 **System (3 tweaks)**
 | Tweak | Value | Mechanism |
 |-------|-------|-----------|
-| NMI watchdog | disabled | Reduces interrupt overhead |
 | vm.dirty_ratio | 5 | Starts disk flush earlier, reduces writeback stall |
 | vm.dirty_background_ratio | 2 | Background IO starts sooner, smoother throughput |
+| net.core.somaxconn | 4096 | Larger connection queue for simultaneous validator inbound connections |
+
+**Scheduler (1 tweak)**
+| Tweak | Value | Mechanism |
+|-------|-------|-----------|
+| kernel.sched_min_granularity_ns | 1ms | Faster wakeup for inference threads yielding on GPU wait |
 
 **Intel Compute (1 tweak — Arc only)**
 | Tweak | Value | Mechanism |
@@ -89,7 +108,7 @@ TAO-OS applies OS-level tweaks at runtime without modifying system files permane
 
 ### 3.2 Benchmark Methodology
 
-Three paired benchmarks run in the same thermal window:
+Three paired benchmarks run in the same thermal window via `tao-os-full-test-v1.3.sh`:
 
 **Network benchmark (`benchmarks/benchmark-network-v0.1.sh`)**
 - Applies `tc netem` WAN simulation: 25ms one-way delay + 0.5% packet loss on loopback
@@ -184,7 +203,8 @@ TAO-OS is designed to run on any Linux system. Hardware-specific tweaks are gate
 | Intel Arc GPU tweaks | `/sys/class/drm/card*/gt/gt0/rps_min_freq_mhz` | Skip silently |
 | AMD CPU boost | `/sys/devices/system/cpu/cpufreq/boost` | Skip silently |
 | Energy performance preference | sysfs per-CPU path | Skip silently |
-| CPU C-states | `/sys/devices/system/cpu/cpu*/cpuidle/state*/disable` | Skip silently |
+| CPU C-states (C2/C3/C6) | `/sys/devices/system/cpu/cpu*/cpuidle/state*/disable` | Skip silently |
+| C6 by name | Loop over `state*/name`, match "C6" | Skip if not found |
 | turbostat power reading | command presence check | Report N/A |
 
 Network and memory tweaks (BBR, buffers, THP, swappiness) are universal — they apply on any Linux kernel 5.4+.
@@ -204,35 +224,39 @@ Every test run automatically submits structured results to **tao-forge**, a host
 - All benchmark results (baseline, tuned, delta for each metric)
 - Timestamp
 
-This database grows with every test run across any machine. Over time it becomes a lookup table: given a CPU and GPU, what gains should a miner expect? This is the foundation for automatic, hardware-specific preset recommendation.
+No setup required — any internet-connected Linux machine running the wrapper POSTs results automatically via curl. The database grows with every test run across any hardware. Over time it becomes a lookup table: given a CPU and GPU, what gains should a miner expect? This is the foundation for automatic, hardware-specific preset recommendation.
 
 ---
 
 ## 8. Roadmap
 
 ### Phase 1 — Self-Fleet Validation (current)
-Run on all hardware Frosty controls. Establish baseline data across diverse hardware. Target: consistent, reproducible gains across 5+ machine configurations.
+Run on all hardware Frosty controls. Establish baseline data across diverse hardware using `tao-os-full-test-v1.3.sh`. Target: consistent, reproducible gains across 5+ machine configurations.
 
 ### Phase 2 — Trusted Fleet (v1.5 milestone)
 Expand to 5+ external miners with close supervision. Gate: clean safety record + documented ≥1.5% average mining/inference gain confirmed by external testers.
 
 ### Phase 3 — Public Release
-Open the repo to the broader Bittensor mining community. The hardware database is the credibility layer — every result is verifiable.
+Open the repo to the broader Bittensor mining community. The tao-forge hardware database is the credibility layer — every result is verifiable, every gain is real.
 
-### Phase 4 — Subnet Integration
-Design a Bittensor subnet where:
-- Miners submit OS optimization proposals
-- Validators run benchmarks and score real gains
-- TAO emissions reward the best configurations
+### Phase 4 — Subnet Integration & Full Distribution
+Launch a Bittensor subnet where:
+- Miners and contributors submit OS optimizations and code improvements
+- Validators run standardized benchmarks and score objective gains
+- TAO emissions reward the highest-impact contributions
 - The network continuously improves its own infrastructure
+
+This phase marks the transition from optimization tool to a full self-updating Linux distribution. The scope expands to every layer of the OS — mining performance, inference efficiency, security hardening, and power efficiency — creating an ever-evolving, community-owned operating system driven entirely by its users.
 
 ---
 
 ## 9. Philosophy
 
-The standard Bittensor mining guide assumes NVIDIA GPUs and leaves Linux performance on the table. TAO-OS is built on AMD CPU + Intel Arc — hardware that most guides ignore — and proves that the biggest gains are in the OS, not the GPU.
+The standard Bittensor mining guide assumes NVIDIA GPUs and leaves massive Linux performance on the table. TAO-OS was built on AMD CPU + Intel Arc — hardware most guides ignore — and proves that the biggest untapped gains live in the OS layer itself.
 
-The self-improving loop is the point. Miners run TAO-OS, earn more TAO because they're faster, fund more optimization work, and the entire network improves. This is infrastructure that gets better by being used.
+The self-improving loop is the point. Miners run TAO-OS and earn more TAO. Contributors submit better tweaks and earn even more. The network rewards the best work with emissions, and everyone gets a better OS in return.
+
+An operating system that literally gets better the more it is used. That is the goal.
 
 ---
 
