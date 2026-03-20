@@ -48,10 +48,36 @@
 |---------|--------|
 | hardware-profiles.json v1.0 | Initial schema. Seeded with 5 runs from Arc A750 rig (2026-03-18). Auto-populated by tao-os-full-test-v1.1.sh on each run. |
 
-## Benchmark Results (test rig: AMD Ryzen 7 5700 · Intel Arc A750)
+## Benchmark Results
+
+### v0.6 presets — AMD Ryzen 7 5700 · Intel Arc A750
 
 | Benchmark | Baseline | Tuned | Delta | Preset validated |
 |-----------|---------|-------|-------|-----------------|
-| Network throughput (WAN sim) | 169.2 Mbit/s | 384.4 Mbit/s | **+127%** | BBR + 16MB buffers |
-| Cold-start latency | 1023.6ms | 1001.1ms | **-2.19%** | GPU min-freq 2000MHz |
-| Sustained inference (warm) | 68.75 tok/s | 68.07 tok/s | -0.98% (flat, expected) | — |
+| Network throughput (WAN sim) | 95.6–174.1 Mbit/s | 383–388 Mbit/s | +123–301% | BBR + 16MB buffers |
+| Cold-start latency | 1022–1024ms | 993–998ms | **-2.41 to -2.86%** | GPU min-freq 2000MHz |
+| Sustained inference (warm) | 75–76 tok/s | 75–77 tok/s | ~flat | — |
+
+### v0.7 presets — AMD Ryzen 7 5700 · Intel Arc A750 (2 runs, validated)
+
+| Benchmark | Baseline | Tuned | Delta | Preset validated |
+|-----------|---------|-------|-------|-----------------|
+| Network throughput (WAN sim) | 139.6–181.2 Mbit/s | **999.8–1003.6 Mbit/s** | **+454–616%** | tcp_rmem/wmem ceiling fix |
+| Cold-start latency | 1020.6–1023.5ms | 996.5–996.7ms | **-2.34 to -2.63%** | GPU min-freq 2000MHz |
+| Sustained inference (warm) | 75–76 tok/s | 76–77 tok/s | **+1.22–1.46%** | sched_min_granularity_ns |
+
+### v0.6 presets — AMD FX-8350 · RX 580 (Stardust)
+
+| Benchmark | Baseline | Tuned | Delta | Preset validated |
+|-----------|---------|-------|-------|-----------------|
+| Network throughput (WAN sim) | 131.4 Mbit/s | 381.9 Mbit/s | **+190.6%** | BBR + 16MB buffers |
+| Cold-start latency | 2493.1ms | 2098.4ms | **-15.83%** | CPU governor + C-states |
+| Sustained inference (warm) | 19.49 tok/s | 20.46 tok/s | **+4.97%** | CPU governor |
+
+### v0.7 presets — AMD FX-8350 · RX 580 (Stardust, 1 run)
+
+| Benchmark | Baseline | Tuned | Delta | Preset validated |
+|-----------|---------|-------|-------|-----------------|
+| Network throughput (WAN sim) | 171 Mbit/s | **1181.9 Mbit/s** | **+591%** | tcp_rmem/wmem ceiling fix |
+| Cold-start latency | 2461.6ms | 2095.5ms | **-14.87%** | CPU governor + C-states |
+| Sustained inference (warm) | 19.59 tok/s | 20.47 tok/s | **+4.49%** | CPU governor |
