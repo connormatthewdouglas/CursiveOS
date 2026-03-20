@@ -51,9 +51,19 @@ if [[ ! -f "$PRESET" ]]; then
 fi
 
 if ! command -v ollama &>/dev/null; then
-    echo "ERROR: ollama not installed. Run ./setup-intel-arc.sh first."
-    exit 1
+    echo ""
+    echo "ollama is not installed. It is required for inference benchmarks."
+    read -rp "  Install ollama now? [y/N]: " INSTALL_OLLAMA
+    if [[ "${INSTALL_OLLAMA,,}" == "y" ]]; then
+        echo "  Installing ollama..."
+        curl -fsSL https://ollama.com/install.sh | sh
+        echo "  ollama installed."
+    else
+        echo "  Skipping ollama install. Inference benchmarks will be skipped."
+        SKIP_INFERENCE=1
+    fi
 fi
+SKIP_INFERENCE=${SKIP_INFERENCE:-0}
 
 if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
     echo "Pulling $MODEL..."
@@ -140,19 +150,27 @@ echo "  → Network done."
 
 # ── Benchmark 2: Cold-start latency ──────────────────────────────────────────
 echo ""
-echo "[2/3] Cold-start latency benchmark (GPU freq: idle vs pinned)..."
-bash "$SCRIPT_DIR/benchmark-inference-v0.2.sh" "$PRESET" "$MODEL" 2>&1
-COLD_LOG=$(ls -t "$LOG_DIR"/tao-os-coldstart-*.log 2>/dev/null | head -1)
-extract_coldstart "$COLD_LOG"
-echo "  → Cold-start done."
+if [[ "$SKIP_INFERENCE" == "1" ]]; then
+    echo "[2/3] Cold-start latency — SKIPPED (ollama not installed)"
+else
+    echo "[2/3] Cold-start latency benchmark (GPU freq: idle vs pinned)..."
+    bash "$SCRIPT_DIR/benchmark-inference-v0.2.sh" "$PRESET" "$MODEL" 2>&1
+    COLD_LOG=$(ls -t "$LOG_DIR"/tao-os-coldstart-*.log 2>/dev/null | head -1)
+    extract_coldstart "$COLD_LOG"
+    echo "  → Cold-start done."
+fi
 
 # ── Benchmark 3: Sustained inference ─────────────────────────────────────────
 echo ""
-echo "[3/3] Sustained inference benchmark (steady-state tok/s)..."
-bash "$SCRIPT_DIR/benchmark-inference-v0.1.sh" "$PRESET" "$MODEL" 2>&1
-WARM_LOG=$(ls -t "$LOG_DIR"/tao-os-inference-*.log 2>/dev/null | head -1)
-extract_sustained "$WARM_LOG"
-echo "  → Sustained inference done."
+if [[ "$SKIP_INFERENCE" == "1" ]]; then
+    echo "[3/3] Sustained inference — SKIPPED (ollama not installed)"
+else
+    echo "[3/3] Sustained inference benchmark (steady-state tok/s)..."
+    bash "$SCRIPT_DIR/benchmark-inference-v0.1.sh" "$PRESET" "$MODEL" 2>&1
+    WARM_LOG=$(ls -t "$LOG_DIR"/tao-os-inference-*.log 2>/dev/null | head -1)
+    extract_sustained "$WARM_LOG"
+    echo "  → Sustained inference done."
+fi
 
 # ── Idle power — tuned ────────────────────────────────────────────────────────
 echo ""
