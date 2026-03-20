@@ -109,7 +109,6 @@ Each benchmark is also runnable standalone:
 ./benchmarks/benchmark-network-v0.1.sh ./tao-os-presets-v0.7.sh        # TCP throughput, WAN sim
 ./benchmarks/benchmark-inference-v0.2.sh ./tao-os-presets-v0.7.sh tinyllama  # cold-start latency
 ./benchmarks/benchmark-inference-v0.1.sh ./tao-os-presets-v0.7.sh tinyllama  # sustained tok/s
-./benchmarks/benchmark-v0.9-paired.sh ./tao-os-presets-v0.7.sh          # CPU sysbench (paired)
 ```
 
 ---
