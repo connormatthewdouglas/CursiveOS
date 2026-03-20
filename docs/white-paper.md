@@ -246,7 +246,7 @@ Launch a Bittensor subnet where:
 - TAO emissions reward the highest-impact contributions
 - The network continuously improves its own infrastructure
 
-This phase marks the transition from optimization tool to a full self-updating Linux distribution. The scope expands to every layer of the OS — mining performance, inference efficiency, security hardening, and power efficiency — creating an ever-evolving, community-owned operating system driven entirely by its users.
+This phase marks the transition from optimization tool to a full self-updating Linux distribution. The scope expands to every layer of the OS — mining performance, inference efficiency, security hardening, power efficiency, and eventually gaming. A well-optimized Linux kernel, better GPU driver integration, and scheduler tuning that makes Bittensor miners faster also makes gaming rigs faster. The same flywheel that rewards the best mining tweaks will reward the best driver patches and frame-time improvements. TAO-OS becomes the go-to Linux for anyone who wants a machine that runs fast — not just miners.
 
 ---
 
