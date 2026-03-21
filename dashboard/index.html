@@ -232,6 +232,36 @@
     .state-idle     .avatar-state-label { color: var(--text-muted); }
     .state-offline  .avatar-state-label { color: var(--red); }
 
+    /* ─── BENCHMARK PROGRESS ─── */
+    .benchmark-progress-wrap {
+      position: absolute;
+      bottom: -8px;
+      left: -10px;
+      right: -10px;
+      height: 3px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 2px;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .benchmark-progress-wrap.active {
+      opacity: 1;
+    }
+    .benchmark-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #39d353, #2d8f3c, #39d353);
+      background-size: 200% 100%;
+      border-radius: 2px;
+      transition: width 0.2s linear;
+      box-shadow: 0 0 8px rgba(57,211,83,0.5);
+      animation: progress-glow 1.5s ease-in-out infinite;
+    }
+    @keyframes progress-glow {
+      0%, 100% { box-shadow: 0 0 8px rgba(57,211,83,0.5); }
+      50% { box-shadow: 0 0 16px rgba(57,211,83,0.8); }
+    }
+
     /* ─── GRID ─── */
     .main {
       padding: 16px;
@@ -817,6 +847,9 @@
       <path d="M45,64 Q50,67 55,64" stroke="rgba(0,0,0,0.35)" stroke-width="1" fill="none" stroke-linecap="round"/>
     </svg>
     <div class="avatar-state-label" id="avatarLabel">IDLE</div>
+    <div class="benchmark-progress-wrap">
+      <div class="benchmark-progress-bar" id="benchmarkProgress" style="width: 0%"></div>
+    </div>
   </div>
 
   <div class="title-block">
@@ -1115,7 +1148,21 @@
 
     // Derive avatar state from queue
     const isWorking = items.some(i => i.status === 'in_progress');
+    const inProgressItem = items.find(i => i.status === 'in_progress');
     setAvatarState(isWorking ? 'working' : 'idle');
+
+    // Update benchmark progress bar
+    const progressWrap = document.querySelector('.benchmark-progress-wrap');
+    const progressBar = document.getElementById('benchmarkProgress');
+    if (inProgressItem) {
+      progressWrap.classList.add('active');
+      // Calculate progress as percentage of runs used for this item
+      const progress = ((inProgressItem.runs_used || 0) / (inProgressItem.runs_budget || 1)) * 100;
+      progressBar.style.width = Math.min(95, progress) + '%'; // Cap at 95% until completion
+    } else {
+      progressWrap.classList.remove('active');
+      progressBar.style.width = '0%';
+    }
 
     const typeLabel = { bug_fix:'🐛 Bug Fix', tweak_candidate:'⚙️ Tweak', integration_test:'🔗 Integration' };
     const statusIcon = { queued:'⏳', in_progress:'🔄', passed:'✅', failed:'❌', committed:'📦', awaiting_approval:'👀' };
