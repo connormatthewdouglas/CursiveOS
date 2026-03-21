@@ -504,49 +504,46 @@
     .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 
-    /* ─── TOGGLE SWITCH ─── */
-    .toggle-switch {
+    /* ─── SLIDER TRACK ─── */
+    .slider-track {
       position: relative;
       display: inline-block;
-      width: 52px;
-      height: 28px;
-    }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .toggle-slider {
-      position: absolute;
+      width: 64px;
+      height: 32px;
       cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--surface3);
-      transition: all 0.3s;
-      border-radius: 14px;
-      border: 1px solid var(--border);
+      background: var(--surface3);
+      border-radius: 32px;
+      border: 1.5px solid var(--border);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+      transition: all 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
-    .toggle-slider:before {
+    .slider-track input {
+      display: none;
+    }
+    .slider-track .slider-thumb {
       position: absolute;
-      content: "";
-      height: 22px;
-      width: 22px;
+      top: 2px;
       left: 2px;
-      bottom: 2px;
-      background-color: var(--text-muted);
-      transition: all 0.3s;
+      width: 28px;
+      height: 28px;
+      background: var(--text-muted);
       border-radius: 50%;
+      transition: all 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
-    input:checked + .toggle-slider {
+    .slider-track input:checked ~ .slider-thumb {
+      left: 34px;
+      background: #000;
+      box-shadow: 0 2px 12px rgba(57,211,83,0.4);
+    }
+    .slider-track input:checked {
+      /* trick to style the track when checked */
+    }
+    /* Style track when input is checked (using js to add class) */
+    .slider-track.active {
       background: linear-gradient(135deg, #2d8f3c, #39d353);
-      border-color: rgba(57,211,83,0.5);
-      box-shadow: 0 0 12px rgba(57,211,83,0.25);
-    }
-    input:checked + .toggle-slider:before {
-      transform: translateX(24px);
-      background-color: #000;
+      border-color: rgba(57,211,83,0.6);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 0 16px rgba(57,211,83,0.2);
     }
 
     .btn-approve {
@@ -876,15 +873,21 @@
           <div class="budget-bar" id="budget-bar" style="width:0%"></div>
         </div>
       </div>
-      <div style="margin:16px 0;padding:12px;background:rgba(184,115,51,0.08);border-radius:var(--radius-sm);border:1px solid var(--copper-dim);display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Auto-Benchmark</div>
-          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">When ON: runs next queued test after completion</div>
+      <div style="margin:16px 0;padding:14px;background:rgba(184,115,51,0.08);border-radius:var(--radius-sm);border:1px solid var(--copper-dim)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Auto-Benchmark</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:2px">Slide to enable continuous benchmarking</div>
+          </div>
         </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="autorun-toggle" onchange="handleAutorunToggle()" />
-          <span class="toggle-slider"></span>
-        </label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:11px;color:var(--text-muted);min-width:32px">OFF</span>
+          <label class="slider-track">
+            <input type="checkbox" id="autorun-toggle" onchange="handleAutorunToggle()" />
+            <span class="slider-thumb"></span>
+          </label>
+          <span style="font-size:11px;color:var(--text-muted);min-width:32px">ON</span>
+        </div>
       </div>
       <div class="queue-list" id="queue-list">
         <div class="empty">Loading…</div>
@@ -1090,7 +1093,14 @@
     try {
       const autorun = await fetchJSON('/autorun');
       const toggle = document.getElementById('autorun-toggle');
+      const track = toggle.closest('.slider-track');
       toggle.checked = autorun.enabled || false;
+      // Update visual feedback
+      if (autorun.enabled) {
+        track.classList.add('active');
+      } else {
+        track.classList.remove('active');
+      }
     } catch(e) {
       console.log('Could not load autorun state:', e.message);
     }
@@ -1214,7 +1224,15 @@
   // ── Autorun Toggle ──
   async function handleAutorunToggle() {
     const checkbox = document.getElementById('autorun-toggle');
+    const track = checkbox.closest('.slider-track');
     const isEnabled = checkbox.checked;
+    
+    // Update visual feedback immediately
+    if (isEnabled) {
+      track.classList.add('active');
+    } else {
+      track.classList.remove('active');
+    }
     
     try {
       const response = await fetch(API + '/autorun', {
@@ -1226,17 +1244,24 @@
       
       if (result.ok) {
         console.log(`Autorun ${isEnabled ? 'enabled' : 'disabled'}`);
-        // Log to comms
-        const msg = isEnabled 
-          ? "🟢 AUTORUN ENABLED — will queue next benchmark after current run completes"
-          : "🔴 AUTORUN DISABLED — benchmarks will stop after completion";
-        console.log(msg);
       } else {
-        checkbox.checked = !isEnabled; // revert on error
+        // Revert on error
+        checkbox.checked = !isEnabled;
+        if (isEnabled) {
+          track.classList.remove('active');
+        } else {
+          track.classList.add('active');
+        }
         alert('Failed to update autorun setting: ' + result.error);
       }
     } catch(e) {
-      checkbox.checked = !isEnabled; // revert on error
+      // Revert on error
+      checkbox.checked = !isEnabled;
+      if (isEnabled) {
+        track.classList.remove('active');
+      } else {
+        track.classList.add('active');
+      }
       alert('Error updating autorun: ' + e.message);
     }
   }
