@@ -135,28 +135,24 @@ read_watts() {
 
     # Primary: RAPL energy counter delta over 1 second (works with or without C-states)
     if [[ -f "$rapl" ]]; then
-        local w
-        w=$(python3 - <<PYEOF 2>/dev/null
-import subprocess, time, sys
-
-rapl = "$rapl"
-def read_uj():
-    r = subprocess.run(["sudo","-S","cat",rapl], input="$TAO_SUDO_PASS\n",
-                       capture_output=True, text=True)
-    return int(r.stdout.strip())
-
-try:
-    e1 = read_uj(); t1 = time.monotonic()
-    time.sleep(1)
-    e2 = read_uj(); t2 = time.monotonic()
-    watts = (e2 - e1) / 1_000_000 / (t2 - t1)
-    print(f"{watts:.2f}")
-except Exception as e:
-    sys.exit(1)
-PYEOF
-)
-        if [[ -n "$w" && "$w" =~ ^[0-9] ]]; then
-            echo "$w"
+        local e1 e2 watts
+        # Read energy before
+        e1=$(echo "$TAO_SUDO_PASS" | sudo -S cat "$rapl" 2>/dev/null)
+        if [[ -z "$e1" || ! "$e1" =~ ^[0-9]+$ ]]; then
+            echo "N/A"
+            return
+        fi
+        sleep 1
+        # Read energy after
+        e2=$(echo "$TAO_SUDO_PASS" | sudo -S cat "$rapl" 2>/dev/null)
+        if [[ -z "$e2" || ! "$e2" =~ ^[0-9]+$ ]]; then
+            echo "N/A"
+            return
+        fi
+        # Calculate watts (convert microjoules to watts over 1 second)
+        watts=$(python3 -c "print(f'{($e2 - $e1) / 1_000_000:.2f}')" 2>/dev/null)
+        if [[ -n "$watts" && "$watts" =~ ^[0-9] ]]; then
+            echo "$watts"
             return
         fi
     fi
@@ -174,7 +170,6 @@ PYEOF
     fi
 
     echo "N/A"
-    echo "  [read_watts] Both RAPL and turbostat failed" >&2
 }
 
 extract_network() {
