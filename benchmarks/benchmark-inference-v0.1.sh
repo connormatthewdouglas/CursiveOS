@@ -46,6 +46,19 @@ fi
 # Ensure clean baseline — undo any previously applied presets
 log "Ensuring clean state for baseline..."
 bash "$PRESET_SCRIPT" --undo 2>/dev/null | grep -E "Revert|reverted|No backup" | sed 's/^/  /' || true
+# Hard-reset CPU governor and GPU freq — don't rely on state file which may
+# have been written when system was already tuned (ratchet bug).
+log "  Hard-resetting CPU governor and GPU freq to defaults..."
+if command -v cpupower &>/dev/null; then
+    echo "$SP" | sudo -S cpupower frequency-set -g schedutil 2>/dev/null \
+        && log "    CPU governor → schedutil" || \
+    echo "$SP" | sudo -S cpupower frequency-set -g powersave 2>/dev/null \
+        && log "    CPU governor → powersave" || true
+fi
+for card in /sys/class/drm/card*/gt/gt0; do
+    [[ -f "$card/rps_min_freq_mhz" ]] && echo "$SP" | sudo -S bash -c "echo 300 > $card/rps_min_freq_mhz" 2>/dev/null \
+        && log "    GPU rps_min_freq_mhz → 300 (idle default)" || true
+done
 sleep 2
 
 # ── JSON parser ──────────────────────────────────────────────────────────────

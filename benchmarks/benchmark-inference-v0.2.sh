@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-PRESET_SCRIPT="${1:-../tao-os-presets-v0.6.sh}"
+PRESET_SCRIPT="${1:-../tao-os-presets-v0.7.sh}"
 MODEL="${2:-tinyllama}"
 PASSES=5          # cold-start calls per pass
 IDLE_SLEEP=15     # seconds to wait for GPU to drop to idle freq between calls
@@ -55,7 +55,21 @@ if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
 fi
 
 log "Ensuring clean state for baseline..."
-bash "$PRESET_SCRIPT" --undo 2>/dev/null | grep -E "Revert|reverted|No backup" | sed 's/^/  /' || true
+_undo_out=$(bash "$PRESET_SCRIPT" --undo 2>/dev/null || true)
+echo "$_undo_out" | grep -E "Revert|reverted|No backup" | sed 's/^/  /' >> "$LOG_FILE" || true
+# Hard-reset CPU governor and GPU freq — don't rely on state file which may
+# have been written when system was already tuned (ratchet bug).
+log "  Hard-resetting CPU governor and GPU freq to defaults..."
+if command -v cpupower &>/dev/null; then
+    echo "$SP" | sudo -S cpupower frequency-set -g schedutil 2>/dev/null \
+        && log "    CPU governor → schedutil" || \
+    echo "$SP" | sudo -S cpupower frequency-set -g powersave 2>/dev/null \
+        && log "    CPU governor → powersave" || true
+fi
+for card in /sys/class/drm/card*/gt/gt0; do
+    [[ -f "$card/rps_min_freq_mhz" ]] && echo "$SP" | sudo -S bash -c "echo 300 > $card/rps_min_freq_mhz" 2>/dev/null \
+        && log "    GPU rps_min_freq_mhz → 300 (idle default)" || true
+done
 sleep 2
 
 # ── JSON parser ───────────────────────────────────────────────────────────────
@@ -172,7 +186,8 @@ BASELINE="$PASS_RESULT"
 # ── Apply presets ─────────────────────────────────────────────────────────────
 log ""
 log "Applying presets: $PRESET_SCRIPT"
-bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE"
+_preset_out=$(bash "$PRESET_SCRIPT" --apply-temp 2>&1 || true)
+echo "$_preset_out" | grep -E "✓|WARNING|skip" | sed 's/^/  /' >> "$LOG_FILE" || true
 log "Presets applied."
 
 # Restart ollama so GPU freq/power settings take effect
@@ -189,7 +204,8 @@ TUNED="$PASS_RESULT"
 # ── Undo presets ──────────────────────────────────────────────────────────────
 log ""
 log "Reverting presets..."
-bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE"
+_revert_out=$(bash "$PRESET_SCRIPT" --undo 2>&1 || true)
+echo "$_revert_out" | grep -E "✓|Revert" | sed 's/^/  /' >> "$LOG_FILE" || true
 
 # ── Results ───────────────────────────────────────────────────────────────────
 if (( $(echo "$BASELINE > 0" | bc -l) )); then

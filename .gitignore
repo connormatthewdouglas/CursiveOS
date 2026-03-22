@@ -25,3 +25,8 @@ IDENTITY.md
 TOOLS.md
 memory/
 .openclaw/
+
+# Brain files — local experiments, not project code
+CLAUDE_SESSION.md
+dashboard/session_watchdog.py
+.local/
