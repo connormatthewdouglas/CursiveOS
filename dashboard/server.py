@@ -6,6 +6,9 @@ import json
 import os
 import glob
 import re
+import signal
+import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -47,6 +50,10 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self.serve_json(get_comms())
         elif self.path == "/api/approvals":
             self.serve_json(get_approvals())
+        elif self.path == "/api/benchmark-progress":
+            self.serve_json(get_benchmark_progress())
+        elif self.path == "/api/benchmarks":
+            self.serve_json(get_benchmarks())
         elif self.path == "/api/queue":
             self.serve_json(get_queue())
         elif self.path == "/api/autorun":
@@ -129,6 +136,124 @@ def get_status():
     }
 
 
+def parse_benchmark_log(log_path):
+    """Parse a full-test log into a structured dict."""
+    text = Path(log_path).read_text()
+    result = {"file": Path(log_path).name}
+
+    # Timestamp from filename: tao-os-full-test-YYYYMMDD-HHMMSS.log
+    m = re.search(r'(\d{8})-(\d{6})', Path(log_path).name)
+    if m:
+        dt = datetime.strptime(m.group(1) + m.group(2), "%Y%m%d%H%M%S")
+        result["ts"] = dt.isoformat()
+        result["label"] = dt.strftime("%m/%d %H:%M")
+
+    for line in text.splitlines():
+        mn = re.search(r'Network throughput\s+([\d.]+)\s*Mbit.*?([\d.]+)\s*Mbit.*?([+-]?[\d.]+)%', line)
+        if mn:
+            result["net_baseline"] = float(mn.group(1))
+            result["net_tuned"]    = float(mn.group(2))
+            result["net_delta"]    = float(mn.group(3))
+
+        mc = re.search(r'Cold-start latency\s+([\d.]+)ms.*?([\d.]+)ms.*?([+-]?[\d.]+)%', line)
+        if mc:
+            result["cold_baseline"] = float(mc.group(1))
+            result["cold_tuned"]    = float(mc.group(2))
+            result["cold_delta"]    = float(mc.group(3))
+
+        mi = re.search(r'Sustained inference\s+([\d.]+)\s*tok.*?([\d.]+)\s*tok.*?([+-]?[\d.]+)%', line)
+        if mi:
+            result["inf_baseline"] = float(mi.group(1))
+            result["inf_tuned"]    = float(mi.group(2))
+            result["inf_delta"]    = float(mi.group(3))
+
+        mp = re.search(r'Idle power draw\s+([\d.]+)W\s+([\d.]+)W', line)
+        if mp:
+            result["power_baseline"] = float(mp.group(1))
+            result["power_tuned"]    = float(mp.group(2))
+            result["power_delta"]    = round(float(mp.group(2)) - float(mp.group(1)), 2)
+
+        if "Hardware:" in line:
+            result["hardware"] = line.replace("Hardware:", "").strip()
+
+        if "Stability" in line:
+            result["stable"] = "true" in line.lower()
+
+    result["mtime"] = os.path.getmtime(log_path)
+    return result
+
+
+def get_benchmark_progress():
+    """Check if a benchmark is currently running and how far along it is."""
+    # run_loop.py captures stdout to heartbeat-run-*.log — that's where progress markers live.
+    # tao-os-full-test-*.log only gets the final summary written at the very end.
+    logs = sorted(glob.glob(str(WORKSPACE / "logs/heartbeat-run-*.log")))
+    if not logs:
+        return {"running": False}
+
+    latest = logs[-1]
+    age_s  = time.time() - os.path.getmtime(latest)
+
+    # If the log hasn't been touched in 20 minutes, it's not an active run
+    if age_s > 1200:
+        return {"running": False}
+
+    try:
+        text = Path(latest).read_text()
+    except:
+        return {"running": False}
+
+    lines = text.splitlines()
+
+    # Determine which steps are done / in progress
+    net_started  = any("[1/3]" in l or "Network throughput benchmark" in l for l in lines)
+    net_done     = any("→ Network done" in l for l in lines)
+    cold_started = any("[2/3]" in l for l in lines)
+    cold_done    = any("→ Cold-start done" in l for l in lines)
+    inf_started  = any("[3/3]" in l for l in lines)
+    inf_done     = any("→ Sustained inference done" in l for l in lines)
+    finishing    = any("Reading idle power with presets active" in l for l in lines)
+    complete     = any("TAO-OS FULL TEST RESULTS" in l for l in lines)
+
+    if complete:
+        return {"running": False}
+
+    # Grab the last few iperf3 run lines for live detail
+    live_lines = [l.strip() for l in lines if "Run " in l and "Mbit/s" in l][-3:]
+
+    steps = [
+        {"label": "🌐 Network Throughput",  "done": net_done,  "active": net_started and not net_done},
+        {"label": "⚡ Cold-Start Latency",  "done": cold_done, "active": cold_started and not cold_done},
+        {"label": "🧠 Sustained Inference", "done": inf_done,  "active": inf_started and not inf_done},
+        {"label": "🔋 Power + Stability",   "done": False,     "active": finishing},
+    ]
+
+    done_count = sum(1 for s in steps if s["done"])
+    pct = int((done_count / len(steps)) * 100)
+
+    return {
+        "running": True,
+        "log": Path(latest).name,
+        "age_s": int(age_s),
+        "pct": pct,
+        "steps": steps,
+        "live": live_lines,
+    }
+
+
+def get_benchmarks():
+    """Return last 25 full-test benchmark logs, newest first."""
+    logs = sorted(glob.glob(str(WORKSPACE / "logs/tao-os-full-test-*.log")))[-25:]
+    results = []
+    for log in logs:
+        try:
+            results.append(parse_benchmark_log(log))
+        except Exception as e:
+            results.append({"file": Path(log).name, "error": str(e)})
+    results.sort(key=lambda x: x.get("mtime", 0), reverse=True)
+    return results
+
+
 def get_logs():
     """Recent log file summaries"""
     logs = sorted(glob.glob(str(WORKSPACE / "logs/*.log")))[-20:]
@@ -154,8 +279,8 @@ def get_memory():
     if daily.exists():
         files["today"] = daily.read_text()
 
-    # MEMORY.md
-    mem = WORKSPACE / "MEMORY.md"
+    # .MEMORY.md (hidden from auto-load, loaded manually by Copper)
+    mem = WORKSPACE / ".MEMORY.md"
     if mem.exists():
         files["longterm"] = mem.read_text()
 
@@ -194,28 +319,65 @@ def get_queue():
     except:
         return []
 
+def get_run_loop_pid():
+    """Return PID of running run_loop.py, or None."""
+    try:
+        state = json.loads(AUTORUN_STATE_FILE.read_text())
+        pid = state.get("pid")
+        if pid and Path(f"/proc/{pid}").exists():
+            return pid
+    except:
+        pass
+    return None
+
 def get_autorun():
     """Get current autorun state"""
     try:
-        return json.loads(AUTORUN_STATE_FILE.read_text())
+        state = json.loads(AUTORUN_STATE_FILE.read_text())
+        # Sync enabled flag with whether the process is actually running
+        state["running"] = get_run_loop_pid() is not None
+        return state
     except:
-        return {"enabled": False, "updated_at": None}
+        return {"enabled": False, "running": False, "updated_at": None}
 
 def set_autorun(enabled):
-    """Set autorun state and persist to disk"""
+    """Set autorun state, start or stop run_loop.py accordingly."""
     try:
+        pid = get_run_loop_pid()
+
+        if enabled and pid is None:
+            # Start run_loop.py in the background
+            run_loop = Path(__file__).parent.parent / "dashboard" / "run_loop.py"
+            proc = subprocess.Popen(
+                ["python3", str(run_loop)],
+                cwd=str(Path(__file__).parent.parent),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
+            new_pid = proc.pid
+            msg = f"🟢 Autorun ENABLED — run_loop.py started (PID {new_pid})"
+        elif not enabled and pid is not None:
+            # Stop the running process
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            new_pid = None
+            msg = f"🔴 Autorun DISABLED — run_loop.py stopped (was PID {pid})"
+        else:
+            new_pid = pid
+            msg = f"Autorun already {'running' if enabled else 'stopped'} — no change"
+
         state = {
             "enabled": enabled,
+            "pid": new_pid,
             "updated_at": datetime.now().isoformat()
         }
         AUTORUN_STATE_FILE.write_text(json.dumps(state, indent=2))
-        
-        # Log to comms
-        status = "🟢 ENABLED" if enabled else "🔴 DISABLED"
-        msg = f"Autorun {status} — benchmarks will {'continue' if enabled else 'stop'} after completion"
         log_comms("Connor", "CopperClaw", "directive", msg)
-        
-        return {"ok": True, "enabled": enabled}
+
+        return {"ok": True, "enabled": enabled, "pid": new_pid}
     except Exception as e:
         return {"ok": False, "error": str(e)}
 

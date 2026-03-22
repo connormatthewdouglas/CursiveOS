@@ -52,7 +52,20 @@ trap cleanup EXIT
 
 # ── Preflight ─────────────────────────────────────────────────────────────────
 log "Ensuring clean state for baseline..."
+# First try the preset undo (in case a partial apply left a backup)
 bash "$PRESET_SCRIPT" --undo 2>/dev/null | grep -E "Revert|reverted|No backup" | sed 's/^/  /' || true
+# Hard-reset network sysctls to kernel defaults regardless of backup state.
+# This is necessary because --undo relies on a state file that may not exist,
+# or may have been written when the system was already in a tuned state
+# (causing a ratchet where BBR is saved as the "original" and never cleared).
+log "  Hard-resetting network sysctls to kernel defaults..."
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_congestion_control=cubic    2>/dev/null && log "    tcp_congestion_control → cubic"     || true
+echo "$SP" | sudo -S sysctl -w net.core.default_qdisc=pfifo_fast         2>/dev/null && log "    default_qdisc → pfifo_fast"         || true
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_slow_start_after_idle=1      2>/dev/null && log "    tcp_slow_start_after_idle → 1"       || true
+echo "$SP" | sudo -S sysctl -w net.core.rmem_max=212992                   2>/dev/null && log "    rmem_max → 212992 (kernel default)"  || true
+echo "$SP" | sudo -S sysctl -w net.core.wmem_max=212992                   2>/dev/null && log "    wmem_max → 212992 (kernel default)"  || true
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_rmem="4096 87380 6291456"    2>/dev/null && log "    tcp_rmem → kernel default"           || true
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_wmem="4096 16384 4194304"    2>/dev/null && log "    tcp_wmem → kernel default"           || true
 sleep 2
 
 # ── Apply WAN simulation (tc netem on loopback) ──────────────────────────────
@@ -162,7 +175,7 @@ BASELINE="$PASS_RESULT"
 # ── Apply presets ─────────────────────────────────────────────────────────────
 log ""
 log "Applying presets: $PRESET_SCRIPT"
-bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE"
+bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
 log "Presets applied."
 
 # ── PASS 2: Tuned ─────────────────────────────────────────────────────────────
@@ -174,7 +187,7 @@ TUNED="$PASS_RESULT"
 # ── Undo presets ──────────────────────────────────────────────────────────────
 log ""
 log "Reverting presets..."
-bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE"
+bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
 
 # ── Results ───────────────────────────────────────────────────────────────────
 if (( $(echo "$BASELINE > 0" | bc -l) )); then
