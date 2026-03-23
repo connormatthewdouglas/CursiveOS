@@ -2,52 +2,11 @@
 
 **AI-optimized Linux for Bittensor miners. One command. Measurable results.**
 
----
-
-## 🤖 AI Collaborators
-
-This repo is worked on by two AIs. Here's who owns what:
-
-### 🟡 Claude (Lead Dev)
-| File/Dir | Purpose |
-|---|---|
-| `CLAUDE.md` | Claude's orientation + project context |
-| `.claude/` | Claude Code settings & permissions |
-| `benchmarks/` | Benchmark scripts |
-| `docs/` | White paper, action plan |
-| `archive/` | Historical data |
-| `logs/` | Runtime logs |
-| `tao-os-*.sh` | Preset + test scripts |
-| `tao-forge-status.sh` | Forge status reporter |
-| `setup-intel-arc.sh` | Hardware setup |
-
-### 🟤 CopperClaw (Async Assistant — OpenClaw)
-| File/Dir | Purpose |
-|---|---|
-| `AGENTS.md` | CopperClaw runtime instructions |
-| `SOUL.md` | CopperClaw personality, values, identity |
-| `USER.md` | Notes about Connor |
-| `MEMORY.md` | CopperClaw long-term memory |
-| `HEARTBEAT.md` | Periodic task checklist |
-| `.openclaw/` | OpenClaw runtime config |
-| `memory/copper/` | CopperClaw daily session logs |
-
-### 📦 Shared
-| File/Dir | Purpose |
-|---|---|
-| `README.md` | This file |
-| `CHANGELOG.md` | Project changelog |
-| `.git/` | Version control |
-
----
-
 ```bash
-git clone https://github.com/connormatthewdouglas/TAO-OS.git
-cd TAO-OS
-./tao-os-full-test-v1.4.sh
+git clone https://github.com/connormatthewdouglas/TAO-OS.git 2>/dev/null; git -C ~/TAO-OS pull; chmod +x ~/TAO-OS/tao-os-full-test-v1.4.sh; cd ~/TAO-OS && bash tao-os-full-test-v1.4.sh
 ```
 
-Runs all benchmarks, applies presets, shows you exactly what you gain. All changes revert automatically.
+Runs all benchmarks, applies presets, shows you exactly what you gain. All changes revert automatically. Works whether you've cloned before or not.
 
 **See live results from all machines:**
 ```bash
@@ -182,3 +141,25 @@ Built for the TAO network. Star the repo if you're a miner, validator, or believ
 **Got results?** Run the wrapper and they'll appear automatically in tao-forge. Or open an issue on GitHub.
 
 Made by [@connormatthewdouglas](https://github.com/connormatthewdouglas)
+
+---
+
+## 🤖 AI Collaborators
+
+This repo is built by two AIs working alongside the founder:
+
+### 🟡 Claude (Lead Dev)
+| File/Dir | Purpose |
+|---|---|
+| `benchmarks/` | Benchmark scripts |
+| `docs/` | White paper, action plan |
+| `tao-os-*.sh` | Preset + test scripts |
+| `tao-forge-status.sh` | Forge status reporter |
+| `setup-intel-arc.sh` | Hardware setup |
+
+### 🟤 CopperClaw (Async Executor — OpenClaw)
+| File/Dir | Purpose |
+|---|---|
+| `HEARTBEAT.md` | Active task queue |
+| `memory/` | CopperClaw daily session logs |
+| `dashboard/` | Mission control + spend monitor |
