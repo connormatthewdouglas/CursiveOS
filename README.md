@@ -3,7 +3,7 @@
 **AI-optimized Linux for Bittensor miners. One command. Measurable results.**
 
 ```bash
-git clone https://github.com/connormatthewdouglas/TAO-OS.git 2>/dev/null; git -C ~/TAO-OS pull; chmod +x ~/TAO-OS/tao-os-full-test-v1.4.sh; cd ~/TAO-OS && bash tao-os-full-test-v1.4.sh
+git clone https://github.com/connormatthewdouglas/TAO-OS.git 2>/dev/null; git -C ~/TAO-OS fetch origin && git -C ~/TAO-OS reset --hard origin/main; chmod +x ~/TAO-OS/tao-os-full-test-v1.4.sh; cd ~/TAO-OS && bash tao-os-full-test-v1.4.sh
 ```
 
 Runs all benchmarks, applies presets, shows you exactly what you gain. All changes revert automatically. Works whether you've cloned before or not.
