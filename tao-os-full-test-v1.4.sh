@@ -24,7 +24,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRESET="$SCRIPT_DIR/tao-os-presets-v0.7.sh"
+# Allow preset override via first arg (for isolated tweak testing)
+PRESET="${1:-$SCRIPT_DIR/tao-os-presets-v0.7.sh}"
 MODEL="tinyllama"
 
 LOG_DIR="$HOME/TAO-OS/logs"
