@@ -385,7 +385,7 @@ def get_tasks():
 
 
 def get_autonomy_score():
-    """Calculate Copper's autonomy score from work_queue.json"""
+    """Calculate Copper's autonomy score from work_queue.json, after reset date."""
     AUTONOMOUS = {"passed", "committed", "dropped"}
     REVIEWED   = {"flagged", "awaiting_approval", "rejected"}
     try:
@@ -393,13 +393,28 @@ def get_autonomy_score():
     except:
         return {"score": None, "error": "no data"}
 
-    autonomous = sum(1 for i in items if i.get("status") in AUTONOMOUS)
-    reviewed   = sum(1 for i in items if i.get("status") in REVIEWED)
+    # Only count items resolved after the reset date
+    reset_at = None
+    try:
+        r = json.loads((Path(__file__).parent / "autonomy_reset.json").read_text())
+        reset_at = r.get("reset_at")
+    except:
+        pass
+
+    def after_reset(item):
+        if not reset_at:
+            return True
+        updated = item.get("updated_at") or item.get("added_at") or ""
+        return updated > reset_at
+
+    counted = [i for i in items if after_reset(i)]
+    autonomous = sum(1 for i in counted if i.get("status") in AUTONOMOUS)
+    reviewed   = sum(1 for i in counted if i.get("status") in REVIEWED)
     total      = autonomous + reviewed
     score      = round((autonomous / total * 100), 1) if total else None
 
     breakdown = {}
-    for i in items:
+    for i in counted:
         s = i.get("status", "unknown")
         breakdown[s] = breakdown.get(s, 0) + 1
 
@@ -409,7 +424,8 @@ def get_autonomy_score():
         "reviewed":   reviewed,
         "total":      total,
         "breakdown":  breakdown,
-        "label":      f"{score}%" if score is not None else "N/A",
+        "label":      f"{score}%" if score is not None else "0% (no data yet)",
+        "reset_at":   reset_at,
     }
 
 
