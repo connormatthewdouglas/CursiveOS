@@ -1313,7 +1313,7 @@
             <span class="q-title">${item.title}</span>
           </div>
           <div class="q-desc">${item.description}</div>
-          ${item.result ? `<div class="q-result ${item.result.includes('✅')?'pass':'fail'}">${item.result}</div>` : ''}
+          ${item.result ? `<div class="q-result ${String(item.result).includes('✅')?'pass':'fail'}">${typeof item.result === 'object' ? JSON.stringify(item.result) : item.result}</div>` : ''}
         </div>
         <div class="q-runs">Runs ${item.runs_used}/${item.runs_budget}<br><span style="opacity:0.5;font-size:10px">#${idx+1}</span></div>
       </div>`).join('');
