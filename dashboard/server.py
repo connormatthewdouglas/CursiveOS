@@ -320,6 +320,24 @@ def get_forge_runs():
                 "power_tuned":          r.get("power_idle_tuned_w"),
                 "power_delta":          r.get("power_delta_w"),
                 "notes":                r.get("notes"),
+                # v1.5 hardware extended
+                "cpu_microcode_version":        r.get("cpu_microcode_version"),
+                "cpu_l1_cache_kb":              r.get("cpu_l1_cache_kb"),
+                "cpu_l2_cache_kb":              r.get("cpu_l2_cache_kb"),
+                "cpu_l3_cache_kb":              r.get("cpu_l3_cache_kb"),
+                "gpu_vram_mb":                  r.get("gpu_vram_mb"),
+                "gpu_driver_version":           r.get("gpu_driver_version"),
+                "ram_speed_mhz":                r.get("ram_speed_mhz"),
+                "ram_channel_config":           r.get("ram_channel_config"),
+                # v1.5 stability extended
+                "dmesg_errors_baseline":        r.get("dmesg_errors_baseline"),
+                "dmesg_errors_tuned":           r.get("dmesg_errors_tuned"),
+                "cpu_throttle_events_baseline": r.get("cpu_throttle_events_baseline"),
+                "cpu_throttle_events_tuned":    r.get("cpu_throttle_events_tuned"),
+                "gpu_throttle_events_baseline": r.get("gpu_throttle_events_baseline"),
+                "gpu_throttle_events_tuned":    r.get("gpu_throttle_events_tuned"),
+                "temp_throttle_count_baseline": r.get("temp_throttle_count_baseline"),
+                "temp_throttle_count_tuned":    r.get("temp_throttle_count_tuned"),
             } for r in m_runs]
         })
 
