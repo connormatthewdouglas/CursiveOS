@@ -25,7 +25,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Allow preset override via first arg (for isolated tweak testing)
-PRESET="${1:-$SCRIPT_DIR/tao-os-presets-v0.7.sh}"
+PRESET="${1:-$SCRIPT_DIR/tao-os-presets-v0.8.sh}"
 MODEL="tinyllama"
 
 LOG_DIR="$HOME/TAO-OS/logs"
@@ -378,7 +378,7 @@ RUN_JSON=$(cat <<JSON
 {
   "machine_id": "$MACHINE_ID",
   "run_date": "$(date +%Y-%m-%d)",
-  "preset_version": "v0.7",
+  "preset_version": "v0.8",
   "wrapper_version": "v1.4",
   "network_baseline_mbit": $NET_B,
   "network_tuned_mbit": $NET_T,
@@ -455,7 +455,7 @@ machine["runs"].append({
     "run_id": next_id,
     "date": datetime.date.today().isoformat(),
     "submission_timestamp": "$SUBMISSION_TIMESTAMP",
-    "preset_version": "v0.7",
+    "preset_version": "v0.8",
     "wrapper_version": "v1.4",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
     "stability_flag": to_bool("$STABILITY_FLAG"),
