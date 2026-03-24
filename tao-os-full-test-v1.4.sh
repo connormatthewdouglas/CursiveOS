@@ -214,7 +214,7 @@ if [[ "$SKIP_INFERENCE" == "1" ]]; then
     echo "[2/3] Cold-start latency — SKIPPED (ollama not installed)"
 else
     echo "[2/3] Cold-start latency benchmark (GPU freq: idle vs pinned)..."
-    bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.2.sh" "$PRESET" "$MODEL" 2>&1
+    bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.3.sh" "$PRESET" "$MODEL" 2>&1
     COLD_LOG=$(ls -t "$LOG_DIR"/tao-os-coldstart-*.log 2>/dev/null | head -1)
     extract_coldstart "$COLD_LOG"
     echo "  → Cold-start done."
