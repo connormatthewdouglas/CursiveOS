@@ -84,6 +84,19 @@ fi
 
 CPU_MODEL=$(lscpu | grep 'Model name:' | cut -d':' -f2 | xargs)
 GPU_MODEL=$(lspci 2>/dev/null | grep -i 'VGA\|3D\|Display' | cut -d: -f3 | xargs || echo 'N/A')
+
+# ── GPU vendor detection ──────────────────────────────────────────────────────
+# Determines which GPU-specific tweaks apply. System-level tweaks (network,
+# CPU governor, scheduler, swappiness) run on ALL hardware regardless of GPU.
+GPU_VENDOR="unknown"
+if echo "$GPU_MODEL" | grep -qi "nvidia"; then
+    GPU_VENDOR="nvidia"
+elif echo "$GPU_MODEL" | grep -qi "arc\|DG2\|alchemist"; then
+    GPU_VENDOR="intel_arc"
+elif echo "$GPU_MODEL" | grep -qi "radeon\|rx [0-9]"; then
+    GPU_VENDOR="amd"
+fi
+
 KERNEL=$(uname -r)
 RAM_GB=$(awk '/MemTotal/ {printf "%.0f", $2/1024/1024}' /proc/meminfo)
 OS_NAME=$(lsb_release -ds 2>/dev/null || echo "unknown")
@@ -109,11 +122,17 @@ fi
 
 echo "Hardware:"
 echo "  CPU: $CPU_MODEL"
-echo "  GPU: $GPU_MODEL"
+echo "  GPU: $GPU_MODEL (vendor: $GPU_VENDOR)"
 echo "  Kernel: $KERNEL"
 echo "  Date: $(date)"
 echo "  Fingerprint: $HW_FINGERPRINT"
 echo "  Thermal headroom: ${THERMAL_HEADROOM}°C (Tjmax=${TJMAX}°C, current=${CURR_TEMP}°C)"
+if [[ "$GPU_VENDOR" == "nvidia" ]]; then
+    echo ""
+    echo "  ℹ NVIDIA GPU detected."
+    echo "    All system-level tweaks apply (network, CPU, scheduler, swappiness)."
+    echo "    Intel Arc GPU tweaks skipped — not applicable to this hardware."
+fi
 echo ""
 echo "Running 3 benchmarks. Total time: ~10 minutes."
 echo "All presets are TEMPORARY — reverted after each test."
@@ -338,6 +357,7 @@ if [[ "$MACHINE_EXISTS" == "[]" ]]; then
   "cpu": "$CPU_MODEL",
   "cpu_cores_logical": $CPU_CORES,
   "gpu": "$GPU_MODEL",
+  "gpu_vendor": "$GPU_VENDOR",
   "ram_gb": $RAM_GB,
   "os": "$OS_NAME",
   "kernel": "$KERNEL"
