@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Config ─────────────────────────────────────────────────────────────────
-DAILY_CAP_USD  = 2.00
+DAILY_CAP_USD  = 4.00
 CRON_RUN_DIR   = Path.home() / ".openclaw/cron/runs"
 SESSION_DIR    = Path.home() / ".openclaw/agents/main/sessions"
 WORKSPACE      = Path.home() / "TAO-OS"
