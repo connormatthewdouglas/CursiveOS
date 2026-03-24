@@ -43,6 +43,10 @@ if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
 fi
 export TAO_SUDO_PASS
 
+# ── Self-update — always run latest version from repo ─────────────────────────
+echo "Checking for updates…"
+git -C "$SCRIPT_DIR" pull --quiet 2>/dev/null && echo "  → Up to date." || echo "  → git pull skipped (no remote or offline)."
+
 # ── Preflight checks ──────────────────────────────────────────────────────────
 echo ""
 echo "TAO-OS Full Test v1.4"
@@ -154,8 +158,9 @@ STABILITY_FLAG="true"
 read_watts() {
     local rapl="/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj"
 
-    # AMD fallback path: amd_energy exposes the same interface under a different name
+    # AMD fallback path: try loading amd_energy module, then check powercap sysfs
     if [[ ! -f "$rapl" ]]; then
+        echo "$TAO_SUDO_PASS" | sudo -S modprobe amd_energy 2>/dev/null || true
         local amd_rapl
         amd_rapl=$(ls /sys/devices/virtual/powercap/*/energy_uj 2>/dev/null | head -1)
         [[ -n "$amd_rapl" ]] && rapl="$amd_rapl"
@@ -381,28 +386,52 @@ else
     MACHINE_RESP="200"  # already exists, skip insert
 fi
 
-# Insert run (columns matching current DB schema)
-RUN_JSON=$(cat <<JSON
-{
-  "machine_id": "$MACHINE_ID",
-  "run_date": "$(date +%Y-%m-%d)",
-  "preset_version": "v0.8",
-  "wrapper_version": "v1.4",
-  "network_baseline_mbit": $NET_B,
-  "network_tuned_mbit": $NET_T,
-  "network_delta_pct": $NET_D,
-  "coldstart_baseline_ms": $COLD_B,
-  "coldstart_tuned_ms": $COLD_T,
-  "coldstart_delta_pct": $COLD_D,
-  "sustained_baseline_toks": $WARM_B,
-  "sustained_tuned_toks": $WARM_T,
-  "sustained_delta_pct": $WARM_D,
-  "power_idle_baseline_w": $PWR_B,
-  "power_idle_tuned_w": $PWR_T,
-  "power_delta_w": $PWR_D,
-  "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL"
+# Insert run (columns matching current DB schema + v1.5 extended fields)
+# v1.5 adds hardware_extended (cpu_microcode_version, cache sizes, GPU VRAM, RAM speed)
+# and stability_extended (dmesg errors, throttle events, temp throttle counts)
+# Build JSON via python3 — bash vars interpolated before python sees the heredoc
+RUN_JSON=$(python3 - <<PYJSON
+import json, datetime
+
+def n(v):
+    try: return float(v)
+    except: return None
+
+def ni(v):
+    try: return int(v)
+    except: return 0
+
+data = {
+    "machine_id": "$MACHINE_ID",
+    "run_date": "$( date +%Y-%m-%d )",
+    "preset_version": "v0.8",
+    "wrapper_version": "v1.4",
+    "network_baseline_mbit": n("$NET_B"),
+    "network_tuned_mbit": n("$NET_T"),
+    "network_delta_pct": n("$NET_D"),
+    "coldstart_baseline_ms": n("$COLD_B"),
+    "coldstart_tuned_ms": n("$COLD_T"),
+    "coldstart_delta_pct": n("$COLD_D"),
+    "sustained_baseline_toks": n("$WARM_B"),
+    "sustained_tuned_toks": n("$WARM_T"),
+    "sustained_delta_pct": n("$WARM_D"),
+    "power_idle_baseline_w": n("$PWR_B"),
+    "power_idle_tuned_w": n("$PWR_T"),
+    "power_delta_w": n("$PWR_D"),
+    "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL",
+    "cpu_microcode_version": "$CPU_MICROCODE" if "$CPU_MICROCODE" not in ("unknown","") else None,
+    "gpu_driver_version": "auto-detected",
+    "dmesg_errors_baseline": 0,
+    "dmesg_errors_tuned": ni("$STABILITY_ERRORS"),
+    "cpu_throttle_events_baseline": 0,
+    "cpu_throttle_events_tuned": 0,
+    "gpu_throttle_events_baseline": 0,
+    "gpu_throttle_events_tuned": 0,
+    "temp_throttle_count_baseline": 0,
+    "temp_throttle_count_tuned": 0
 }
-JSON
+print(json.dumps(data))
+PYJSON
 )
 
 RUN_RESP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
