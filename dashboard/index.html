@@ -1484,7 +1484,7 @@
 
         return `<tr style="border-bottom:1px solid var(--border);${rowStyle}cursor:pointer" onclick="toggleRunDetail('${detailId}', this)">
           <td style="padding:5px 8px;color:var(--text-muted)">#${runs.length - i}${badge}</td>
-          <td style="padding:5px 8px;white-space:nowrap">${r.run_date || '—'}</td>
+          <td style="padding:5px 8px;white-space:nowrap">${r.run_date || '—'}${r.created_at ? '<br><span style="font-size:10px;color:var(--text-muted)">' + new Date(r.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}) + '</span>' : ''}</td>
           <td style="padding:5px 8px;text-align:center;color:var(--text-dim)">${r.preset_version || '—'}</td>
           <td style="padding:5px 8px;text-align:right;font-weight:600;color:${nd>0?'var(--green)':nd<0?'var(--red)':'var(--text-muted)'}">${nd!=null?(nd>=0?'+':'')+nd.toFixed(1)+'%':'—'}</td>
           <td style="padding:5px 8px;text-align:right;font-weight:600;color:${cd<0?'var(--green)':cd>0?'var(--red)':'var(--text-muted)'}">${cd!=null?(cd>=0?'+':'')+cd.toFixed(2)+'%':'—'}</td>

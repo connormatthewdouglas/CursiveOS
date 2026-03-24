@@ -306,6 +306,7 @@ def get_forge_runs():
             "run_count":  len(m_runs),
             "runs": [{
                 "run_date":             r.get("run_date"),
+                "created_at":           r.get("created_at"),
                 "preset_version":       r.get("preset_version"),
                 "network_baseline":     r.get("network_baseline_mbit"),
                 "network_tuned":        r.get("network_tuned_mbit"),
