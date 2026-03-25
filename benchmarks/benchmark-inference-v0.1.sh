@@ -102,21 +102,34 @@ else
                 fi
                 echo "  Recommended: ${_rec_model} (${_rec_size}) — fits your GPU and"
                 echo "  shows real improvement with frequency and memory tuning."
-                echo ""
-                read -rp "  Download ${_rec_model} now? [Y/N]: " _pull_answer </dev/tty
-                if [[ "${_pull_answer,,}" == "y" ]]; then
-                    echo "  Pulling ${_rec_model}..."
-                    ollama pull "$_rec_model" && MODEL="$_rec_model" \
-                        && echo "  ✓ ${_rec_model} ready." \
-                        || echo "  Pull failed — continuing with tinyllama."
-                else
-                    echo "  Continuing with tinyllama — inference delta may be near-zero."
-                fi
+                echo "  Auto-installing ${_rec_model}..."
+                ollama pull "$_rec_model" && MODEL="$_rec_model" \
+                    && echo "  ✓ ${_rec_model} ready." \
+                    || echo "  Pull failed — continuing with tinyllama."
                 echo ""
             fi
         fi
     fi
 fi
+# ── Model validation ─────────────────────────────────────────────────────────
+# Quick 5-token test to catch silent failures before wasting a full benchmark run.
+# Arc A750 Vulkan bug: models 3B+ return 0 tokens silently (driver crashes internally).
+# If validation fails, fall back to tinyllama which is known-good on all hardware.
+if [[ "$MODEL" != "tinyllama" ]]; then
+    echo "  Validating $MODEL (quick 5-token test)..."
+    _test=$(curl -s --max-time 30 http://localhost:11434/api/generate \
+        -d "{\"model\":\"$MODEL\",\"prompt\":\"Hi\",\"stream\":false,\"options\":{\"num_predict\":5}}" \
+        | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('eval_count',0))" 2>/dev/null || echo "0")
+    if [[ "$_test" == "0" ]]; then
+        echo "  ✗ $MODEL returned 0 tokens — not compatible with this GPU/driver combination."
+        echo "  (Known issue: Arc A750 Vulkan driver crashes silently on 3B+ parameter models.)"
+        echo "  Falling back to tinyllama..."
+        MODEL="tinyllama"
+    else
+        echo "  ✓ $MODEL validated (${_test} tokens)."
+    fi
+fi
+
 PASSES=5        # inference calls per pass (more = more stable average)
 WARMUP=1        # throwaway calls before measuring (GPU cold start)
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then

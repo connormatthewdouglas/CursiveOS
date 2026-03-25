@@ -300,15 +300,15 @@ extract_network() {
 
 extract_coldstart() {
     local log="$1"
-    COLD_BASELINE=$(grep "Baseline latency:" "$log" | grep -oP '[0-9]+\.[0-9]+' | head -1 || echo "?")
-    COLD_TUNED=$(grep "Tuned latency:" "$log"       | grep -oP '[0-9]+\.[0-9]+' | head -1 || echo "?")
-    COLD_DELTA=$(grep "Delta:" "$log"               | grep -oP '[+\-]?[0-9]+\.[0-9]+' | head -1 || echo "N/A")
+    COLD_BASELINE=$(grep "Baseline latency:" "$log" | grep -oP '[0-9]+\.?[0-9]*' | head -1 || echo "?")
+    COLD_TUNED=$(grep "Tuned latency:" "$log"       | grep -oP '[0-9]+\.?[0-9]*' | head -1 || echo "?")
+    COLD_DELTA=$(grep "Delta:" "$log"               | grep -oP '[+\-]?[0-9]+\.?[0-9]*' | head -1 || echo "N/A")
 }
 
 extract_sustained() {
     local log="$1"
-    WARM_BASELINE=$(grep "Baseline:" "$log" | grep -oP '[0-9]+\.[0-9]+ tok/s' | head -1 || echo "?")
-    WARM_TUNED=$(grep "Tuned:" "$log"       | grep -oP '[0-9]+\.[0-9]+ tok/s' | head -1 || echo "?")
+    WARM_BASELINE=$(grep "Baseline:" "$log" | grep -oP '[0-9]+\.?[0-9]* tok/s' | head -1 || echo "?")
+    WARM_TUNED=$(grep "Tuned:" "$log"       | grep -oP '[0-9]+\.?[0-9]* tok/s' | head -1 || echo "?")
     # Delta may be "N/A" (CPU inference suppressed) or a percentage
     local raw_delta
     raw_delta=$(grep "Delta:" "$log" | tail -1 || echo "")
@@ -340,7 +340,7 @@ if [[ "$SKIP_INFERENCE" == "1" ]]; then
 else
     echo "[2/3] Cold-start latency benchmark (GPU freq: idle vs pinned)..."
     bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.3.sh" "$PRESET" "$MODEL" 2>&1
-    COLD_LOG=$(ls -t "$LOG_DIR"/tao-os-coldstart-*.log 2>/dev/null | head -1)
+    COLD_LOG=$(ls -t "$LOG_DIR"/cursiveos-coldstart-*.log "$LOG_DIR"/tao-os-coldstart-*.log 2>/dev/null | head -1)
     extract_coldstart "$COLD_LOG"
     echo "  → Cold-start done."
 fi
