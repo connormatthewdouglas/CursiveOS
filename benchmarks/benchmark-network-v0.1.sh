@@ -70,8 +70,9 @@ sleep 2
 
 # ── Apply WAN simulation (tc netem on loopback) ──────────────────────────────
 apply_netem() {
-    # Add netem to loopback: 25ms one-way = ~50ms RTT, 0.5% loss
-    sc "tc qdisc replace dev lo root netem delay $WAN_DELAY loss $WAN_LOSS"
+    # Clear any leftover qdisc first — replace can fail if prior run crashed mid-flight
+    sc "tc qdisc del dev lo root 2>/dev/null || true"
+    sc "tc qdisc add dev lo root netem delay $WAN_DELAY loss $WAN_LOSS"
     log "  WAN sim: ${WAN_DELAY} one-way + ${WAN_LOSS} loss (loopback)"
 }
 
