@@ -60,7 +60,7 @@ if [[ -n "${2:-}" ]]; then
 else
     MODEL=""
     for m in llama3 mistral llama3.2 phi3 qwen2 tinyllama; do
-        if ollama list 2>/dev/null | grep -q "^$m"; then
+        if ollama list 2>/dev/null | grep -q "^$m:"; then
             MODEL="$m"
             break
         fi
@@ -128,7 +128,7 @@ s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 
 LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/tao-os-inference-$(date +%Y%m%d-%H%M%S).log"
+LOG_FILE="$LOG_DIR/cursiveos-inference-$(date +%Y%m%d-%H%M%S).log"
 PASS_RESULT=""
 
 log() { echo "$1" | tee -a "$LOG_FILE"; }
@@ -254,7 +254,7 @@ run_pass() {
 
     # Warmup — model loads on first call, so check GPU after
     log "  Warming up ($WARMUP call)..."
-    for _ in $(seq 1 $WARMUP); do infer > /dev/null; done
+    for _ in $(seq 1 $WARMUP); do infer > /dev/null || true; done
 
     # Confirm whether model is on GPU or CPU — logged for visibility.
     # We always measure both passes; delta is suppressed later if TUNED stays on CPU.
@@ -300,7 +300,8 @@ log "========================================"
 log "Hardware:"
 log "  CPU: $(lscpu | grep 'Model name:' | cut -d':' -f2 | xargs)"
 log "  GPU: $(lspci | grep -i 'VGA\|3D\|Display' | cut -d: -f3 | xargs || echo 'N/A')"
-VRAM_TOTAL=$(cat /sys/class/drm/card1/device/mem_info_vram_total 2>/dev/null | awk '{printf "%.1f GiB", $1/1073741824}' || echo "N/A")
+_vram_display=$(detect_vram_gb)
+VRAM_TOTAL=$([ "$_vram_display" -gt 0 ] && echo "${_vram_display} GiB" || echo "N/A")
 log "  GPU VRAM: $VRAM_TOTAL"
 log "========================================"
 
@@ -367,7 +368,11 @@ log "INFERENCE BENCHMARK RESULTS"
 log "  Model:    $MODEL"
 log "  Baseline: ${BASELINE} tok/s"
 log "  Tuned:    ${TUNED} tok/s"
-log "  Delta:    ${DELTA}%  (positive = better)"
+if [[ "$DELTA" == "N/A" ]]; then
+    log "  Delta:    N/A (see notes above)"
+else
+    log "  Delta:    ${DELTA}%  (positive = better)"
+fi
 log "========================================"
 log "Log: $LOG_FILE"
 log "Complete: $(date)"

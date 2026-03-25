@@ -344,7 +344,7 @@ if [[ "$SKIP_INFERENCE" == "1" ]]; then
 else
     echo "[3/3] Sustained inference benchmark (steady-state tok/s)..."
     bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.1.sh" "$PRESET" "$MODEL" 2>&1
-    WARM_LOG=$(ls -t "$LOG_DIR"/tao-os-inference-*.log 2>/dev/null | head -1)
+    WARM_LOG=$(ls -t "$LOG_DIR"/cursiveos-inference-*.log "$LOG_DIR"/tao-os-inference-*.log 2>/dev/null | head -1)
     extract_sustained "$WARM_LOG"
     echo "  → Sustained inference done."
 fi
