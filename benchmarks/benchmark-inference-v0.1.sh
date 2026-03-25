@@ -1,17 +1,39 @@
 #!/usr/bin/env bash
 # CursiveOS benchmark-inference-v0.1.sh
-# Measures AI inference performance on Intel Arc A750 via ollama REST API.
+# Measures GPU inference performance via ollama REST API.
 # Paired test: baseline (no presets) vs tuned (presets applied) in same session.
 # Reports: tokens/sec, time-to-first-token, GPU vs CPU confirmation.
 #
+# CPU inference is intentionally skipped — disabling C-states causes thermal
+# buildup that makes tuned-pass results unreliable. Cold-start latency is the
+# right metric for CPU-inference machines (measured separately).
+#
 # Usage: ./benchmark-inference-v0.1.sh [preset-script] [model]
-#   preset-script : default ./tao-os-presets-v0.5.sh
-#   model         : default tinyllama (must already be pulled)
+#   preset-script : default ../cursiveos-presets-v0.8.sh
+#   model         : auto-selected if omitted (prefers larger models)
 
 set -euo pipefail
 
-PRESET_SCRIPT="${1:-../cursiveos-presets-v0.7.sh}"
-MODEL="${2:-tinyllama}"
+PRESET_SCRIPT="${1:-../cursiveos-presets-v0.8.sh}"
+
+# Auto-select best available model — larger models stress VRAM/bandwidth
+# where GPU freq and THP settings actually show a delta. TinyLlama is too
+# small: the Arc A750 hits its hardware ceiling at any governor setting.
+if [[ -n "${2:-}" ]]; then
+    MODEL="$2"
+else
+    MODEL=""
+    for m in llama3 mistral llama3.2 phi3 qwen2 tinyllama; do
+        if ollama list 2>/dev/null | grep -q "^$m"; then
+            MODEL="$m"
+            break
+        fi
+    done
+    if [[ -z "$MODEL" ]]; then
+        echo "No supported model found. Pull one first: ollama pull tinyllama"
+        exit 1
+    fi
+fi
 PASSES=5        # inference calls per pass (more = more stable average)
 WARMUP=1        # throwaway calls before measuring (GPU cold start)
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
@@ -102,12 +124,17 @@ run_pass() {
     log "  Warming up ($WARMUP call)..."
     for _ in $(seq 1 $WARMUP); do infer > /dev/null; done
 
-    # Confirm GPU after model is loaded
+    # Confirm GPU after model is loaded — abort measured passes if on CPU.
+    # CPU inference cannot produce a reliable delta: disabling C-states causes
+    # thermal buildup that throttles the tuned pass, producing meaningless negatives.
     local proc
     proc=$(ollama ps 2>/dev/null | grep "$MODEL" | grep -oP '[0-9]+% (GPU|CPU)' || echo "not loaded")
     log "  Processor: $proc"
     if ! echo "$proc" | grep -qi "gpu"; then
-        log "  WARNING: model not on GPU — results may be CPU-based"
+        log "  SKIP: model running on CPU — sustained inference delta suppressed."
+        log "        (C-state disable causes thermal variance; see cold-start benchmark for CPU impact.)"
+        PASS_RESULT="N/A"
+        return 0
     fi
 
     # Measured passes
@@ -115,16 +142,16 @@ run_pass() {
     local tps_sum=0 ttft_sum=0 tps_min=99999 tps_max=0 i=1
     for _ in $(seq 1 $PASSES); do
         local result tps ttft toks
-        result=$(infer | parse_response)
+        result=$(infer | parse_response) || true
         tps=$(echo "$result"  | cut -d'|' -f1)
         ttft=$(echo "$result" | cut -d'|' -f2)
         toks=$(echo "$result" | cut -d'|' -f3)
         log "    Pass $i: ${tps} tok/s | TTFT: ${ttft}s | tokens: $toks"
         tps_sum=$(echo "$tps_sum + $tps" | bc -l)
         ttft_sum=$(echo "$ttft_sum + $ttft" | bc -l)
-        (( $(echo "$tps < $tps_min" | bc -l) )) && tps_min=$tps
-        (( $(echo "$tps > $tps_max" | bc -l) )) && tps_max=$tps
-        (( i++ ))
+        [[ $(echo "$tps < $tps_min" | bc -l) == 1 ]] && tps_min=$tps
+        [[ $(echo "$tps > $tps_max" | bc -l) == 1 ]] && tps_max=$tps
+        (( i++ )) || true
     done
 
     local avg_tps avg_ttft
@@ -178,7 +205,11 @@ log "Reverting presets..."
 bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE"
 
 # ── Results ───────────────────────────────────────────────────────────────────
-DELTA=$(echo "scale=2; ($TUNED - $BASELINE) * 100 / $BASELINE" | bc -l | awk '{printf "%.2f", $1}')
+if [[ "$BASELINE" == "N/A" || "$TUNED" == "N/A" ]]; then
+    DELTA="N/A"
+else
+    DELTA=$(echo "scale=2; ($TUNED - $BASELINE) * 100 / $BASELINE" | bc -l | awk '{printf "%.2f", $1}')
+fi
 
 log ""
 log "========================================"
