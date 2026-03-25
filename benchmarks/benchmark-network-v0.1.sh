@@ -123,7 +123,13 @@ run_pass() {
 
     for _ in $(seq 1 $RUNS); do
         local result mbps retx rtt
-        result=$(iperf3 -c 127.0.0.1 -p $IPERF_PORT -t $DURATION -J 2>/dev/null | parse_iperf)
+        # Restart server before each run — daemon can crash after very high-throughput connections
+        pkill -f "iperf3 -s" 2>/dev/null || true
+        sleep 1
+        iperf3 -s -p $IPERF_PORT -D --logfile /tmp/tao-iperf3-server.log 2>/dev/null
+        sleep 1
+        # || true: iperf3 exits non-zero on some error paths; don't let pipefail kill the script
+        result=$(iperf3 -c 127.0.0.1 -p $IPERF_PORT -t $DURATION -J 2>/dev/null | parse_iperf) || true
         mbps=$(echo "$result" | cut -d'|' -f1)
         retx=$(echo "$result" | cut -d'|' -f2)
         rtt=$(echo  "$result" | cut -d'|' -f3)
@@ -131,9 +137,9 @@ run_pass() {
         mbps_sum=$(echo "$mbps_sum + $mbps" | bc -l)
         retx_sum=$(echo "$retx_sum + $retx" | bc -l)
         rtt_sum=$(echo  "$rtt_sum  + $rtt"  | bc -l)
-        (( $(echo "$mbps < $mbps_min" | bc -l) )) && mbps_min=$mbps
-        (( $(echo "$mbps > $mbps_max" | bc -l) )) && mbps_max=$mbps
-        (( i++ ))
+        [[ $(echo "$mbps < $mbps_min" | bc -l) == 1 ]] && mbps_min=$mbps
+        [[ $(echo "$mbps > $mbps_max" | bc -l) == 1 ]] && mbps_max=$mbps
+        (( i++ )) || true
     done
 
     remove_netem
