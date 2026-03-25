@@ -34,7 +34,7 @@ WAN_DELAY="25ms" # one-way delay → 50ms RTT
 WAN_LOSS="0.5%"  # packet loss rate
 IPERF_PORT=15201
 
-LOG_DIR="$HOME/TAO-OS/logs"
+LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/tao-os-network-$(date +%Y%m%d-%H%M%S).log"
 PASS_RESULT=""

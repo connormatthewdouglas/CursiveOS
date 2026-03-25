@@ -34,7 +34,7 @@ SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
 s() { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 
-LOG_DIR="$HOME/TAO-OS/logs"
+LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/tao-os-coldstart-$(date +%Y%m%d-%H%M%S).log"
 STABILITY_BASELINE_FILE="$LOG_DIR/.stability-baseline-$$.txt"
@@ -43,7 +43,7 @@ PASS_RESULT=""
 log() { echo "$1" | tee -a "$LOG_FILE"; }
 
 # Source data injection helpers
-source "$HOME/TAO-OS/scripts/inject-extended-data.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/inject-extended-data.sh"
 
 # Short prompt — minimizes generation time, isolates load+TTFT signal
 PROMPT="What is Bittensor? Answer in one sentence."
