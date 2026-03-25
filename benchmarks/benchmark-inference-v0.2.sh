@@ -32,7 +32,7 @@ SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
 s() { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 
-LOG_DIR="$HOME/TAO-OS/logs"
+LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/tao-os-coldstart-$(date +%Y%m%d-%H%M%S).log"
 PASS_RESULT=""
