@@ -149,12 +149,23 @@ if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
 fi
 
 # ── AMD ROCm auto-install ─────────────────────────────────────────────────────
-# If an AMD GPU is present but ROCm isn't installed, offer to install it now.
-# ROCm enables GPU inference on RX 470/480/570/580/590 (and newer AMD cards).
-# After install, CursiveOS presets apply HSA_OVERRIDE and restart ollama —
-# everything works in the same session, no reboot needed.
-_amd_gpu=$(lspci 2>/dev/null | grep -iE 'VGA|3D|Display' | grep -iE 'AMD|ATI|Radeon' || true)
-if [[ -n "$_amd_gpu" ]] && ! command -v rocm-smi &>/dev/null && ! [[ -d /opt/rocm ]]; then
+# If a discrete AMD GPU is present but ROCm isn't installed, offer to install it.
+# Skips if: Intel Arc is present (already handling GPU inference via sysfs),
+#           NVIDIA is present, or the AMD entry is an integrated GPU (iGPU).
+# AMD iGPU codenames excluded: Renoir/Cezanne (5000G), Lucienne, Barcelo,
+#   Raphael (7000), Rembrandt, Phoenix/Hawk Point (7040) — all share PCIe slot
+#   with the CPU and can't run ROCm meaningfully alongside a discrete GPU.
+_arc_present=""
+ls /sys/class/drm/card*/gt/gt0/rps_min_freq_mhz > /dev/null 2>&1 && _arc_present="yes"
+_nvidia_present=$(lspci 2>/dev/null | grep -iE 'VGA|3D|Display' | grep -i 'NVIDIA' || true)
+_amd_gpu=$(lspci 2>/dev/null | grep -iE 'VGA|3D|Display' \
+    | grep -iE 'AMD|ATI|Radeon' \
+    | grep -ivE 'Renoir|Cezanne|Lucienne|Barcelo|Raphael|Rembrandt|Phoenix|Hawk' || true)
+if [[ -n "$_amd_gpu" ]] \
+    && [[ -z "$_arc_present" ]] \
+    && [[ -z "$_nvidia_present" ]] \
+    && ! command -v rocm-smi &>/dev/null \
+    && ! [[ -d /opt/rocm ]]; then
     echo ""
     echo "  AMD GPU detected: $_amd_gpu"
     echo "  ROCm is not installed — Ollama will use CPU inference without it."

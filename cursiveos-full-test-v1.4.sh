@@ -26,7 +26,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Allow preset override via first arg (for isolated tweak testing)
 PRESET="${1:-$SCRIPT_DIR/cursiveos-presets-v0.8.sh}"
-MODEL="tinyllama"
+# Auto-select best available model — same preference order as benchmark-inference-v0.1.sh
+MODEL=""
+for _m in llama3 mistral llama3.2 phi3 qwen2 tinyllama; do
+    if ollama list 2>/dev/null | grep -q "^${_m}:"; then
+        MODEL="$_m"
+        break
+    fi
+done
+MODEL="${MODEL:-tinyllama}"  # fallback if ollama not running yet — preflight will pull it
 
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
@@ -343,7 +351,7 @@ if [[ "$SKIP_INFERENCE" == "1" ]]; then
     echo "[3/3] Sustained inference — SKIPPED (ollama not installed)"
 else
     echo "[3/3] Sustained inference benchmark (steady-state tok/s)..."
-    bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.1.sh" "$PRESET" "$MODEL" 2>&1
+    bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.1.sh" "$PRESET" 2>&1
     WARM_LOG=$(ls -t "$LOG_DIR"/cursiveos-inference-*.log "$LOG_DIR"/tao-os-inference-*.log 2>/dev/null | head -1)
     extract_sustained "$WARM_LOG"
     echo "  → Sustained inference done."
