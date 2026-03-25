@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
-# CursiveOS tao-os-presets-v0.7.sh
-# v0.7 – 7 new tweaks on top of v0.6 (research-backed additions):
-#   + tcp_rmem/tcp_wmem: close the 16MB gap (rmem_max was set, auto-tuner wasn't)
-#   + C6 idle state: disable by name (robust cross-BIOS, not fragile index)
-#   + kernel.numa_balancing=0 (Ryzen 5700 is single NUMA node — pure overhead)
-#   + vm.compaction_proactiveness=0 (stops background THP compaction jitter)
-#   + net.core.netdev_max_backlog=5000 (prevents silent packet drops under P2P load)
-#   + kernel.sched_min_granularity_ns (faster scheduler response for inference threads)
-#   + net.core.somaxconn=4096 (larger connection queue for validator traffic)
+# CursiveOS tao-os-presets-v0.8.sh
+# v0.8 – 3 new tweaks on top of v0.7 (wq-013/014/015, all individually + integration tested):
+#   + kernel.sched_util_clamp_min=128 (faster freq ramp under bursty inference load)
+#   + net.ipv4.tcp_tw_reuse=1 (reuse TIME_WAIT sockets — reduces port exhaustion under validator traffic)
+#   + vm.swappiness=0 (never swap — keeps model weights in RAM, overrides v0.7's swappiness=10)
+#
+# Confirmed stack deltas (vs v0.7 baseline ~1019ms cold-start, ~74-76 tok/s):
+#   Cold-start:  -25.7ms total  (-10.5 + -9.5 + -5.7)
+#   Inference:   -0.48% net     (0% + 1.23% + -1.71%)
+#   Power:       +0.68W net     (+0.26 + 0.52 + -0.10)
 #
 # Usage:
-#   ./tao-os-presets-v0.7.sh --apply-temp   apply all tweaks (temporary)
-#   ./tao-os-presets-v0.7.sh --undo         revert to saved state
-#   ./tao-os-presets-v0.7.sh --dry-run      show what would change, touch nothing
+#   ./tao-os-presets-v0.8.sh --apply-temp   apply all tweaks (temporary)
+#   ./tao-os-presets-v0.8.sh --undo         revert to saved state
+#   ./tao-os-presets-v0.8.sh --dry-run      show what would change, touch nothing
 
 set -euo pipefail
 
@@ -50,7 +51,7 @@ for state_dir in /sys/devices/system/cpu/cpu0/cpuidle/state*/; do
     fi
 done
 
-echo "CursiveOS Presets v0.7"
+echo "CursiveOS Presets v0.8"
 echo "----------------------------------------"
 [[ -n "$GPU_GT" ]]  && echo "GPU: Intel Arc detected ($GPU_GT)" \
                     || echo "GPU: Intel Arc not found – GPU/SYCL tweaks will be skipped"
@@ -83,7 +84,6 @@ if [[ "$ACTION" == "--dry-run" ]]; then
     echo "  net.core.default_qdisc:           $(sysctl -n net.core.default_qdisc) → fq"
     echo "  tcp_slow_start_after_idle:        $(sysctl -n net.ipv4.tcp_slow_start_after_idle) → 0"
     echo "  sched_autogroup_enabled:          $(sysctl -n kernel.sched_autogroup_enabled) → 0"
-    echo "  vm.swappiness:                    $(sysctl -n vm.swappiness) → 10"
     echo "  kernel.nmi_watchdog:              $(sysctl -n kernel.nmi_watchdog 2>/dev/null || echo N/A) → 0"
     echo "  CPU C2 idle (index):              $(cat /sys/devices/system/cpu/cpu0/cpuidle/state2/disable 2>/dev/null || echo N/A) → 1"
     echo "  CPU C3 idle (index):              $(cat /sys/devices/system/cpu/cpu0/cpuidle/state3/disable 2>/dev/null || echo N/A) → 1"
@@ -102,22 +102,26 @@ if [[ "$ACTION" == "--dry-run" ]]; then
     [[ -n "$C6_IDX" ]] && \
     echo "  CPU C6 idle (by name, state$C6_IDX):  $(cat /sys/devices/system/cpu/cpu0/cpuidle/state${C6_IDX}/disable 2>/dev/null || echo N/A) → 1"
     echo "  kernel.numa_balancing:            $(sysctl -n kernel.numa_balancing 2>/dev/null || echo N/A) → 0"
-    echo "  vm.compaction_proactiveness:      $(sysctl -n vm.compaction_proactiveness 2>/dev/null || echo N/A) → 0"
     echo "  net.core.netdev_max_backlog:      $(sysctl -n net.core.netdev_max_backlog) → 5000"
     echo "  kernel.sched_min_granularity_ns:  $(sysctl -n kernel.sched_min_granularity_ns 2>/dev/null || echo N/A) → 1000000"
     echo "  kernel.sched_wakeup_granularity:  $(sysctl -n kernel.sched_wakeup_granularity_ns 2>/dev/null || echo N/A) → 1500000"
     echo "  net.core.somaxconn:               $(sysctl -n net.core.somaxconn) → 4096"
     echo ""
+    echo "=== v0.8 new tweaks ==="
+    echo "  kernel.sched_util_clamp_min:      $(sysctl -n kernel.sched_util_clamp_min 2>/dev/null || echo N/A) → 128"
+    echo "  net.ipv4.tcp_tw_reuse:            $(sysctl -n net.ipv4.tcp_tw_reuse) → 1"
+    echo "  vm.swappiness:                    $(sysctl -n vm.swappiness) → 0  (was 10 in v0.7)"
+    echo ""
     echo "DRY RUN complete. Run with --apply-temp to apply."
     exit 0
 fi
 
-STATE_FILE="$HOME/TAO-OS/preset_state_backup_v0.7.txt"
-SYCL_PROFILE="/etc/profile.d/tao-os-sycl.sh"
+STATE_FILE="$HOME/CursiveOS/preset_state_backup_v0.8.txt"
+SYCL_PROFILE="/etc/profile.d/cursiveos-sycl.sh"
 
 # ── Apply ─────────────────────────────────────────────────────────────────────
 if [[ "$ACTION" == "--apply-temp" ]]; then
-    echo "Applying temporary mining presets (v0.7)..."
+    echo "Applying temporary mining presets (v0.8)..."
 
     # ── Backup current state ─────────────────────────────────────────────────
     > "$STATE_FILE"
@@ -130,7 +134,9 @@ if [[ "$ACTION" == "--apply-temp" ]]; then
     echo "tcp_congestion_control: $(sysctl -n net.ipv4.tcp_congestion_control)" >> "$STATE_FILE"
     echo "default_qdisc: $(sysctl -n net.core.default_qdisc)" >> "$STATE_FILE"
     echo "tcp_slow_start_after_idle: $(sysctl -n net.ipv4.tcp_slow_start_after_idle)" >> "$STATE_FILE"
+    echo "tcp_tw_reuse: $(sysctl -n net.ipv4.tcp_tw_reuse)" >> "$STATE_FILE"
     echo "sched_autogroup_enabled: $(sysctl -n kernel.sched_autogroup_enabled)" >> "$STATE_FILE"
+    echo "sched_util_clamp_min: $(sysctl -n kernel.sched_util_clamp_min 2>/dev/null || echo N/A)" >> "$STATE_FILE"
     echo "nmi_watchdog: $(sysctl -n kernel.nmi_watchdog 2>/dev/null || echo N/A)" >> "$STATE_FILE"
     echo "swappiness: $(sysctl -n vm.swappiness)" >> "$STATE_FILE"
     echo "dirty_ratio: $(sysctl -n vm.dirty_ratio)" >> "$STATE_FILE"
@@ -174,8 +180,6 @@ if [[ "$ACTION" == "--apply-temp" ]]; then
     s sysctl -w net.ipv4.tcp_congestion_control=bbr 2>/dev/null && echo "✓ TCP: BBR + fq" || echo "  BBR unavailable – skipping"
     s sysctl -w net.ipv4.tcp_slow_start_after_idle=0
     echo "✓ TCP slow start after idle: disabled"
-    s sysctl -w vm.swappiness=10
-    echo "✓ vm.swappiness: 10"
     s sysctl -w kernel.nmi_watchdog=0 2>/dev/null && echo "✓ NMI watchdog: disabled" || true
     sc 'for f in /sys/devices/system/cpu/cpu*/cpuidle/state2/disable; do echo 1 > "$f" 2>/dev/null || true; done'
     echo "✓ CPU C2 idle state: disabled (18μs)"
@@ -212,58 +216,67 @@ SYCL_EOF"
 
     # ── v0.7 new tweaks ───────────────────────────────────────────────────────
 
-    # tcp_rmem/tcp_wmem: explicitly set 16MB ceiling for the TCP auto-tuner
-    # Closes the gap where rmem_max=16MB but the auto-tuner was silently capped lower
     s sysctl -w net.ipv4.tcp_rmem="4096 262144 16777216" \
-        && echo "✓ tcp_rmem: 4096 / 262144 / 16MB (auto-tuner ceiling now matches rmem_max)" \
+        && echo "✓ tcp_rmem: 4096 / 262144 / 16MB" \
         || echo "  tcp_rmem write failed – skipping"
     s sysctl -w net.ipv4.tcp_wmem="4096 262144 16777216" \
         && echo "✓ tcp_wmem: 4096 / 262144 / 16MB" \
         || echo "  tcp_wmem write failed – skipping"
 
-    # C6 disable by name (robust cross-BIOS — doesn't assume a fixed state index)
     if [[ -n "$C6_IDX" ]]; then
         sc "for f in /sys/devices/system/cpu/cpu*/cpuidle/state${C6_IDX}/disable; do echo 1 > \"\$f\" 2>/dev/null || true; done"
-        echo "✓ CPU C6 idle state: disabled by name at state${C6_IDX} (highest-latency AMD sleep)"
+        echo "✓ CPU C6 idle state: disabled by name at state${C6_IDX}"
     else
-        echo "  CPU C6 not found by name – skipping (may already be handled by C2/C3 disable)"
+        echo "  CPU C6 not found by name – skipping"
     fi
 
-    # NUMA balancing: pure overhead on single-socket Ryzen (one NUMA node)
     s sysctl -w kernel.numa_balancing=0 2>/dev/null \
-        && echo "✓ NUMA balancing: disabled (single NUMA node — eliminates spurious page fault overhead)" \
+        && echo "✓ NUMA balancing: disabled" \
         || echo "  NUMA balancing sysctl not available – skipping"
 
-    # Compaction proactiveness: stop background THP compaction causing latency spikes
     s sysctl -w vm.compaction_proactiveness=0 2>/dev/null \
-        && echo "✓ THP compaction proactiveness: 0 (no background compaction jitter)" \
+        && echo "✓ THP compaction proactiveness: 0" \
         || echo "  compaction_proactiveness not available – skipping"
 
-    # Packet backlog: prevents silent drops under heavy Bittensor P2P / gossip traffic
     s sysctl -w net.core.netdev_max_backlog=5000 \
-        && echo "✓ netdev_max_backlog: 5000 (prevents packet drops under validator load)" \
+        && echo "✓ netdev_max_backlog: 5000" \
         || echo "  netdev_max_backlog write failed – skipping"
 
-    # Scheduler granularity: faster wakeup for inference threads yielding on GPU wait
     s sysctl -w kernel.sched_min_granularity_ns=1000000 2>/dev/null \
-        && echo "✓ sched_min_granularity_ns: 1ms (faster scheduler response for inference threads)" \
+        && echo "✓ sched_min_granularity_ns: 1ms" \
         || echo "  sched_min_granularity_ns not available – skipping"
     s sysctl -w kernel.sched_wakeup_granularity_ns=1500000 2>/dev/null \
         && echo "✓ sched_wakeup_granularity_ns: 1.5ms" \
         || echo "  sched_wakeup_granularity_ns not available – skipping"
 
-    # Connection queue: handles many simultaneous validator inbound connections
     s sysctl -w net.core.somaxconn=4096 \
-        && echo "✓ net.core.somaxconn: 4096 (larger connection queue for validator traffic)" \
+        && echo "✓ net.core.somaxconn: 4096" \
         || echo "  somaxconn write failed – skipping"
 
+    # ── v0.8 new tweaks ───────────────────────────────────────────────────────
+
+    # Faster CPU freq ramp under bursty inference load (-10.5ms cold-start, wq-013)
+    s sysctl -w kernel.sched_util_clamp_min=128 2>/dev/null \
+        && echo "✓ sched_util_clamp_min: 128 (faster freq ramp under bursty inference load)" \
+        || echo "  sched_util_clamp_min not available – skipping"
+
+    # Reuse TIME_WAIT sockets — reduces port exhaustion under validator traffic (wq-014)
+    s sysctl -w net.ipv4.tcp_tw_reuse=1 \
+        && echo "✓ tcp_tw_reuse: 1 (reuse TIME_WAIT sockets)" \
+        || echo "  tcp_tw_reuse write failed – skipping"
+
+    # Never swap — model weights stay in RAM (wq-015; overrides v0.7's swappiness=10)
+    s sysctl -w vm.swappiness=0 \
+        && echo "✓ vm.swappiness: 0 (no swap — model weights pinned in RAM)" \
+        || echo "  swappiness write failed – skipping"
+
     echo ""
-    echo "All v0.7 presets applied (temporary — reboot or --undo to revert)."
+    echo "All v0.8 presets applied (temporary — reboot or --undo to revert)."
 
 # ── Undo ─────────────────────────────────────────────────────────────────────
 elif [[ "$ACTION" == "--undo" ]]; then
     if [[ -f "$STATE_FILE" ]]; then
-        echo "Reverting v0.7 presets..."
+        echo "Reverting v0.8 presets..."
 
         get_val()     { grep "^$1:" "$STATE_FILE" | cut -d':' -f2- | xargs; }
         get_val_raw() { grep "^$1:" "$STATE_FILE" | cut -d':' -f2-; }
@@ -279,7 +292,9 @@ elif [[ "$ACTION" == "--undo" ]]; then
         s sysctl -w net.core.default_qdisc="$(get_val default_qdisc)"
         s sysctl -w net.ipv4.tcp_congestion_control="$(get_val tcp_congestion_control)" 2>/dev/null || true
         s sysctl -w net.ipv4.tcp_slow_start_after_idle="$(get_val tcp_slow_start_after_idle)"
+        s sysctl -w net.ipv4.tcp_tw_reuse="$(get_val tcp_tw_reuse)"
         s sysctl -w kernel.sched_autogroup_enabled="$(get_val sched_autogroup_enabled)"
+        SUCM=$(get_val sched_util_clamp_min); [[ "$SUCM" != "N/A" ]] && s sysctl -w kernel.sched_util_clamp_min="$SUCM" 2>/dev/null || true
         s sysctl -w vm.swappiness="$(get_val swappiness)"
         s sysctl -w vm.dirty_ratio="$(get_val dirty_ratio)"
         s sysctl -w vm.dirty_background_ratio="$(get_val dirty_background_ratio)"
@@ -321,7 +336,7 @@ elif [[ "$ACTION" == "--undo" ]]; then
         [[ -n "$BOOST" && -f "$BOOST_PATH" ]] && sc "echo $BOOST > $BOOST_PATH" 2>/dev/null || true
 
         rm -f "$STATE_FILE"
-        echo "✓ All v0.7 settings reverted."
+        echo "✓ All v0.8 settings reverted."
     else
         echo "No backup found – nothing to undo."
     fi

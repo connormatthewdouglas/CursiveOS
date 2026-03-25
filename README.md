@@ -3,7 +3,7 @@
 **AI-optimized Linux for Bittensor miners. One command. Measurable results.**
 
 ```bash
-git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git -C ~/CursiveOS fetch origin && git -C ~/CursiveOS reset --hard origin/main; chmod +x ~/CursiveOS/tao-os-full-test-v1.4.sh; cd ~/CursiveOS && bash tao-os-full-test-v1.4.sh
+git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git -C ~/CursiveOS fetch origin && git -C ~/CursiveOS reset --hard origin/main; chmod +x ~/CursiveOS/cursiveos-full-test-v1.4.sh; cd ~/CursiveOS && bash cursiveos-full-test-v1.4.sh
 ```
 
 Runs all benchmarks, applies presets, shows you exactly what you gain. All changes revert automatically. Works whether you've cloned before or not.
@@ -46,7 +46,7 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 
 CursiveOS applies a set of temporary, safe OS tweaks tuned for Bittensor mining workloads. Every change reverts on reboot or with `--undo`.
 
-**25 tweaks in `tao-os-presets-v0.7.sh`:**
+**25 tweaks in `cursiveos-presets-v0.7.sh`:**
 
 | Tweak | Value | Why |
 |-------|-------|-----|
@@ -78,9 +78,9 @@ CursiveOS applies a set of temporary, safe OS tweaks tuned for Bittensor mining 
 
 Apply manually:
 ```bash
-./tao-os-presets-v0.7.sh --dry-run      # preview all changes first
-./tao-os-presets-v0.7.sh --apply-temp   # apply
-./tao-os-presets-v0.7.sh --undo         # revert
+./cursiveos-presets-v0.7.sh --dry-run      # preview all changes first
+./cursiveos-presets-v0.7.sh --apply-temp   # apply
+./cursiveos-presets-v0.7.sh --undo         # revert
 ```
 
 ---
@@ -104,9 +104,9 @@ Installs Intel compute-runtime (OpenCL 3.0), Level Zero, and configures Ollama's
 Each benchmark is also runnable standalone:
 
 ```bash
-./benchmarks/benchmark-network-v0.1.sh ./tao-os-presets-v0.7.sh        # TCP throughput, WAN sim
-./benchmarks/benchmark-inference-v0.2.sh ./tao-os-presets-v0.7.sh tinyllama  # cold-start latency
-./benchmarks/benchmark-inference-v0.1.sh ./tao-os-presets-v0.7.sh tinyllama  # sustained tok/s
+./benchmarks/benchmark-network-v0.1.sh ./cursiveos-presets-v0.7.sh        # TCP throughput, WAN sim
+./benchmarks/benchmark-inference-v0.2.sh ./cursiveos-presets-v0.7.sh tinyllama  # cold-start latency
+./benchmarks/benchmark-inference-v0.1.sh ./cursiveos-presets-v0.7.sh tinyllama  # sustained tok/s
 ```
 
 ---
