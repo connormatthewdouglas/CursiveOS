@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS tao-os-presets-v0.4.sh
+# CursiveOS tao-os-presets-v0.4.sh
 # v0.4 – Dropped min-freq lock (caused thermal regression in v0.3 testing).
 #         Keeps: performance governor, energy pref, net buffers (16MB),
 #         BBR+fq, autogroup off, swappiness=10, NMI watchdog off.
@@ -15,7 +15,7 @@ SP="2633"  # sudo password
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }        # sudo command
 sc() { echo "$SP" | sudo -S bash -c "$1" 2>/dev/null; } # sudo shell string
 
-echo "TAO-OS Presets v0.4"
+echo "CursiveOS Presets v0.4"
 echo "----------------------------------------"
 
 if [[ "$ACTION" == "--help" ]]; then

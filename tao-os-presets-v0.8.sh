@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS tao-os-presets-v0.8.sh
+# CursiveOS tao-os-presets-v0.8.sh
 # v0.8 – 3 new tweaks on top of v0.7 (wq-013/014/015, all individually + integration tested):
 #   + kernel.sched_util_clamp_min=128 (faster freq ramp under bursty inference load)
 #   + net.ipv4.tcp_tw_reuse=1 (reuse TIME_WAIT sockets — reduces port exhaustion under validator traffic)
@@ -20,7 +20,7 @@ set -euo pipefail
 ACTION=${1:-"--help"}
 
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
@@ -51,7 +51,7 @@ for state_dir in /sys/devices/system/cpu/cpu0/cpuidle/state*/; do
     fi
 done
 
-echo "TAO-OS Presets v0.8"
+echo "CursiveOS Presets v0.8"
 echo "----------------------------------------"
 [[ -n "$GPU_GT" ]]  && echo "GPU: Intel Arc detected ($GPU_GT)" \
                     || echo "GPU: Intel Arc not found – GPU/SYCL tweaks will be skipped"
@@ -206,7 +206,7 @@ if [[ "$ACTION" == "--apply-temp" ]]; then
         sc "echo $MAX_GPU > $GPU_GT/rps_boost_freq_mhz"
         echo "✓ GPU boost freq: ${MAX_GPU} MHz (Arc)"
         sc "cat > $SYCL_PROFILE << 'SYCL_EOF'
-# TAO-OS: Intel compute environment
+# CursiveOS: Intel compute environment
 export SYCL_CACHE_PERSISTENT=1
 SYCL_EOF"
         echo "✓ SYCL persistent cache: enabled (Arc)"

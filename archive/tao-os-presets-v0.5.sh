@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS tao-os-presets-v0.5.sh
+# CursiveOS tao-os-presets-v0.5.sh
 # v0.5 – Added Intel Arc GPU performance mode + CPU C-state limiting + THP
 #   GPU: slpc_ignore_eff_freq=1, rps_min=2000MHz, rps_boost=2400MHz
 #   CPU: disable C2 (18us) + C3 (350us) idle states to eliminate latency spikes
@@ -11,7 +11,7 @@ set -euo pipefail
 
 ACTION=${1:-"--help"}
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
@@ -27,7 +27,7 @@ for card in /sys/class/drm/card*/gt/gt0; do
     fi
 done
 
-echo "TAO-OS Presets v0.5"
+echo "CursiveOS Presets v0.5"
 echo "----------------------------------------"
 [[ -n "$GPU_GT" ]] && echo "GPU GT path: $GPU_GT" || echo "WARNING: Intel Arc GT path not found – GPU tweaks will be skipped"
 

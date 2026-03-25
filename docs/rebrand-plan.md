@@ -1,105 +1,69 @@
-# ForgeOS Rebrand Plan
-**Status:** PREP ONLY — do not execute before v1.5 gate
+# CursiveOS Rebrand Plan
+**Status:** EXECUTED — 2026-03-25
 **Prepared:** 2026-03-23
-**Trigger:** v1.5 gate conditions met (5+ external machines, clean safety record, ≥1.5% avg gain)
+**Executed:** 2026-03-25
+**Chosen name:** CursiveOS (recursive → cursive: the self-improving data flywheel is literally recursive)
 
 ---
 
-## Rename Map
+## What Changed
 
-### TAO-OS → ForgeOS
+### TAO-OS → CursiveOS
 | Old | New |
 |-----|-----|
-| `TAO-OS` (display name) | `ForgeOS` |
-| `tao-os` (slug in filenames) | `forge-os` |
-| `TAO_OS` (env vars) | `FORGE_OS` |
-| `~/TAO-OS` (workspace dir) | `~/ForgeOS` |
-| GitHub repo: `TAO-OS` | `ForgeOS` |
+| `TAO-OS` (display name) | `CursiveOS` |
+| GitHub repo: `TAO-OS` | `CursiveOS` (rename to follow separately) |
+| White paper title | "CursiveOS: AI-Guided Linux Optimization for Local Compute" |
+| White paper version | v0.4 → v0.4.1 |
 
-### tao-forge → forge-db (TBD — decide at gate)
-`tao-forge` has equity as a name. Board should decide at v1.5 whether to keep it or rename. Supabase project rename is separate from code rename. **Do not rename tao-forge until board decision.**
+### What Did NOT Change
+- `tao-forge` database name — board decision: keep the brand equity
+- Script filenames (`tao-os-*.sh`, `benchmark-*.sh`) — benchmark history is sacred
+- `machine_id` values in tao-forge — hardware fingerprints stay
+- Benchmark methodology — nothing scientific changes
+- `.openclaw/` config — Copper's runtime, not project-facing
+- Archive scripts — left as-is, they're history
 
 ---
 
-## Files Requiring Changes
-
-### Scripts (new versioned files — never overwrite)
-| File | Change |
-|------|--------|
-| `tao-os-full-test-v1.4.sh` | New: `forge-os-full-test-v1.5.sh` — replace all TAO-OS/tao-os refs |
-| `tao-os-presets-v0.8.sh` | New: `forge-os-presets-v0.9.sh` — replace header/comments |
-| `tao-os-presets-integration-wq013.sh` | Archive — integration test artifact, not worth porting |
-| `tao-forge-status.sh` | Rename/keep as `forge-status.sh` (or keep tao-forge if brand stays) |
-| `run-full-test.sh` | Update wrapper call to new script name |
-| `setup-intel-arc.sh` | Minor: update any TAO-OS path refs in comments |
-| All `benchmarks/*.sh` | Update header comments only — logic unchanged |
-
-### Dashboard
-| File | Change |
-|------|--------|
-| `dashboard/index.html` | Title: "ForgeOS Mission Control" · all display strings |
-| `dashboard/server.py` | `WORKSPACE` path if dir renamed · any string refs |
-| `dashboard/spend_monitor.py` | Path refs, Telegram alert strings |
-| `dashboard/session_watchdog.py` | Path refs |
-| `dashboard/run_loop.py` | Path refs |
-| `dashboard/approval_watcher.py` | Path refs |
+## Files Updated (2026-03-25)
 
 ### Docs / Markdown
 | File | Change |
 |------|--------|
-| `README.md` | Full rewrite at gate (Copper docket) — new name throughout |
-| `docs/white-paper.md` | Full rewrite at gate (Copper docket) — new name throughout |
-| `docs/action-plan.md` | Update project name refs |
-| `references/CLAUDE.md` | Update project name, last updated date |
-| `references/README.md` | Update project name |
-| `references/CHANGELOG.md` | Add rebrand entry |
-| `MEMORY.md` | Update project name refs |
-| `HEARTBEAT.md` | Update if any TAO-OS refs |
-| `USER.md` | Update if any TAO-OS refs |
+| `README.md` | Title, clone URL, all display name refs → CursiveOS |
+| `docs/white-paper.md` | Full rebrand, v0.4.1, CursiveOS identity throughout |
+| `docs/action-plan.md` | Project name refs, task #6 marked COMPLETE |
+| `references/CLAUDE.md` | Project name, rebrand section updated, last updated date |
+| `references/README.md` | Project name refs |
+| `references/CHANGELOG.md` | v0.4.1 entry added at top |
+| `docs/rebrand-plan.md` | This file — status updated to EXECUTED |
+| `docs/external-tester-guide.md` | Project name refs |
+| `references/ONBOARDING_EXTERNAL.md` | Project name refs |
+| `references/BENCHMARK-INTEGRATION-v1.5.md` | Project name refs |
+| `docs/RESEARCH.md` | Project name refs |
+| All benchmark .sh headers | TAO-OS → CursiveOS in comments/echo |
 
-### Agent / Config Files
+### Script Headers (content only — filenames unchanged)
 | File | Change |
 |------|--------|
-| `agents/specs/benchmark-agent.md` | Update script name refs |
-| `agents/specs/queue-worker.md` | Update script name refs |
-| `agents/handoff-schema.json` | Update any name refs |
-| `.claude/settings.local.json` | Update workspace path if dir renamed |
-
-### GitHub
-| Item | Action |
-|------|--------|
-| Repo name | Rename `TAO-OS` → `ForgeOS` in GitHub settings |
-| Repo description | Update |
-| README one-liner | Update clone URL to new repo name |
-| Topics/tags | Update |
+| `benchmarks/benchmark-network-v0.1.sh` | Header comment, sudo prompt, log echo |
+| `benchmarks/benchmark-inference-v0.3.sh` | Header comment, sudo prompt, log echo |
+| `benchmarks/benchmark-inference-v0.4.sh` | Header comment, sudo prompt, log echo |
+| `benchmarks/benchmark-inference-v0.1.sh` | Header comment, sudo prompt |
+| `tao-os-full-test-v1.4.sh` | Header/echo refs (script filename preserved) |
+| `tao-os-presets-v0.8.sh` | Header/echo refs (script filename preserved) |
 
 ---
 
-## Execution Order (when gate is hit)
-
-1. **Board confirms v1.5 gate met** — Connor calls it
-2. **Decide tao-forge naming** — keep or rename (board vote)
-3. **Create new script versions** — forge-os-full-test-v1.5.sh, forge-os-presets-v0.9.sh
-4. **Update all docs** — README, white-paper, CLAUDE.md, action-plan.md
-5. **Update dashboard** — index.html title + strings, server.py paths
-6. **Update agent files** — specs, handoff schema
-7. **Single commit** — `feat: rebrand TAO-OS → ForgeOS (v1.5 gate)`
-8. **Rename GitHub repo** — settings → rename (breaks old clone URLs, README updates automatically)
-9. **Update one-liner** in README with new clone URL
-10. **Announce** — Connor decides channel/timing
-
----
-
-## What Does NOT Change
-- Supabase database (unless board decides to rename tao-forge)
-- `machine_id` values in tao-forge — hardware fingerprints stay
-- Benchmark methodology — nothing scientific changes
-- `.openclaw/` config — Copper's runtime, not project-facing
-- Archive scripts — leave as-is, they're history
+## GitHub (separate action)
+- [ ] Rename GitHub repo `TAO-OS` → `CursiveOS` in settings
+- [ ] Update repo description
+- [ ] Update README one-liner clone URL is already updated in README.md
 
 ---
 
 ## Notes
 - GitHub repo rename automatically redirects old clone URLs for ~1 year
-- `~/TAO-OS` workspace dir rename is optional — scripts use `$HOME/TAO-OS` internally; update or symlink
-- Do this in one PR/commit for a clean git history entry
+- `~/TAO-OS` workspace dir rename is optional — not renamed (scripts use `$HOME/TAO-OS` internally)
+- This was a one-shot clean commit: `rebrand: TAO-OS → CursiveOS (v0.4.1)`

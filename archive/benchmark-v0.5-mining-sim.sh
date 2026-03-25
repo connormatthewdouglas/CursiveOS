@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-v0.5-mining-sim.sh
+# CursiveOS benchmark-v0.5-mining-sim.sh
 # v0.5 – Added: progress indicators during runs, hardware detection/logging, baseline delta prep
 # Purpose: Simulate Bittensor mining load (CPU + network) for 5 min × 3 runs with better visibility
 
@@ -10,7 +10,7 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/tao-os-bench-$(date +%Y%m%d-%H%M%S).log"
 BASELINE_FILE="$HOME/TAO-OS/last_baseline.txt"  # For future % delta
 
-echo "TAO-OS Mining Benchmark v0.5" | tee -a "$LOG_FILE"
+echo "CursiveOS Mining Benchmark v0.5" | tee -a "$LOG_FILE"
 echo "Started: $(date)" | tee -a "$LOG_FILE"
 echo "----------------------------------------" | tee -a "$LOG_FILE"
 

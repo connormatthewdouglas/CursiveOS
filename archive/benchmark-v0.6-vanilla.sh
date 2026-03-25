@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-v0.6-vanilla.sh
+# CursiveOS benchmark-v0.6-vanilla.sh
 # v0.6 – Vanilla mode: NO auto-tweaks applied. Pure measurement only.
 # Updated: Improved temp detection to reliably grab AMD Tctl (k10temp) or other CPU-relevant sensors
 # Purpose: Standardized mining-load test (CPU + network) for Bittensor miners.
@@ -11,7 +11,7 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/tao-os-bench-$(date +%Y%m%d-%H%M%S).log"
 BASELINE_FILE="$HOME/TAO-OS/last_baseline.txt"
 
-echo "TAO-OS Mining Benchmark v0.6 (Vanilla - No Tweaks)" | tee -a "$LOG_FILE"
+echo "CursiveOS Mining Benchmark v0.6 (Vanilla - No Tweaks)" | tee -a "$LOG_FILE"
 echo "Started: $(date)" | tee -a "$LOG_FILE"
 echo "----------------------------------------" | tee -a "$LOG_FILE"
 

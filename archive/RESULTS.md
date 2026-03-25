@@ -1,4 +1,4 @@
-# TAO-OS Benchmark Results
+# CursiveOS Benchmark Results
 
 Community results from `tao-os-full-test-v1.0.sh`.
 

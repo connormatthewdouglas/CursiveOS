@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# TAO-OS Full Test v1.0
+# CursiveOS Full Test v1.0
 # Single command for Bittensor miners to measure their system's baseline
-# and the impact of TAO-OS performance presets.
+# and the impact of CursiveOS performance presets.
 #
 # Runs three paired benchmarks (baseline → presets → baseline restored):
 #   1. Network throughput  — BBR vs CUBIC on simulated WAN (50ms RTT, 0.5% loss)
@@ -26,13 +26,13 @@ SUMMARY_LOG="$LOG_DIR/tao-os-full-test-$(date +%Y%m%d-%H%M%S).log"
 
 # ── Sudo prompt (once — exported so child scripts skip re-prompting) ──────────
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 export TAO_SUDO_PASS
 
 # ── Preflight checks ──────────────────────────────────────────────────────────
 echo ""
-echo "TAO-OS Full Test v1.0"
+echo "CursiveOS Full Test v1.0"
 echo "======================================"
 
 if [[ ! -f "$PRESET" ]]; then
@@ -154,7 +154,7 @@ fi
 SUMMARY=$(cat <<EOF
 
 ======================================================
-TAO-OS FULL TEST RESULTS — $(date +%Y-%m-%d)
+CursiveOS FULL TEST RESULTS — $(date +%Y-%m-%d)
 ======================================================
 Hardware: $(lscpu | grep 'Model name:' | cut -d':' -f2 | xargs)
           $(lspci 2>/dev/null | grep -i 'VGA\|3D\|Display' | cut -d: -f3 | xargs || echo 'GPU: N/A')
@@ -178,4 +178,4 @@ echo ""
 echo "Full summary saved: $SUMMARY_LOG"
 echo ""
 echo "If these results are useful, share your logs:"
-echo "  https://github.com/connormatthewdouglas/TAO-OS"
+echo "  https://github.com/connormatthewdouglas/CursiveOS"

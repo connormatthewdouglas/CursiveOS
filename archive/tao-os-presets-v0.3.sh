@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS tao-os-presets-v0.3.sh
+# CursiveOS tao-os-presets-v0.3.sh
 # v0.3 – Stacked on v0.2: scheduler tuning, CPU min-freq lock,
 #         BBR congestion control, swappiness, NMI watchdog off
 # Usage: ./tao-os-presets-v0.3.sh --apply-temp   or   --undo
@@ -14,7 +14,7 @@ SP="2633"  # sudo password
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }        # sudo command
 sc() { echo "$SP" | sudo -S bash -c "$1" 2>/dev/null; } # sudo shell string
 
-echo "TAO-OS Presets v0.3"
+echo "CursiveOS Presets v0.3"
 echo "----------------------------------------"
 
 if [[ "$ACTION" == "--help" ]]; then

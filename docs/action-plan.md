@@ -1,5 +1,5 @@
-# TAO-OS Action Plan
-**Last updated:** 2026-03-23
+# CursiveOS Action Plan
+**Last updated:** 2026-03-25
 **Current preset:** v0.8 (28 tweaks) — validated on Arc A750 + RX 580
 **Current wrapper:** v1.4
 **Board reviewed:** 2026-03-23 05:30 EDT
@@ -51,18 +51,20 @@ Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/01
 - Goal: heartbeats + queue worker tasks on local model; cloud only for planner tasks
 - This directly reduces cloud spend toward near-zero for routine work
 
-### 6. Rebrand task prep — ForgeOS
-- Private only — nothing public before v1.5 gate
-- Prepare file list of everything that needs renaming (scripts, README, repo, dashboard)
-- Do not execute the rename — prep the commit plan only
-- Board shortlist winner: **ForgeOS**
+### 6. ✅ Rebrand — CursiveOS
+- **COMPLETE — executed 2026-03-25**
+- CursiveOS is the confirmed name (recursive → cursive: the self-improving flywheel is literally recursive)
+- All internal references updated; GitHub repo rename to follow separately
+- tao-forge database name unchanged (board decision)
+- Script filenames preserved for benchmark history integrity
+- White paper bumped to v0.4.1
 
 ### 7. Begin planning external testers + laptop/AIO validation (v1.5 gate prep)
 - v1.5 gate conditions: 5+ external machines, clean safety record, ≥1.5% avg gain confirmed externally
 - Identify 2-3 trusted testers for first external runs
 - Verify `--undo` works cleanly on every fleet machine before sending to anyone
 - Laptop + all-in-one: run v0.8 on remaining self-fleet hardware first
-- Write plain-English "what TAO-OS does to your system" explainer for external testers
+- Write plain-English "what CursiveOS does to your system" explainer for external testers
 - **NVIDIA laptops:** run v0.8 as-is — wrapper detects NVIDIA, applies all GPU-agnostic tweaks (TCP, swappiness, scheduler), skips GPU-specific section gracefully, submits to tao-forge. Goal: NVIDIA hardware entries in database + proof that system-level gains apply regardless of GPU vendor. Do not attempt GPU clock/power tuning on laptop hardware.
 - **Pre-req:** add NVIDIA detection block to wrapper (~20 lines bash) so GPU-specific section skips cleanly instead of erroring. Do this before running laptops.
 
@@ -77,7 +79,7 @@ Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/01
 - [ ] Safety audit: `--undo` tested on every fleet machine
 - [ ] Wrapper works on fresh git clone
 - [ ] Plain-English explainer written for external testers
-- [ ] ForgeOS rebrand executed (one clean commit)
+- [x] CursiveOS rebrand executed (2026-03-25)
 
 ---
 
@@ -88,7 +90,6 @@ Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/01
 - **No permanent changes:** every tweak reversible, `--undo` always works
 - **Self-fleet only** until v1.5 gate — no public solicitation before then
 - **No DePIN/incentive layer** before v1.5 gate
-- **No rebrand execution** before v1.5 gate — prep only
 - **Broader crypto mining scope:** tool is chain-agnostic, Kaspa/ETC/Monero valid targets for Phase 2+
 
 ---

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-v0.4-mining-sim.sh
+# CursiveOS benchmark-v0.4-mining-sim.sh
 # Purpose: Simulate Bittensor mining load (CPU + network) for 5 min × 3 runs, apply common tweaks, log results
 # Version: 0.4 – auto deps + sustained load + tweaks + simple averaging
 
@@ -9,7 +9,7 @@ LOG_DIR="$HOME/TAO-OS/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/tao-os-bench-$(date +%Y%m%d-%H%M%S).log"
 
-echo "TAO-OS Mining Benchmark v0.4" | tee -a "$LOG_FILE"
+echo "CursiveOS Mining Benchmark v0.4" | tee -a "$LOG_FILE"
 echo "Started: $(date)" | tee -a "$LOG_FILE"
 echo "----------------------------------------" | tee -a "$LOG_FILE"
 

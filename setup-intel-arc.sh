@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS setup-intel-arc.sh
+# CursiveOS setup-intel-arc.sh
 # One-shot setup: Intel compute runtime (OpenCL) + Level Zero + Ollama
 # Enables Intel Arc GPU for AI inference on Bittensor mining rigs.
 # Tested on: Linux Mint 22.3 / Ubuntu 24.04 (Noble), Intel Arc A750, kernel 6.17
@@ -8,14 +8,14 @@
 set -euo pipefail
 
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 sc() { echo "$SP" | sudo -S bash -c "$1"; }
 
-log() { echo "[TAO-OS] $1"; }
+log() { echo "[CursiveOS] $1"; }
 
 log "Intel Arc GPU + Ollama setup"
 log "========================================"

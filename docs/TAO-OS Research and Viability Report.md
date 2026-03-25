@@ -1,18 +1,18 @@
-# **TAO-OS: AI-Guided Linux Optimization for Crypto Miners**
+# **CursiveOS: AI-Guided Linux Optimization for Crypto Miners**
 
 ## **Industrial Context and the Zettahash Era**
 
 The operational landscape for cryptocurrency mining in 2026 has transitioned from a decentralized hobbyist pursuit into a hyper-competitive industrial infrastructure. This era, characterized as the zettahash period, is defined by network hashing rates reaching approximately 1 ZH/s, or 1,000 exahashes per second. By February 19, 2026, the Bitcoin network recorded a historic 14.73% surge in mining difficulty, hitting a record 144.4 trillion. Such immense difficulty reflects a market dominated by specialized Application-Specific Integrated Circuit (ASIC) hardware, such as the Antminer S23 Hydro, which achieves efficiencies of 9.5 J/TH at 1,000 TH/s per unit. For operators utilizing general-purpose hardware, specifically Graphics Processing Units (GPUs) and Central Processing Units (CPUs), the margin for error has effectively vanished. Profits are dictated by the ability to extract every possible cycle of performance while minimizing power consumption and network latency.  
 The emergence of Decentralized Physical Infrastructure Networks (DePIN) has further complicated the hardware requirements for miners. Networks like Bittensor (TAO) and io.net have redirected compute power toward artificial intelligence training and inference tasks. As of early 2026, Bittensor hosts over 34 active subnets, each functioning as a specialized marketplace for machine learning tasks. Unlike traditional proof-of-work hashing, these workloads are non-deterministic and highly sensitive to operating system (OS) overhead, memory alignment, and inter-node communication latency. Standard Linux distributions, designed for general-purpose server or desktop use, include thousands of kernel parameters and background services that introduce "jitter"—random performance fluctuations that result in sub-optimal rewards or node de-registration.  
-TAO-OS serves as a critical intervention in this space, acting not merely as a management dashboard like HiveOS or Awesome Miner, but as an AI-guided kernel optimization layer. The project prioritizes the economy of physical contiguity, treating memory alignment and physical page allocation as the primary determinants of throughput in data-intensive hashing and inference tasks. By leveraging machine learning (ML) models to tune the heart of the OS, TAO-OS bridges the gap between raw silicon capabilities and the high-level requirements of 2026’s decentralized compute economy.
+CursiveOS serves as a critical intervention in this space, acting not merely as a management dashboard like HiveOS or Awesome Miner, but as an AI-guided kernel optimization layer. The project prioritizes the economy of physical contiguity, treating memory alignment and physical page allocation as the primary determinants of throughput in data-intensive hashing and inference tasks. By leveraging machine learning (ML) models to tune the heart of the OS, CursiveOS bridges the gap between raw silicon capabilities and the high-level requirements of 2026’s decentralized compute economy.
 
 ## **Theoretical Framework for AI-Guided Kernel Tuning**
 
-The Linux kernel offers approximately 20,000 configuration options, making manual optimization a task of extreme complexity for even the most skilled system administrators. Traditional tuning relies on static "best practice" heuristics that are often outdated or inapplicable to specific hardware-workload combinations. TAO-OS replaces these static rules with an adaptive, data-driven optimization engine. This engine employs a combination of supervised learning for pattern detection, reinforcement learning for dynamic scheduling, and automated machine learning (AutoML) for hyperparameter search within the kernel's configuration space.
+The Linux kernel offers approximately 20,000 configuration options, making manual optimization a task of extreme complexity for even the most skilled system administrators. Traditional tuning relies on static "best practice" heuristics that are often outdated or inapplicable to specific hardware-workload combinations. CursiveOS replaces these static rules with an adaptive, data-driven optimization engine. This engine employs a combination of supervised learning for pattern detection, reinforcement learning for dynamic scheduling, and automated machine learning (AutoML) for hyperparameter search within the kernel's configuration space.
 
 ### **Automated Feature Selection and Metric Pruning**
 
-A primary challenge in automated system tuning is the "curse of dimensionality." Modern Database Management Systems (DBMS) and kernels have hundreds of tunable "knobs," many of which are non-independent or redundant. TAO-OS utilizes a multi-stage analysis pipeline to identify the most impactful parameters for mining throughput. This process begins with workload characterization, mapping current system behavior to a repository of historical performance data. To manage the complexity, the system applies factor analysis and Lasso-based feature selection to rank knobs by their statistical significance to the target metric, such as hashes per second or inference latency.
+A primary challenge in automated system tuning is the "curse of dimensionality." Modern Database Management Systems (DBMS) and kernels have hundreds of tunable "knobs," many of which are non-independent or redundant. CursiveOS utilizes a multi-stage analysis pipeline to identify the most impactful parameters for mining throughput. This process begins with workload characterization, mapping current system behavior to a repository of historical performance data. To manage the complexity, the system applies factor analysis and Lasso-based feature selection to rank knobs by their statistical significance to the target metric, such as hashes per second or inference latency.
 
 | Optimization Phase | Statistical Method | Objective |
 | :---- | :---- | :---- |
@@ -25,13 +25,13 @@ By pruning redundant metrics—such as correlated counters for disk reads and wr
 
 ### **LLM-Integrated Heuristic Discovery**
 
-Beyond traditional statistical ML, TAO-OS integrates Large Language Models (LLMs) into its build-house for the purpose of evolutionary heuristic discovery. Recent breakthroughs, such as AlphaEvolve, demonstrate that LLMs can generate Python functions that represent complex kernel heuristics. These functions are then scored by an evaluator based on real-world hardware execution rather than simulations.  
+Beyond traditional statistical ML, CursiveOS integrates Large Language Models (LLMs) into its build-house for the purpose of evolutionary heuristic discovery. Recent breakthroughs, such as AlphaEvolve, demonstrate that LLMs can generate Python functions that represent complex kernel heuristics. These functions are then scored by an evaluator based on real-world hardware execution rather than simulations.  
 The fitness function for these evolved heuristics can be represented as:  
 where H is the heuristic code generated by the LLM ensemble. This allows the system to discover hardware-specific optimizations that human developers might overlook, such as specific memory tiling configurations for Intel Arc's Xe Matrix Extensions (XMX). Semantic mutations, such as increasing tile sizes for better memory coalescing, are tested across hundreds of iterations, converging on programs that can reduce training and inference times for Bittensor nodes by up to 23%.
 
 ## **Networking Breakthroughs for P2P Mining Throughput**
 
-For decentralized networks, the bottleneck is often the transport layer. Rapid block propagation and model weight synchronization are essential for maintaining high "Evidence Chain Availability" (ECA). Traditional loss-based congestion control algorithms like TCP CUBIC are inherently flawed in the high-speed, long-haul links that connect global mining farms. CUBIC treats every packet loss as a sign of congestion, halving the transmission rate and leading to abysmal throughput on lossy or high-latency paths. TAO-OS resolves this by standardizing on Bottleneck Bandwidth and Round-trip propagation time (BBR) version 3\.
+For decentralized networks, the bottleneck is often the transport layer. Rapid block propagation and model weight synchronization are essential for maintaining high "Evidence Chain Availability" (ECA). Traditional loss-based congestion control algorithms like TCP CUBIC are inherently flawed in the high-speed, long-haul links that connect global mining farms. CUBIC treats every packet loss as a sign of congestion, halving the transmission rate and leading to abysmal throughput on lossy or high-latency paths. CursiveOS resolves this by standardizing on Bottleneck Bandwidth and Round-trip propagation time (BBR) version 3\.
 
 ### **BBRv3: Model-Based Congestion Control**
 
@@ -43,20 +43,20 @@ BBR represents a paradigm shift by modeling the network pipe directly based on d
 | WAN (50ms RTT, 0% loss) | 180 Mbps | 750 Mbps | BBR Superior |
 | Lossy WAN (100ms RTT, 1% loss) | 25 Mbps | 650 Mbps | CUBIC Unstable |
 
-However, BBR is not a universal panacea. In virtualized environments under heavy CPU contention, BBR throughput can collapse to nearly zero as its bandwidth estimation algorithm fails to account for scheduling delays. TAO-OS implements a specialized BBR patch that monitors inflight bytes and increases the pacing rate during CPU-limited episodes to preserve throughput. Furthermore, for competitive network bottlenecks, TAO-OS supports "Ad-BBR" (Adaptive BBR), which uses a finer-grained RTT-based adjustment mechanism to reduce data over-injection and improve fairness against legacy flows, yielding a 17% increase in throughput over standard BBRv1.
+However, BBR is not a universal panacea. In virtualized environments under heavy CPU contention, BBR throughput can collapse to nearly zero as its bandwidth estimation algorithm fails to account for scheduling delays. CursiveOS implements a specialized BBR patch that monitors inflight bytes and increases the pacing rate during CPU-limited episodes to preserve throughput. Furthermore, for competitive network bottlenecks, CursiveOS supports "Ad-BBR" (Adaptive BBR), which uses a finer-grained RTT-based adjustment mechanism to reduce data over-injection and improve fairness against legacy flows, yielding a 17% increase in throughput over standard BBRv1.
 
 ### **High-BDP Socket Buffer Optimization**
 
 To support high-bandwidth transfers, the kernel's socket buffer ceilings must be raised significantly. The Bandwidth-Delay Product (BDP) determines the theoretical maximum window size required to keep a link saturated. For a 10Gbps link with a 50ms RTT, the required buffer is approximately 62.5 MB.  
-Standard Linux defaults, which often cap at 4MB or 6MB, act as an invisible ceiling that prevents miners from ever reaching their hardware's potential. TAO-OS employs a 16MB or 32MB maximum for tcp\_rmem and tcp\_wmem on standard rigs, and up to 128MB for servers on 10Gbps+ backbones. These changes are paired with the fq (Fair Queuing) packet scheduler, which is a prerequisite for optimal BBR performance, as it ensures proper packet pacing at the network interface card (NIC) layer.
+Standard Linux defaults, which often cap at 4MB or 6MB, act as an invisible ceiling that prevents miners from ever reaching their hardware's potential. CursiveOS employs a 16MB or 32MB maximum for tcp\_rmem and tcp\_wmem on standard rigs, and up to 128MB for servers on 10Gbps+ backbones. These changes are paired with the fq (Fair Queuing) packet scheduler, which is a prerequisite for optimal BBR performance, as it ensures proper packet pacing at the network interface card (NIC) layer.
 
 ## **Hardware Synergy: Intel Arc GPU Optimization**
 
-A defining characteristic of TAO-OS is its deep integration with the Intel Arc graphics ecosystem. In 2026, Intel's Alchemist and Battlemage series have emerged as highly efficient alternatives for decentralized AI workloads due to their open-source driver stack and dedicated XMX matrix hardware. TAO-OS provides specialized sysfs handles and performance mode tweaks that are absent in generic distributions like Ubuntu or Fedora.
+A defining characteristic of CursiveOS is its deep integration with the Intel Arc graphics ecosystem. In 2026, Intel's Alchemist and Battlemage series have emerged as highly efficient alternatives for decentralized AI workloads due to their open-source driver stack and dedicated XMX matrix hardware. CursiveOS provides specialized sysfs handles and performance mode tweaks that are absent in generic distributions like Ubuntu or Fedora.
 
 ### **GPU Frequency Pinning and SLPC Profiles**
 
-In computationally intensive workloads such as large language model (LLM) inference, dynamic GPU frequency scaling can introduce significant performance variability. TAO-OS allows operators to "pin" GPU frequencies to their theoretical hardware maximum, known as the RP0 frequency. This is achieved by echoing the desired frequency into the rps\_min\_freq\_mhz, rps\_max\_freq\_mhz, and rps\_boost\_freq\_mhz sysfs handles provided by the i915 or Xe kernel drivers.  
+In computationally intensive workloads such as large language model (LLM) inference, dynamic GPU frequency scaling can introduce significant performance variability. CursiveOS allows operators to "pin" GPU frequencies to their theoretical hardware maximum, known as the RP0 frequency. This is achieved by echoing the desired frequency into the rps\_min\_freq\_mhz, rps\_max\_freq\_mhz, and rps\_boost\_freq\_mhz sysfs handles provided by the i915 or Xe kernel drivers.  
 \# Example frequency pinning script for multi-tile Intel GPUs  
 for (( i=1; i\<$num\_cards; i++ )); do  
   for (( j=0; j\<$num\_tiles; j++ )); do  
@@ -65,11 +65,11 @@ for (( i=1; i\<$num\_cards; i++ )); do
   done  
 done
 
-Furthermore, TAO-OS facilitates the adjustment of the GuC (Graphics Microcontroller) Single Loop Power Control (SLPC) profiles. By writing power\_saving or base to the slpc\_power\_profile sysfs handle, users can choose between conservative thresholds for energy efficiency or aggressive ramping for peak hashrate performance. This is particularly useful for miners operating under variable electricity pricing, allowing the OS to automatically pivot power profiles based on profitability data.
+Furthermore, CursiveOS facilitates the adjustment of the GuC (Graphics Microcontroller) Single Loop Power Control (SLPC) profiles. By writing power\_saving or base to the slpc\_power\_profile sysfs handle, users can choose between conservative thresholds for energy efficiency or aggressive ramping for peak hashrate performance. This is particularly useful for miners operating under variable electricity pricing, allowing the OS to automatically pivot power profiles based on profitability data.
 
 ### **Mesa 26.1 and HiZ-CCS Surface Optimization**
 
-The release of Mesa 26.1 has introduced critical patches for Intel DG2 (Alchemist) discrete and integrated GPUs. These updates, which took over four months to develop, address long-standing graphics corruption issues by implementing partial resolves for HiZ-CCS (Hierarchical Z and Color Control Surface) surfaces. Rather than resolving the entire depth buffer, the driver now resolves only the regions required by the current workload, significantly reducing memory traffic. For miners, this hardware-level memory efficiency has translated into benchmarks showing performance uplifts as high as 260% in specific graphical trace scenarios. TAO-OS ensures that these optimizations are enabled by default, paired with support for the low-latency hints introduced in the modern Intel Xe kernel graphics driver.
+The release of Mesa 26.1 has introduced critical patches for Intel DG2 (Alchemist) discrete and integrated GPUs. These updates, which took over four months to develop, address long-standing graphics corruption issues by implementing partial resolves for HiZ-CCS (Hierarchical Z and Color Control Surface) surfaces. Rather than resolving the entire depth buffer, the driver now resolves only the regions required by the current workload, significantly reducing memory traffic. For miners, this hardware-level memory efficiency has translated into benchmarks showing performance uplifts as high as 260% in specific graphical trace scenarios. CursiveOS ensures that these optimizations are enabled by default, paired with support for the low-latency hints introduced in the modern Intel Xe kernel graphics driver.
 
 ## **Latency Reduction through CPU Power State Management**
 
@@ -77,7 +77,7 @@ In high-frequency P2P networks and real-time validation systems, the micro-laten
 
 ### **Disabling Deep C-States for Immediate Response**
 
-TAO-OS implements aggressive CPU power management overrides. By limiting the maximum C-state to C1 or C0 (fully active), the OS ensures that idle vCPUs resume execution almost instantly. Empirical testing shows that average measured interrupted process latency drops from 3.4$\\mus with C-states enabled to just 1.12\\mu$s with them disabled. This is critical for workloads like in-memory databases and high-frequency network packet processing found in Bittensor validators.
+CursiveOS implements aggressive CPU power management overrides. By limiting the maximum C-state to C1 or C0 (fully active), the OS ensures that idle vCPUs resume execution almost instantly. Empirical testing shows that average measured interrupted process latency drops from 3.4$\\mus with C-states enabled to just 1.12\\mu$s with them disabled. This is critical for workloads like in-memory databases and high-frequency network packet processing found in Bittensor validators.
 
 | CPU Idle State | Description | Latency Impact | Power Impact |
 | :---- | :---- | :---- | :---- |
@@ -86,22 +86,22 @@ TAO-OS implements aggressive CPU power management overrides. By limiting the max
 | C3 | Sleep: Internal/External clocks stopped | Medium (ms range) | Moderate |
 | C6 | Deep Power Down: Voltage reduced to 0V | High (Wake delay) | Minimum |
 
-Operators can apply these limits via kernel boot parameters such as intel\_idle.max\_cstate=1 and processor.max\_cstate=1. For servers utilizing 4th Gen Intel Xeon Scalable Processors, where power management is extremely aggressive, TAO-OS recommends reducing the number of active cores via ethtool to keep them "awake" longer, preventing the core from entering low-power states during transient idle periods.
+Operators can apply these limits via kernel boot parameters such as intel\_idle.max\_cstate=1 and processor.max\_cstate=1. For servers utilizing 4th Gen Intel Xeon Scalable Processors, where power management is extremely aggressive, CursiveOS recommends reducing the number of active cores via ethtool to keep them "awake" longer, preventing the core from entering low-power states during transient idle periods.
 
 ### **Sched\_ext and BPF-Powered Scheduling**
 
-A foundational innovation of TAO-OS is its support for sched\_ext, a Linux kernel feature introduced in version 6.12 that enables implementing thread schedulers in eBPF. Unlike traditional schedulers like EEVDF, sched\_ext allows for the dynamic loading of custom scheduling policies without rebooting the system. TAO-OS provides specialized BPF schedulers such as scx\_nest, which concentrates tasks on the most efficient subset of cores to maintain high frequencies and optimize performance for workloads with low CPU utilization. Conversely, the scx\_rustland scheduler is designed to prioritize interactive rig management GUIs over background CPU-intensive hashing, ensuring that the system remains responsive even under 100% load.
+A foundational innovation of CursiveOS is its support for sched\_ext, a Linux kernel feature introduced in version 6.12 that enables implementing thread schedulers in eBPF. Unlike traditional schedulers like EEVDF, sched\_ext allows for the dynamic loading of custom scheduling policies without rebooting the system. CursiveOS provides specialized BPF schedulers such as scx\_nest, which concentrates tasks on the most efficient subset of cores to maintain high frequencies and optimize performance for workloads with low CPU utilization. Conversely, the scx\_rustland scheduler is designed to prioritize interactive rig management GUIs over background CPU-intensive hashing, ensuring that the system remains responsive even under 100% load.
 
 ## **Security, Attestation, and the DePIN "Oracle Problem"**
 
-Decentralized compute networks must solve the "oracle problem": verifying that work happening off-chain on physical hardware is legitimate and not misrepresented. This requires hardware attestation, a cryptographic process where nodes submit proofs of their physical configuration. Virtualization layers, such as those used by AWS or GCP, catastrophically fail here by masking PCI device IDs and abstracting hardware counters. TAO-OS provides a bare-metal substrate designed for direct hardware access and authentic firmware signatures.
+Decentralized compute networks must solve the "oracle problem": verifying that work happening off-chain on physical hardware is legitimate and not misrepresented. This requires hardware attestation, a cryptographic process where nodes submit proofs of their physical configuration. Virtualization layers, such as those used by AWS or GCP, catastrophically fail here by masking PCI device IDs and abstracting hardware counters. CursiveOS provides a bare-metal substrate designed for direct hardware access and authentic firmware signatures.
 
 ### **Transitioning from SGX to Intel TDX**
 
 For several years, Intel SGX (Software Guard Extensions) was the standard for Trusted Execution Environments (TEEs). However, research into the "WireTap" vulnerability has demonstrated that an attacker with physical access to a DDR4 platform can extract SGX attestation signing keys via DRAM bus interposition. This allows for the forgery of attestation quotes, making malicious code appear valid.  
-In response, TAO-OS facilitates a strategic migration toward Intel TDX (Trust Domain Extensions) and NVIDIA Confidential Computing (CC). TDX, built for the DDR5 era, is hardened against physical bus-level attacks and enables secure virtual machine isolation with minimal overhead. By integrating with Intel Trust Authority—a zero-trust attestation SaaS—TAO-OS allows nodes to independently verify the integrity of their compute environments to remote validators.
+In response, CursiveOS facilitates a strategic migration toward Intel TDX (Trust Domain Extensions) and NVIDIA Confidential Computing (CC). TDX, built for the DDR5 era, is hardened against physical bus-level attacks and enables secure virtual machine isolation with minimal overhead. By integrating with Intel Trust Authority—a zero-trust attestation SaaS—CursiveOS allows nodes to independently verify the integrity of their compute environments to remote validators.
 
-| Attestation Feature | SGX (Legacy) | TDX (Next-Gen) | TAO-OS Implementation |
+| Attestation Feature | SGX (Legacy) | TDX (Next-Gen) | CursiveOS Implementation |
 | :---- | :---- | :---- | :---- |
 | **Integrity Protection** | Enclave-based | TD Partition-based | Memory Isolation |
 | **Bus Attack Resistance** | Vulnerable (WireTap) | Hardened (DDR5) | Hardware-Rooted |
@@ -110,11 +110,11 @@ In response, TAO-OS facilitates a strategic migration toward Intel TDX (Trust Do
 
 ### **Hardware Fingerprinting and Fingerprint Hashing**
 
-To prevent "mining botnets" from hijacking resources or operators from "gaming" performance benchmarks, TAO-OS implements microarchitectural fingerprinting. These fingerprints are compact (e.g., 16-bit) signatures of recent architectural state updates that can detect soft errors or input incoherence with only 5-6% overhead. Additionally, the OS includes a Verilog-based implementation of the SHA-256 algorithm for Field-Programmable Gate Arrays (FPGAs), achieving throughputs of 1.4 Gbps across 16 parallel cores. This dedicated hardware implementation is used as a secure "heartbeat" for DePIN nodes, proving physical hardware presence and reducing dynamic power consumption by 1000x compared to software-based verification.
+To prevent "mining botnets" from hijacking resources or operators from "gaming" performance benchmarks, CursiveOS implements microarchitectural fingerprinting. These fingerprints are compact (e.g., 16-bit) signatures of recent architectural state updates that can detect soft errors or input incoherence with only 5-6% overhead. Additionally, the OS includes a Verilog-based implementation of the SHA-256 algorithm for Field-Programmable Gate Arrays (FPGAs), achieving throughputs of 1.4 Gbps across 16 parallel cores. This dedicated hardware implementation is used as a secure "heartbeat" for DePIN nodes, proving physical hardware presence and reducing dynamic power consumption by 1000x compared to software-based verification.
 
 ## **The Bittensor (TAO) Ecosystem: Performance Benchmarks**
 
-The Bittensor network utilizes the Yuma Consensus mechanism to reward models proportional to the informational value they provide. In 2026, the network's value proposition is centered on the democratization of compute. High-performing nodes, which accumulate more TAO stake, are prioritized for rewards, while underperforming nodes face gradual de-registration. TAO-OS provides the infrastructure required to meet these stringent performance requirements.
+The Bittensor network utilizes the Yuma Consensus mechanism to reward models proportional to the informational value they provide. In 2026, the network's value proposition is centered on the democratization of compute. High-performing nodes, which accumulate more TAO stake, are prioritized for rewards, while underperforming nodes face gradual de-registration. CursiveOS provides the infrastructure required to meet these stringent performance requirements.
 
 ### **Model Benchmarks: Covenant-72B**
 
@@ -128,11 +128,11 @@ A landmark achievement in the 2026 Bittensor ecosystem was the collaborative pre
 | Top Validator APY | 10.31% | Competitive |
 | Average Model MMLU | 67.1 (Covenant-72B) | High Performance |
 
-TAO-OS enhances these results by providing a comprehensive dashboard for monitoring Bitcoin and TAO network data. The dashboard consumes data from specialized Node.js RPC workers, tracking block height, network hashrate, difficulty adjustment metrics, and transaction fee recommendations in real-time. This feedback loop allows the AI-guided tuning engine to adjust kernel parameters in lockstep with network conditions.
+CursiveOS enhances these results by providing a comprehensive dashboard for monitoring Bitcoin and TAO network data. The dashboard consumes data from specialized Node.js RPC workers, tracking block height, network hashrate, difficulty adjustment metrics, and transaction fee recommendations in real-time. This feedback loop allows the AI-guided tuning engine to adjust kernel parameters in lockstep with network conditions.
 
 ## **Tweak Stack Suggestions for Maximum Efficiency**
 
-For the 2026 mining environment, TAO-OS incorporates a multi-layer "tweak stack" designed to optimize the relationship between hashing performance and network connectivity.
+For the 2026 mining environment, CursiveOS incorporates a multi-layer "tweak stack" designed to optimize the relationship between hashing performance and network connectivity.
 
 ### **Network Layer Optimizations**
 
@@ -158,13 +158,13 @@ The goal of the network tweak stack is to maximize throughput on high-BDP links 
 
 ## **Project Viability and Market Positioning**
 
-The viability of TAO-OS is bolstered by the maturation of the decentralized compute market. By late 2026, the sector is expected to enter a consolidation phase, with the number of decentralized AI protocols decreasing to 2-3 through integration or transformation into institutional ETFs. TAO-OS is positioned as the primary infrastructure layer for these surviving protocols, offering a "policy-backed turnaround" opportunity for miners who invest in Intel hardware.
+The viability of CursiveOS is bolstered by the maturation of the decentralized compute market. By late 2026, the sector is expected to enter a consolidation phase, with the number of decentralized AI protocols decreasing to 2-3 through integration or transformation into institutional ETFs. CursiveOS is positioned as the primary infrastructure layer for these surviving protocols, offering a "policy-backed turnaround" opportunity for miners who invest in Intel hardware.
 
 ### **Comparative Market Analysis**
 
-While competitive operating systems like HiveOS provide a polished user experience, they are management-centric rather than optimization-centric. HiveOS’s primary value proposition is its dashboard and mobile app, but it lacks the deep kernel-level BPF hooks and AI-guided tuning capabilities of TAO-OS. Furthermore, HiveOS’s pricing model—at $3 per rig per month—can become prohibitive for large-scale GPU farms. TAO-OS, by contrast, emphasizes open-source modularity and hardware-rooted trust through TDX integration.
+While competitive operating systems like HiveOS provide a polished user experience, they are management-centric rather than optimization-centric. HiveOS’s primary value proposition is its dashboard and mobile app, but it lacks the deep kernel-level BPF hooks and AI-guided tuning capabilities of CursiveOS. Furthermore, HiveOS’s pricing model—at $3 per rig per month—can become prohibitive for large-scale GPU farms. CursiveOS, by contrast, emphasizes open-source modularity and hardware-rooted trust through TDX integration.
 
-| Feature | HiveOS / Awesome Miner | NiceHash | TAO-OS |
+| Feature | HiveOS / Awesome Miner | NiceHash | CursiveOS |
 | :---- | :---- | :---- | :---- |
 | **Focus** | Remote Monitoring & Overclocking | Hashrate Marketplace | AI-Guided Kernel Tuning |
 | **Scheduler** | Standard Linux (EEVDF) | Standard Linux | Dynamic BPF (sched\_ext) |
@@ -175,21 +175,21 @@ While competitive operating systems like HiveOS provide a polished user experien
 
 ### **Sustainable and Green Mining Initiatives**
 
-TAO-OS aligns with the global shift toward sustainable energy in mining. As of 2026, renewable energy sources power 56.7% of Bitcoin mining, with wind and nuclear contributing 15.4% and 9.8% respectively. TAO-OS contributes to this sustainability trend through its AI-driven power management, which dynamically redistributes power between GPU and CPU based on real-time task demand while maintaining the system's total thermal budget. This reduces the carbon footprint of high-TDP operations and makes TAO-OS an attractive choice for green data center pilots like South Texas's "Project Ellen".
+CursiveOS aligns with the global shift toward sustainable energy in mining. As of 2026, renewable energy sources power 56.7% of Bitcoin mining, with wind and nuclear contributing 15.4% and 9.8% respectively. CursiveOS contributes to this sustainability trend through its AI-driven power management, which dynamically redistributes power between GPU and CPU based on real-time task demand while maintaining the system's total thermal budget. This reduces the carbon footprint of high-TDP operations and makes CursiveOS an attractive choice for green data center pilots like South Texas's "Project Ellen".
 
 ## **Improvements and Future Directions**
 
-The investigation of the 2026 OS landscape suggests several high-value improvements for TAO-OS to maintain its competitive edge.
+The investigation of the 2026 OS landscape suggests several high-value improvements for CursiveOS to maintain its competitive edge.
 
-1. **Adaptive BBR Corner Case Handling**: While BBRv3 is superior to CUBIC, it still exhibits unfairness when competing against other BBR flows in multi-RTT networks. TAO-OS should incorporate "Ad-BBR" (Adaptive BBR) logic, which uses link queue-state information and real-time RTT standard deviation to reduce data over-injection and improve RTT fairness. This would provide a 30% improvement in fairness and a 20% decrease in latency over standard BBRv1.  
-2. **Intel Graphics Shader Distribution Service**: To address the long "first load" times for AI models on Battlemage GPUs, TAO-OS should integrate the new shader distribution service, which helps improve load times by up to 2x for titles like Black Myth: Wukong and Hogwarts Legacy.  
-3. **HyperEnclave Attestation**: Moving beyond vendor-specific attestation, TAO-OS should support the "HyperEnclave" model, which uses physical TPMs to bind virtualized attestation identity keys (AIK). This decouples the root-of-trust from a single CPU vendor and provides enhanced transparency through independent third-party CAs.  
-4. **Hardware Wallet Integration**: For validators managing massive TAO stakes, TAO-OS should provide direct integration with bank-grade secure elements (EAL 6+) such as those found in the OneKey Pro or Ledger Stax. This would allow for air-gapped signing of evidence chains, protecting assets against kernel-level compromise.
+1. **Adaptive BBR Corner Case Handling**: While BBRv3 is superior to CUBIC, it still exhibits unfairness when competing against other BBR flows in multi-RTT networks. CursiveOS should incorporate "Ad-BBR" (Adaptive BBR) logic, which uses link queue-state information and real-time RTT standard deviation to reduce data over-injection and improve RTT fairness. This would provide a 30% improvement in fairness and a 20% decrease in latency over standard BBRv1.  
+2. **Intel Graphics Shader Distribution Service**: To address the long "first load" times for AI models on Battlemage GPUs, CursiveOS should integrate the new shader distribution service, which helps improve load times by up to 2x for titles like Black Myth: Wukong and Hogwarts Legacy.  
+3. **HyperEnclave Attestation**: Moving beyond vendor-specific attestation, CursiveOS should support the "HyperEnclave" model, which uses physical TPMs to bind virtualized attestation identity keys (AIK). This decouples the root-of-trust from a single CPU vendor and provides enhanced transparency through independent third-party CAs.  
+4. **Hardware Wallet Integration**: For validators managing massive TAO stakes, CursiveOS should provide direct integration with bank-grade secure elements (EAL 6+) such as those found in the OneKey Pro or Ledger Stax. This would allow for air-gapped signing of evidence chains, protecting assets against kernel-level compromise.
 
 ## **Conclusions**
 
-The research indicates that the decentralized compute economy of 2026 rewards reliability, revenue, and verified performance over speculative node counts. TAO-OS addresses these business fundamentals by bridging the gap between raw physical silicon and the intelligence layer of the blockchain. By replacing static Linux defaults with an AI-guided kernel—optimized for BBRv3 networking, Intel Arc XMX acceleration, and zero-latency CPU state management—TAO-OS provides the only viable operating environment for miners facing 144T difficulty.  
-The project's success is tied to its role as "invisible infrastructure," providing the vessel for custom security and observability features that bypass the constraints of traditional Linux release timelines. As decentralized AI subnets proliferate, the ability to proof work on bare-metal hardware with reliable attestation will remain the primary barrier to entry. Through its commitment to hardware-rooted trust and open-source modularity, TAO-OS enables miners to transform their rigs from speculative assets into critical components of the global internet of value.
+The research indicates that the decentralized compute economy of 2026 rewards reliability, revenue, and verified performance over speculative node counts. CursiveOS addresses these business fundamentals by bridging the gap between raw physical silicon and the intelligence layer of the blockchain. By replacing static Linux defaults with an AI-guided kernel—optimized for BBRv3 networking, Intel Arc XMX acceleration, and zero-latency CPU state management—CursiveOS provides the only viable operating environment for miners facing 144T difficulty.  
+The project's success is tied to its role as "invisible infrastructure," providing the vessel for custom security and observability features that bypass the constraints of traditional Linux release timelines. As decentralized AI subnets proliferate, the ability to proof work on bare-metal hardware with reliable attestation will remain the primary barrier to entry. Through its commitment to hardware-rooted trust and open-source modularity, CursiveOS enables miners to transform their rigs from speculative assets into critical components of the global internet of value.
 
 #### **Works cited**
 

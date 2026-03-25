@@ -1,4 +1,4 @@
-# TAO-OS
+# CursiveOS
 
 **AI-optimized Linux for Bittensor miners. One command. Measurable results.**
 
@@ -42,8 +42,8 @@ This repo is worked on by two AIs. Here's who owns what:
 ---
 
 ```bash
-git clone https://github.com/connormatthewdouglas/TAO-OS.git
-cd TAO-OS
+git clone https://github.com/connormatthewdouglas/CursiveOS.git
+cd CursiveOS
 ./tao-os-full-test-v1.3.sh
 ```
 
@@ -60,7 +60,7 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 
 ### AMD Ryzen 7 5700 · Intel Arc A750
 
-| Benchmark | Default | TAO-OS Presets | Delta |
+| Benchmark | Default | CursiveOS Presets | Delta |
 |-----------|---------|---------------|-------|
 | **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 140–181 Mbit/s | **~1000 Mbit/s** | **+454–616%** |
 | **Cold-start latency** (GPU idle → first inference token) | 1021–1024ms | 996–997ms | **-22–27ms (-2.3 to -2.6%)** |
@@ -69,23 +69,23 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 
 ### AMD FX-8350 · RX 580
 
-| Benchmark | Default | TAO-OS Presets | Delta |
+| Benchmark | Default | CursiveOS Presets | Delta |
 |-----------|---------|---------------|-------|
 | **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 171 Mbit/s | **1182 Mbit/s** | **+591%** |
 | **Cold-start latency** | 2462–2493ms | 2095–2098ms | **-366–395ms (-14.9 to -15.8%)** |
 | Sustained inference (warm model, CPU-bound) | 19.5 tok/s | 20.5 tok/s | +4.5–5% |
 
-**Network is the headline.** Two bugs in default Linux cap your throughput regardless of link speed: a 212KB socket buffer (smaller than the bandwidth-delay product on any real WAN link) and CUBIC congestion control (degrades under packet loss). TAO-OS fixes both — 16MB buffers, BBR, and the v0.7 tcp_rmem/wmem fix that closes the auto-tuner ceiling gap. Result: both test rigs now saturate ~1 Gbit/s tuned vs ~380 Mbit/s on v0.6.
+**Network is the headline.** Two bugs in default Linux cap your throughput regardless of link speed: a 212KB socket buffer (smaller than the bandwidth-delay product on any real WAN link) and CUBIC congestion control (degrades under packet loss). CursiveOS fixes both — 16MB buffers, BBR, and the v0.7 tcp_rmem/wmem fix that closes the auto-tuner ceiling gap. Result: both test rigs now saturate ~1 Gbit/s tuned vs ~380 Mbit/s on v0.6.
 
 **Power tradeoff is real.** Disabled C-states keep the CPU in C0 continuously. Measured cost varies by system — expect +8–14W at idle. For 24/7 mining at $0.12/kWh that's ~$8–15/year. The network and latency gains justify it in active mining workloads, but it's worth knowing.
 
-**Cold-start latency matters for mining.** Validators query miners unpredictably. Between queries, your GPU idles to 300–600 MHz. TAO-OS pins the Arc A750 to 2000 MHz minimum — 22–27ms faster on every cold request. On older CPU-only hardware (FX-8350), C-state and governor changes alone cut 366–395ms per cold request. At scale this shifts active set membership.
+**Cold-start latency matters for mining.** Validators query miners unpredictably. Between queries, your GPU idles to 300–600 MHz. CursiveOS pins the Arc A750 to 2000 MHz minimum — 22–27ms faster on every cold request. On older CPU-only hardware (FX-8350), C-state and governor changes alone cut 366–395ms per cold request. At scale this shifts active set membership.
 
 ---
 
 ## What it does
 
-TAO-OS applies a set of temporary, safe OS tweaks tuned for Bittensor mining workloads. Every change reverts on reboot or with `--undo`.
+CursiveOS applies a set of temporary, safe OS tweaks tuned for Bittensor mining workloads. Every change reverts on reboot or with `--undo`.
 
 **25 tweaks in `tao-os-presets-v0.7.sh`:**
 
@@ -173,7 +173,7 @@ Each benchmark is also runnable standalone:
 
 ## Why this hardware
 
-Bittensor can't thrive long-term on a single vendor's silicon. TAO-OS is built and tested on **AMD CPU + Intel Arc GPU** — hardware most mining guides ignore. If you're a non-NVIDIA miner, this project is for you.
+Bittensor can't thrive long-term on a single vendor's silicon. CursiveOS is built and tested on **AMD CPU + Intel Arc GPU** — hardware most mining guides ignore. If you're a non-NVIDIA miner, this project is for you.
 
 ---
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-v0.9-paired.sh
+# CursiveOS benchmark-v0.9-paired.sh
 # Paired test: runs one BASELINE pass then one TUNED pass in the same thermal
 # window so ambient temperature drift cannot skew the comparison.
 # Usage: ./benchmark-v0.9-paired.sh [preset-script]
@@ -11,7 +11,7 @@ set -euo pipefail
 
 PRESET_SCRIPT="${1:-../tao-os-presets-v0.6.sh}"
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
@@ -28,7 +28,7 @@ SYSBENCH_TMP="/tmp/tao-os-sysbench-$$.out"
 log() { echo "$1" | tee -a "$LOG_FILE"; }
 PASS_RESULT=""  # set by run_pass, read by caller
 
-log "TAO-OS Paired Benchmark v0.9"
+log "CursiveOS Paired Benchmark v0.9"
 log "Preset: $PRESET_SCRIPT"
 log "Started: $(date)"
 log "========================================"

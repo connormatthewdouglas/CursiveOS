@@ -1,4 +1,4 @@
-# TAO-OS / ForgeOS — Research Library
+# CursiveOS / CursiveOS — Research Library
 **Maintained by:** CopperClaw (Lead Dev + PM)
 **Last updated:** 2026-03-20
 **Purpose:** Living reference document. Pull from here before searching the web. Organized by topic. Add new findings at the top of each section with a date.
@@ -38,7 +38,7 @@
 - Major logistics + ride-sharing companies BUY the data (paying fiat for token-incentivized contributions)
 - Model: contribute physical-world data → earn → data sold to enterprises
 - Enacted MIP-19 (Jan 2025) to raise Map Credit prices — tokenomics evolving
-- **Lesson for ForgeOS:** the data buyer doesn't have to be crypto-native. Enterprise value of optimization data is real.
+- **Lesson for CursiveOS:** the data buyer doesn't have to be crypto-native. Enterprise value of optimization data is real.
 - Cautionary: manipulation risk — someone could fake contributions without hardware verification
 
 **Helium (HNT/IOT/MOBILE)**
@@ -50,15 +50,15 @@
 **Render Network (RNDR)**
 - Idle GPU capacity contributed → used for rendering → contributors earn RNDR
 - Migrated to Solana from Ethereum 2024
-- **Most directly analogous to ForgeOS** — GPU owners contribute compute, get rewarded
+- **Most directly analogous to CursiveOS** — GPU owners contribute compute, get rewarded
 - **Key difference for us:** we're not selling compute time, we're building a benchmark dataset
 
-### DePIN Architecture Fit for ForgeOS
+### DePIN Architecture Fit for CursiveOS
 Our use case maps to DePIN almost exactly:
 - Physical resource: Linux machines running benchmarks
 - Contribution: structured benchmark data (hardware fingerprint → tweaks → deltas)
 - Verification: hardware-bound submission hash (CPU microcode + GPU VBIOS + kernel hash)
-- Reward: ForgeOS token
+- Reward: CursiveOS token
 - Data consumer: AI that generates optimizations, and eventually enterprise buyers
 
 **Open questions to research later:**
@@ -79,7 +79,7 @@ Our use case maps to DePIN almost exactly:
 - Users can input custom hashrates and power consumption
 - Real-time profitability based on current coin prices + difficulty
 - **Gap:** doesn't capture OS-level optimization deltas. Assumes hardware runs at stock performance.
-- **Our opportunity:** WhatToMine shows you what to mine. ForgeOS shows you how to make your rig faster doing it.
+- **Our opportunity:** WhatToMine shows you what to mine. CursiveOS shows you how to make your rig faster doing it.
 
 ### Minerstat
 *(2026-03-20)*
@@ -141,19 +141,19 @@ Our use case maps to DePIN almost exactly:
 - Yuma Consensus: stake-weighted aggregation of validator scores
 - **Yuma itself doesn't measure latency** — it aggregates what validators report
 
-### Subnets Relevant to ForgeOS
+### Subnets Relevant to CursiveOS
 
 **SN64 — Chutes ("the Linux of AI")**
 - Connor's primary target subnet
 - High mindshare (2.36% as of Aug 2025, #2 overall)
 - Tools: https://github.com/minersunion/sn64-tools
 - Scoring: inference quality + speed
-- **TAO-OS sweet spot** — cold-start latency matters here
+- **CursiveOS sweet spot** — cold-start latency matters here
 
 **SN1 — Apex / Text Prompting**
 - LLM inference subnet
 - Validators score on semantic quality AND response speed
-- Clear TAO-OS benefit: cold-start latency reduction directly affects scoring
+- Clear CursiveOS benefit: cold-start latency reduction directly affects scoring
 
 **SN27 — Compute**
 - Proof-of-GPU verification — benchmarks raw GPU capability
@@ -163,7 +163,7 @@ Our use case maps to DePIN almost exactly:
 
 **SN3 — Templar (Training)**
 - Gradient quality dominates, speed secondary
-- Less relevant for TAO-OS optimization pitch
+- Less relevant for CursiveOS optimization pitch
 
 ### Subnet Registration Cost
 *(2026-03-20)*
@@ -197,7 +197,7 @@ Our use case maps to DePIN almost exactly:
 *(2026-03-20)*
 - GitHub Gist (gboddin): "Mining optimisation under Linux" — https://gist.github.com/gboddin/bbf10dc51cd468fba93e8f4e17c51859
   - Basic sysctl tweaks, no benchmarking framework, no reversibility
-  - **ForgeOS is 10x more rigorous** (benchmarked, reversible, hardware-aware)
+  - **CursiveOS is 10x more rigorous** (benchmarked, reversible, hardware-aware)
 - DigitalOcean TCP tuning guide: https://www.digitalocean.com/community/tutorials/tuning-linux-performance-optimization
   - Covers tcp_rmem/wmem, BBR — confirms our approach is correct
   - But: general guide, not mining-specific, no before/after data
@@ -321,13 +321,13 @@ Medium confidence:
 - DePIN sector: 19B+ breakout in 2026, enterprise adoption accelerating (Hivemapper data used by logistics/ride-sharing companies)
 - Solana DePIN revenue +33% YoY (May 2025)
 
-### Rebrand — ForgeOS
+### Rebrand — CursiveOS
 *(2026-03-20, board decision)*
-- Winner: **ForgeOS**
+- Winner: **CursiveOS**
 - Runner-ups: OptiForge, AetherForge
 - Rationale: keeps forge equity, chain-agnostic, premium signal, works for mining + gaming + inference
 - Private lock: do NOT touch public branding until v1.5 gate
-- CLAUDE.md already notes "ForgeOS" as private shortlist winner
+- CLAUDE.md already notes "CursiveOS" as private shortlist winner
 
 ### Key Strategic Risks
 *(2026-03-20, from research report + board)*

@@ -1,27 +1,27 @@
-# TAO-OS — What It Does To Your System
+# CursiveOS — What It Does To Your System
 
-**For anyone running a test on behalf of the TAO-OS project.**
+**For anyone running a test on behalf of the CursiveOS project.**
 
 ---
 
 ## The short version
 
-TAO-OS runs a set of performance tweaks on your Linux machine, measures whether they help, and uploads the results. **Every change it makes is temporary.** Nothing is permanent. If you reboot, your machine is back to exactly how it was.
+CursiveOS runs a set of performance tweaks on your Linux machine, measures whether they help, and uploads the results. **Every change it makes is temporary.** Nothing is permanent. If you reboot, your machine is back to exactly how it was.
 
 ---
 
 ## What it actually changes
 
-TAO-OS adjusts settings in three areas. All of these are standard Linux tuning knobs — nothing obscure, nothing dangerous.
+CursiveOS adjusts settings in three areas. All of these are standard Linux tuning knobs — nothing obscure, nothing dangerous.
 
 ### Network (the big one)
-Your Linux machine ships with a 212KB network buffer. That's a 2003-era default. TAO-OS bumps it to 16MB and switches your TCP congestion control from CUBIC to BBR. On most hardware this produces a 400–600% improvement in sustained network throughput under real-world conditions (packet loss, latency). This is why miners and AI users both benefit — both workloads are bottlenecked by the same default.
+Your Linux machine ships with a 212KB network buffer. That's a 2003-era default. CursiveOS bumps it to 16MB and switches your TCP congestion control from CUBIC to BBR. On most hardware this produces a 400–600% improvement in sustained network throughput under real-world conditions (packet loss, latency). This is why miners and AI users both benefit — both workloads are bottlenecked by the same default.
 
 ### CPU
-TAO-OS sets your CPU governor to "performance" mode and disables some aggressive idle states (C2, C3, C6). This keeps your CPU ready to respond instead of sleeping between requests. The tradeoff: your idle power draw goes up by roughly 8–14W depending on your hardware. For a machine that's running 24/7 at $0.12/kWh, that's about $8–15/year extra. The benchmark measures this and reports it honestly.
+CursiveOS sets your CPU governor to "performance" mode and disables some aggressive idle states (C2, C3, C6). This keeps your CPU ready to respond instead of sleeping between requests. The tradeoff: your idle power draw goes up by roughly 8–14W depending on your hardware. For a machine that's running 24/7 at $0.12/kWh, that's about $8–15/year extra. The benchmark measures this and reports it honestly.
 
 ### Memory
-TAO-OS sets swappiness to 0 (never swap) and enables Transparent Huge Pages. This keeps model weights pinned in RAM and reduces memory allocation overhead during inference. On machines with plenty of RAM this is free performance. On machines with tight RAM it could cause issues — the benchmark will catch this.
+CursiveOS sets swappiness to 0 (never swap) and enables Transparent Huge Pages. This keeps model weights pinned in RAM and reduces memory allocation overhead during inference. On machines with plenty of RAM this is free performance. On machines with tight RAM it could cause issues — the benchmark will catch this.
 
 ---
 
@@ -40,7 +40,7 @@ TAO-OS sets swappiness to 0 (never swap) and enables Transparent Huge Pages. Thi
 One command, copy-paste from the GitHub README:
 
 ```bash
-git clone https://github.com/connormatthewdouglas/TAO-OS.git 2>/dev/null; git -C ~/TAO-OS fetch origin && git -C ~/TAO-OS reset --hard origin/main; chmod +x ~/TAO-OS/tao-os-full-test-v1.4.sh; cd ~/TAO-OS && bash tao-os-full-test-v1.4.sh
+git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git -C ~/TAO-OS fetch origin && git -C ~/TAO-OS reset --hard origin/main; chmod +x ~/TAO-OS/tao-os-full-test-v1.4.sh; cd ~/TAO-OS && bash tao-os-full-test-v1.4.sh
 ```
 
 It will:
@@ -68,7 +68,7 @@ cd ~/TAO-OS && bash tao-os-presets-v0.8.sh --undo
 
 ## What gets uploaded
 
-Your benchmark results go to the TAO-OS hardware database (tao-forge). This includes:
+Your benchmark results go to the CursiveOS hardware database (tao-forge). This includes:
 - Your CPU model and core count
 - Your GPU model
 - Your kernel version and OS name

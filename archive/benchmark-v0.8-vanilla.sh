@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-v0.8-vanilla.sh
+# CursiveOS benchmark-v0.8-vanilla.sh
 # Vanilla mode: NO tweaks. Pure measurement + live progress every 30s with CPU temp.
 # Fix over v0.6: progress loop uses last_print tracker (not % 30) so it never misses
 # a 30s interval under load. Temp file goes to /tmp to avoid CWD issues.
@@ -17,7 +17,7 @@ SYSBENCH_TMP="/tmp/tao-os-sysbench-$$.out"
 
 log() { echo "$1" | tee -a "$LOG_FILE"; }
 
-log "TAO-OS Mining Benchmark v0.8 (Vanilla - No Tweaks)"
+log "CursiveOS Mining Benchmark v0.8 (Vanilla - No Tweaks)"
 log "Started: $(date)"
 log "----------------------------------------"
 

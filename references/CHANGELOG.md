@@ -1,4 +1,12 @@
-# TAO-OS Changelog
+# CursiveOS Changelog
+
+## v0.4.1 — 2026-03-25
+- Project rebranded from TAO-OS → CursiveOS
+- White paper updated to v0.4.1 with CursiveOS identity and local-AI-first positioning
+- All internal references updated
+- Recursive → Cursive: name reflects the self-improving data flywheel
+
+## Historical (TAO-OS era)
 
 ## Presets
 
