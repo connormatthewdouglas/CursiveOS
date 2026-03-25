@@ -40,7 +40,7 @@ CursiveOS sets swappiness to 0 (never swap) and enables Transparent Huge Pages. 
 One command, copy-paste from the GitHub README:
 
 ```bash
-git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git -C ~/TAO-OS fetch origin && git -C ~/TAO-OS reset --hard origin/main; chmod +x ~/TAO-OS/tao-os-full-test-v1.4.sh; cd ~/TAO-OS && bash tao-os-full-test-v1.4.sh
+git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git -C ~/CursiveOS fetch origin && git -C ~/CursiveOS reset --hard origin/main; chmod +x ~/CursiveOS/tao-os-full-test-v1.4.sh; cd ~/CursiveOS && bash tao-os-full-test-v1.4.sh
 ```
 
 It will:
@@ -61,7 +61,7 @@ The wrapper reverts everything automatically when it finishes. If something goes
 
 If you want to manually revert without rebooting:
 ```bash
-cd ~/TAO-OS && bash tao-os-presets-v0.8.sh --undo
+cd ~/CursiveOS && bash tao-os-presets-v0.8.sh --undo
 ```
 
 ---
@@ -81,4 +81,4 @@ Nothing else. No IP addresses, no usernames, no file system data.
 
 ## Questions or problems
 
-Open an issue on GitHub or message the project directly. If something looks wrong with your results, the raw logs are saved in `~/TAO-OS/logs/` — share those and we can diagnose.
+Open an issue on GitHub or message the project directly. If something looks wrong with your results, the raw logs are saved in `~/CursiveOS/logs/` — share those and we can diagnose.
