@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Config ─────────────────────────────────────────────────────────────────
-DAILY_CAP_USD  = 4.00
+DAILY_CAP_USD  = 2.00
 CRON_RUN_DIR   = Path.home() / ".openclaw/cron/runs"
 SESSION_DIR    = Path.home() / ".openclaw/agents/main/sessions"
 WORKSPACE      = Path.home() / "TAO-OS"
@@ -105,8 +105,7 @@ def cron_spend_today():
 # usage data in message.usage.cost.total — use that directly.
 
 def session_spend_today():
-    from datetime import timezone
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now().date()
     total_cost = 0.0
     total_input = 0
     total_output = 0
