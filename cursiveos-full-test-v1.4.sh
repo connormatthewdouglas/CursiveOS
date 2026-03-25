@@ -25,12 +25,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Allow preset override via first arg (for isolated tweak testing)
-PRESET="${1:-$SCRIPT_DIR/tao-os-presets-v0.8.sh}"
+PRESET="${1:-$SCRIPT_DIR/cursiveos-presets-v0.8.sh}"
 MODEL="tinyllama"
 
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
-SUMMARY_LOG="$LOG_DIR/tao-os-full-test-$(date +%Y%m%d-%H%M%S).log"
+SUMMARY_LOG="$LOG_DIR/cursiveos-full-test-$(date +%Y%m%d-%H%M%S).log"
 HW_DB="$SCRIPT_DIR/hardware-profiles.json"
 
 # ── tao-forge (Supabase) ──────────────────────────────────────────────────────
