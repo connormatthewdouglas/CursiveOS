@@ -158,7 +158,7 @@ fi
 # GPU driver version (xe = Intel Arc, amdgpu = AMD, i915 = older Intel)
 GPU_DRIVER_VERSION="null"
 for mod in amdgpu i915 nouveau; do
-    mod_ver=$(cat /sys/module/${mod}/version 2>/dev/null)
+    mod_ver=$(cat /sys/module/${mod}/version 2>/dev/null || true)
     if [[ -n "$mod_ver" ]]; then
         GPU_DRIVER_VERSION="${mod}: ${mod_ver}"
         break
