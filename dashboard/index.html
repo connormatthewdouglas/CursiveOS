@@ -913,6 +913,8 @@
   <div style="display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto">
     <button class="tab-btn active" onclick="switchTab('overview')">📡 Overview</button>
     <button class="tab-btn" onclick="switchTab('queue')">⚙️ Work Queue</button>
+    <button class="tab-btn" onclick="switchTab('spend')">💸 Spend</button>
+    <button class="tab-btn" onclick="switchTab('autonomy')">🤖 Autonomy</button>
     <button class="tab-btn" onclick="switchTab('approvals')">⚡ Approvals</button>
     <button class="tab-btn" onclick="switchTab('comms')">🟤 Comms</button>
     <button class="tab-btn" onclick="switchTab('tasks')">📋 Tasks</button>
@@ -930,18 +932,6 @@
         <div class="info-rows" id="status-info">
           <div class="empty">Loading…</div>
         </div>
-      </div>
-
-      <!-- SPEND MONITOR -->
-      <div class="card">
-        <div class="card-title"><span class="ct-icon">💸</span> Cloud Spend Today</div>
-        <div id="spend-body"><div class="empty">Loading…</div></div>
-      </div>
-
-      <!-- AUTONOMY SCORE -->
-      <div class="card">
-        <div class="card-title"><span class="ct-icon">🤖</span> Copper Autonomy Score</div>
-        <div id="autonomy-body"><div class="empty">Loading…</div></div>
       </div>
 
       <!-- TREND CHART -->
@@ -971,6 +961,22 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- ── TAB: SPEND ── -->
+    <div id="tab-spend" class="tab-content" style="grid-column:1/-1;display:none">
+      <div class="card full">
+        <div class="card-title"><span class="ct-icon">💸</span> Cloud Spend Today</div>
+        <div id="spend-body"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: AUTONOMY ── -->
+    <div id="tab-autonomy" class="tab-content" style="grid-column:1/-1;display:none">
+      <div class="card full">
+        <div class="card-title"><span class="ct-icon">🤖</span> Copper Autonomy Score</div>
+        <div id="autonomy-body"><div class="empty">Loading…</div></div>
+      </div>
     </div>
 
     <!-- ── TAB: WORK QUEUE ── -->
