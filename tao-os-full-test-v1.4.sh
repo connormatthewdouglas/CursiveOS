@@ -19,7 +19,7 @@
 # Usage: ./tao-os-full-test-v1.4.sh
 #
 # All changes are TEMPORARY. Presets revert after each test.
-# Logs saved to ~/TAO-OS/logs/
+# Logs saved to ~/CursiveOS/logs/
 
 set -euo pipefail
 
@@ -28,7 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRESET="${1:-$SCRIPT_DIR/tao-os-presets-v0.8.sh}"
 MODEL="tinyllama"
 
-LOG_DIR="$HOME/TAO-OS/logs"
+LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 SUMMARY_LOG="$LOG_DIR/tao-os-full-test-$(date +%Y%m%d-%H%M%S).log"
 HW_DB="$SCRIPT_DIR/hardware-profiles.json"
