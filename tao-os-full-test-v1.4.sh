@@ -113,6 +113,77 @@ CPU_MICROCODE=$(grep -m1 'microcode' /proc/cpuinfo | awk '{print $3}' 2>/dev/nul
 GPU_VBIOS=$(cat /sys/class/drm/card*/device/vbios_version 2>/dev/null | head -1 || echo "unknown")
 HW_FINGERPRINT=$(echo "${CPU_MICROCODE}-${GPU_VBIOS}-${KERNEL}" | sha256sum | cut -c1-16)
 
+# ── v1.5: Extended hardware fingerprint ───────────────────────────────────────
+# CPU cache sizes (L1/L2/L3)
+CPU_L1_CACHE_KB="null"
+CPU_L2_CACHE_KB="null"
+CPU_L3_CACHE_KB="null"
+for idx in 0 1 2 3; do
+    cache_dir="/sys/devices/system/cpu/cpu0/cache/index${idx}"
+    [[ -d "$cache_dir" ]] || continue
+    level=$(cat "$cache_dir/level" 2>/dev/null)
+    type=$(cat "$cache_dir/type" 2>/dev/null)
+    size_raw=$(cat "$cache_dir/size" 2>/dev/null | sed 's/K$//')
+    [[ "$type" == "Instruction" ]] && continue  # skip I-cache, take D/Unified
+    case "$level" in
+        1) CPU_L1_CACHE_KB="$size_raw" ;;
+        2) CPU_L2_CACHE_KB="$size_raw" ;;
+        3) CPU_L3_CACHE_KB="$size_raw" ;;
+    esac
+done
+
+# GPU VRAM — try sysfs (amdgpu), then lspci prefetchable region (xe/Intel Arc), then clinfo
+GPU_VRAM_MB="null"
+for vram_file in /sys/class/drm/card*/device/mem_info_vram_total; do
+    [[ -f "$vram_file" ]] || continue
+    vram_bytes=$(cat "$vram_file" 2>/dev/null)
+    if [[ "$vram_bytes" =~ ^[0-9]+$ && "$vram_bytes" -gt 0 ]]; then
+        GPU_VRAM_MB=$(( vram_bytes / 1024 / 1024 ))
+        break
+    fi
+done
+if [[ "$GPU_VRAM_MB" == "null" ]]; then
+    # Intel Arc (xe driver) — read from lspci prefetchable region
+    gpu_pci=$(lspci 2>/dev/null | grep -i 'VGA\|3D\|Display' | awk '{print $1}' | head -1)
+    if [[ -n "$gpu_pci" ]]; then
+        pref_size=$(lspci -v -s "$gpu_pci" 2>/dev/null | grep -i "prefetchable" | grep -iv "non-prefetchable" | grep -oP 'size=\K[0-9]+[MG]' | head -1)
+        if [[ "$pref_size" =~ ^([0-9]+)G$ ]]; then
+            GPU_VRAM_MB=$(( ${BASH_REMATCH[1]} * 1024 ))
+        elif [[ "$pref_size" =~ ^([0-9]+)M$ ]]; then
+            GPU_VRAM_MB="${BASH_REMATCH[1]}"
+        fi
+    fi
+fi
+
+# GPU driver version (xe = Intel Arc, amdgpu = AMD, i915 = older Intel)
+GPU_DRIVER_VERSION="null"
+for mod in amdgpu i915 nouveau; do
+    mod_ver=$(cat /sys/module/${mod}/version 2>/dev/null)
+    if [[ -n "$mod_ver" ]]; then
+        GPU_DRIVER_VERSION="${mod}: ${mod_ver}"
+        break
+    fi
+done
+# xe (Intel Arc) doesn't expose /sys/module/xe/version — use kernel version
+if [[ "$GPU_DRIVER_VERSION" == "null" ]] && lsmod | grep -q '^xe '; then
+    GPU_DRIVER_VERSION="xe: $(uname -r)"
+fi
+
+# RAM speed via dmidecode (needs sudo; graceful fallback)
+RAM_SPEED_MHZ="null"
+RAM_CHANNEL_CONFIG="null"
+if command -v dmidecode &>/dev/null; then
+    dmi_out=$(echo "$TAO_SUDO_PASS" | sudo -S dmidecode -t memory 2>/dev/null || true)
+    if [[ -n "$dmi_out" ]]; then
+        speed=$(echo "$dmi_out" | grep -i "Speed:" | grep -v "Unknown" | head -1 | awk '{print $2}')
+        [[ "$speed" =~ ^[0-9]+$ ]] && RAM_SPEED_MHZ="$speed"
+        num_slots=$(echo "$dmi_out" | grep -c "Memory Device" || true)
+        if [[ "$num_slots" -gt 0 ]]; then
+            RAM_CHANNEL_CONFIG="${num_slots}-slot"
+        fi
+    fi
+fi
+
 # ── v1.4: Thermal headroom ────────────────────────────────────────────────────
 CURR_TEMP=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null | awk '{printf "%.0f", $1/1000}' || echo "null")
 TJMAX=$(echo "$TAO_SUDO_PASS" | sudo -S turbostat --quiet --num_iterations 1 --show Tj_max 2>/dev/null \
@@ -158,7 +229,7 @@ STABILITY_FLAG="true"
 read_watts() {
     local rapl="/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj"
 
-    # AMD fallback path: try loading amd_energy module, then check powercap sysfs
+    # AMD fallback: try loading amd_energy module, then scan powercap sysfs
     if [[ ! -f "$rapl" ]]; then
         echo "$TAO_SUDO_PASS" | sudo -S modprobe amd_energy 2>/dev/null || true
         local amd_rapl
@@ -166,7 +237,14 @@ read_watts() {
         [[ -n "$amd_rapl" ]] && rapl="$amd_rapl"
     fi
 
-    # Primary: RAPL energy counter delta over 1 second (works with or without C-states)
+    # Intel Arc (xe driver) hwmon fallback: energy1_input in microjoules (same math)
+    if [[ ! -f "$rapl" ]]; then
+        local xe_energy
+        xe_energy=$(ls /sys/class/drm/card*/device/hwmon/hwmon*/energy1_input 2>/dev/null | head -1)
+        [[ -n "$xe_energy" ]] && rapl="$xe_energy"
+    fi
+
+    # Primary: energy counter delta over 1 second (works with or without C-states)
     if [[ -f "$rapl" ]]; then
         local e1 e2 watts
         # Read energy before
@@ -420,7 +498,13 @@ data = {
     "power_delta_w": n("$PWR_D"),
     "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL",
     "cpu_microcode_version": "$CPU_MICROCODE" if "$CPU_MICROCODE" not in ("unknown","") else None,
-    "gpu_driver_version": "auto-detected",
+    "cpu_l1_cache_kb": ni("$CPU_L1_CACHE_KB") if "$CPU_L1_CACHE_KB" != "null" else None,
+    "cpu_l2_cache_kb": ni("$CPU_L2_CACHE_KB") if "$CPU_L2_CACHE_KB" != "null" else None,
+    "cpu_l3_cache_kb": ni("$CPU_L3_CACHE_KB") if "$CPU_L3_CACHE_KB" != "null" else None,
+    "gpu_vram_mb": ni("$GPU_VRAM_MB") if "$GPU_VRAM_MB" != "null" else None,
+    "gpu_driver_version": "$GPU_DRIVER_VERSION" if "$GPU_DRIVER_VERSION" != "null" else None,
+    "ram_speed_mhz": ni("$RAM_SPEED_MHZ") if "$RAM_SPEED_MHZ" != "null" else None,
+    "ram_channel_config": "$RAM_CHANNEL_CONFIG" if "$RAM_CHANNEL_CONFIG" != "null" else None,
     "dmesg_errors_baseline": 0,
     "dmesg_errors_tuned": ni("$STABILITY_ERRORS"),
     "cpu_throttle_events_baseline": 0,
