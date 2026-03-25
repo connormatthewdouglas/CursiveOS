@@ -198,7 +198,7 @@ If new data collection causes benchmark timeouts or failures:
 2. Comment out `inject_stability_metrics` lines (stability capture ~100ms each)
 3. Revert to previous v0.X script
 
-New fields are optional in the schema, so incomplete data won't break tao-forge submissions.
+New fields are optional in the schema, so incomplete data won't break CursiveRoot submissions.
 
 ---
 
@@ -232,4 +232,4 @@ New fields are optional in the schema, so incomplete data won't break tao-forge 
 - **"What if hardware probe fails?"** → Script returns null for that field. BenchmarkAgent logs the gap. Not fatal.
 - **"Will stability metrics slow down benchmarks?"** → No. Collection is O(200 dmesg lines) = <100ms per call.
 - **"Can I skip EXTENDED_DATA if no GPU?"** → Not recommended. Always inject; use null for missing fields.
-- **"Do I need to update tao-forge schema?"** → Not yet. Test first. Supabase migration happens post-test (Connor decision).
+- **"Do I need to update CursiveRoot schema?"** → Not yet. Test first. Supabase migration happens post-test (Connor decision).

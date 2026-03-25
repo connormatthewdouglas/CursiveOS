@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# tao-forge-status.sh
-# Pull and display all run data from the tao-forge database.
-# Usage: ./tao-forge-status.sh
+# cursiveroot-status.sh
+# Pull and display all run data from the CursiveRoot database.
+# Usage: ./cursiveroot-status.sh
 
 SUPABASE_URL="https://iovvktpuoinmjdgfxgvm.supabase.co"
 SUPABASE_KEY="sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
 H=(-H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY")
 
 echo ""
-echo "tao-forge database status — $(date +%Y-%m-%d)"
+echo "CursiveRoot database status — $(date +%Y-%m-%d)"
 echo "======================================================"
 
 python3 - <<PYEOF

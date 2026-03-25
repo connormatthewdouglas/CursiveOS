@@ -70,7 +70,7 @@ Our use case maps to DePIN almost exactly:
 
 ## 2. Competitive Landscape — Hardware Databases
 
-> **Relevance:** tao-forge is our moat. Understanding what exists (and what's broken) tells us how to win.
+> **Relevance:** CursiveRoot is our moat. Understanding what exists (and what's broken) tells us how to win.
 
 ### WhatToMine
 *(2026-03-20)*
@@ -96,14 +96,14 @@ Our use case maps to DePIN almost exactly:
 - Submitted by corporations in controlled lab environments
 - NOT crowdsourced — no individual miners represented
 - **Gap:** totally disconnected from real miner hardware (no RX 580, no Arc A750 results)
-- **Our opportunity:** tao-forge is the MLPerf for the other 99% of hardware
+- **Our opportunity:** CursiveRoot is the MLPerf for the other 99% of hardware
 
 ### UserBenchmark (cautionary tale)
 *(2026-03-20)*
 - Amassed millions of crowdsourced CPU/GPU benchmarks
 - **Destroyed credibility** by silently biasing scoring methodology to favor certain hardware
 - Got banned across major community forums (r/hardware, etc.)
-- **Lesson for tao-forge:** scoring methodology transparency is existential. Must be:
+- **Lesson for CursiveRoot:** scoring methodology transparency is existential. Must be:
   - Open-source scoring algorithm
   - Hardware-bound submissions (can't fake results)
   - Statistical outlier detection
@@ -159,7 +159,7 @@ Our use case maps to DePIN almost exactly:
 - Proof-of-GPU verification — benchmarks raw GPU capability
 - Closest existing analog to our verification architecture
 - Does NOT touch kernel parameters
-- **Study their verification mechanism** for tao-forge anti-gaming design
+- **Study their verification mechanism** for CursiveRoot anti-gaming design
 
 **SN3 — Templar (Training)**
 - Gradient quality dominates, speed secondary
@@ -234,11 +234,11 @@ Our use case maps to DePIN almost exactly:
 
 ## 6. Anti-Gaming & Verification Architecture
 
-> **Relevance:** Before attaching any token reward to benchmark submissions, tao-forge needs hardware-bound verification. Claude's explicit requirement for v1.4 schema.**
+> **Relevance:** Before attaching any token reward to benchmark submissions, CursiveRoot needs hardware-bound verification. Claude's explicit requirement for v1.4 schema.**
 
 ### The Problem
 *(2026-03-20)*
-- Currently anyone can submit fake benchmark results to tao-forge
+- Currently anyone can submit fake benchmark results to CursiveRoot
 - Once token rewards are attached, fake submissions become financially motivated
 - Must be solved at the schema level BEFORE any incentive layer
 
@@ -264,7 +264,7 @@ Additional fields:
 - Academic paper (Dec 2025, IEEE): "Proof of Authenticity of General IoT Information with Tamper-Evident Sensors and Blockchain"
 - Method: devices periodically sign readouts, link data using redundant hash chains, submit cryptographic evidence via Merkle trees
 - Source: https://arxiv.org/html/2512.18560
-- **Directly applicable** to tao-forge — benchmark runner signs results with hardware-derived key
+- **Directly applicable** to CursiveRoot — benchmark runner signs results with hardware-derived key
 
 ### SN27 (Proof-of-GPU) as Design Reference
 *(2026-03-20)*
@@ -347,7 +347,7 @@ The project is fundamentally about closing the loop between AI and OS-level opti
 
 ## 🔧 Research TODO List
 - [ ] Exact cost to deploy a Solana token/program for contributor rewards
-- [ ] DIMO verification architecture (vehicle data DePIN) — borrow for tao-forge?
+- [ ] DIMO verification architecture (vehicle data DePIN) — borrow for CursiveRoot?
 - [ ] IoTeX — purpose-built for physical device data contributions
 - [ ] Intel Arc B580 (Battlemage) benchmark — worth running v0.7?
 - [ ] SN27 verification mechanism deep dive — design reference for anti-gaming

@@ -68,7 +68,7 @@ cd ~/CursiveOS && bash tao-os-presets-v0.8.sh --undo
 
 ## What gets uploaded
 
-Your benchmark results go to the CursiveOS hardware database (tao-forge). This includes:
+Your benchmark results go to the CursiveOS hardware database (CursiveRoot). This includes:
 - Your CPU model and core count
 - Your GPU model
 - Your kernel version and OS name
