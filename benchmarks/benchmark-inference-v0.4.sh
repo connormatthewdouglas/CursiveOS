@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-inference-v0.4.sh
+# CursiveOS benchmark-inference-v0.4.sh
 # Cold-start latency benchmark: measures GPU wakeup + model load penalty.
 # v0.4: Extended data collection (hardware fingerprint + stability metrics)
 #
@@ -28,7 +28,7 @@ MODEL="${2:-tinyllama}"
 PASSES=5          # cold-start calls per pass
 IDLE_SLEEP=15     # seconds to wait for GPU to drop to idle freq between calls
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
@@ -169,7 +169,7 @@ run_pass() {
 }
 
 # ── Header ────────────────────────────────────────────────────────────────────
-log "TAO-OS Inference Benchmark v0.4 — Cold-Start Latency (with Extended Data)"
+log "CursiveOS Inference Benchmark v0.4 — Cold-Start Latency (with Extended Data)"
 log "Model:      $MODEL"
 log "Preset:     $PRESET_SCRIPT"
 log "Passes:     $PASSES  (${IDLE_SLEEP}s idle gap between each)"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-inference-v0.1.sh
+# CursiveOS benchmark-inference-v0.1.sh
 # Measures AI inference performance on Intel Arc A750 via ollama REST API.
 # Paired test: baseline (no presets) vs tuned (presets applied) in same session.
 # Reports: tokens/sec, time-to-first-token, GPU vs CPU confirmation.
@@ -15,7 +15,7 @@ MODEL="${2:-tinyllama}"
 PASSES=5        # inference calls per pass (more = more stable average)
 WARMUP=1        # throwaway calls before measuring (GPU cold start)
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
@@ -136,7 +136,7 @@ run_pass() {
 }
 
 # ── Header ───────────────────────────────────────────────────────────────────
-log "TAO-OS Inference Benchmark v0.1"
+log "CursiveOS Inference Benchmark v0.1"
 log "Model:   $MODEL"
 log "Preset:  $PRESET_SCRIPT"
 log "Passes:  $PASSES  (+ $WARMUP warmup)"

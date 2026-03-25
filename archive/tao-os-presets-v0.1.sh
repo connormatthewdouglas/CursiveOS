@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS tao-os-presets-v0.1.sh
+# CursiveOS tao-os-presets-v0.1.sh
 # v0.1 – First separate preset applicator (temporary tweaks only)
 # Usage: ./tao-os-presets-v0.1.sh --apply-temp   or   --undo
 # Applies: performance governor + energy bias (Intel/AMD)
@@ -9,7 +9,7 @@ set -euo pipefail
 
 ACTION=${1:-"--help"}
 
-echo "TAO-OS Presets v0.1"
+echo "CursiveOS Presets v0.1"
 echo "----------------------------------------"
 
 if [[ "$ACTION" == "--help" ]]; then

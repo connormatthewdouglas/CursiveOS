@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS tao-os-presets-v0.2.sh
+# CursiveOS tao-os-presets-v0.2.sh
 # v0.2 – Added temporary net buffer increase (rmem/wmem_max = 16MB) for Bittensor gossip/chain traffic
 # Usage: ./tao-os-presets-v0.2.sh --apply-temp   or   --undo
 # All changes temporary (reset on reboot or undo)
@@ -8,7 +8,7 @@ set -euo pipefail
 
 ACTION=${1:-"--help"}
 
-echo "TAO-OS Presets v0.2"
+echo "CursiveOS Presets v0.2"
 echo "----------------------------------------"
 
 if [[ "$ACTION" == "--help" ]]; then

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS tao-os-presets-v0.6.sh
+# CursiveOS tao-os-presets-v0.6.sh
 # v0.6 – 4 new tweaks on top of v0.5:
 #   + AMD CPU boost: ensure turbo boost enabled
 #   + THP defrag: madvise (targeted defrag for ML workloads, avoids stalling system)
@@ -16,7 +16,7 @@ set -euo pipefail
 ACTION=${1:-"--help"}
 
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
@@ -37,7 +37,7 @@ done
 # AMD CPU boost sysfs path
 BOOST_PATH="/sys/devices/system/cpu/cpufreq/boost"
 
-echo "TAO-OS Presets v0.6"
+echo "CursiveOS Presets v0.6"
 echo "----------------------------------------"
 [[ -n "$GPU_GT" ]] && echo "GPU: Intel Arc detected ($GPU_GT)" || echo "GPU: Intel Arc not found – GPU/SYCL tweaks will be skipped"
 [[ -f "$BOOST_PATH" ]] && echo "CPU boost: sysfs path found" || echo "CPU boost: sysfs path not found – boost tweak will be skipped"
@@ -201,7 +201,7 @@ if [[ "$ACTION" == "--apply-temp" ]]; then
     # SYCL persistent kernel cache (Intel Arc only)
     if [[ -n "$GPU_GT" ]]; then
         sc "cat > $SYCL_PROFILE << 'SYCL_EOF'
-# TAO-OS: Intel compute environment (applied by tao-os-presets-v0.6.sh)
+# CursiveOS: Intel compute environment (applied by tao-os-presets-v0.6.sh)
 export SYCL_CACHE_PERSISTENT=1
 SYCL_EOF" 2>/dev/null \
             && echo "✓ SYCL persistent cache: enabled (/etc/profile.d/tao-os-sycl.sh)" \

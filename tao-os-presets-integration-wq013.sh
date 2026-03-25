@@ -9,7 +9,7 @@ ACTION=${1:-"--help"}
 BASE_PRESET="$(dirname "${BASH_SOURCE[0]}")/tao-os-presets-v0.7.sh"
 
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 export TAO_SUDO_PASS
 SP="$TAO_SUDO_PASS"

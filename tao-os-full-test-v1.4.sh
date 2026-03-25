@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# TAO-OS Full Test v1.4
+# CursiveOS Full Test v1.4
 # Single command for Bittensor miners to measure their system's baseline
-# and the impact of TAO-OS performance presets.
+# and the impact of CursiveOS performance presets.
 #
 # Runs three paired benchmarks (baseline → presets → baseline restored):
 #   1. Network throughput  — BBR vs CUBIC on simulated WAN (50ms RTT, 0.5% loss)
@@ -39,7 +39,7 @@ SUPABASE_KEY="sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
 
 # ── Sudo prompt (once — exported so child scripts skip re-prompting) ──────────
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 export TAO_SUDO_PASS
 
@@ -49,7 +49,7 @@ git -C "$SCRIPT_DIR" pull --quiet 2>/dev/null && echo "  → Up to date." || ech
 
 # ── Preflight checks ──────────────────────────────────────────────────────────
 echo ""
-echo "TAO-OS Full Test v1.4"
+echo "CursiveOS Full Test v1.4"
 echo "======================================"
 
 if [[ ! -f "$PRESET" ]]; then
@@ -374,7 +374,7 @@ fi
 SUMMARY=$(cat <<EOF
 
 ======================================================
-TAO-OS FULL TEST RESULTS — $(date +%Y-%m-%d)
+CursiveOS FULL TEST RESULTS — $(date +%Y-%m-%d)
 ======================================================
 Hardware: $CPU_MODEL
           $GPU_MODEL
@@ -601,7 +601,7 @@ PYEOF
 fi
 
 echo ""
-echo "https://github.com/connormatthewdouglas/TAO-OS"
+echo "https://github.com/connormatthewdouglas/CursiveOS"
 echo ""
 
 # ── Notify CopperClaw that the run is complete ────────────────────────────────

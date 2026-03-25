@@ -1,4 +1,4 @@
-# TAO-OS External Tester Onboarding
+# CursiveOS External Tester Onboarding
 
 **Status:** Draft for Phase 2 (v1.5 gate)  
 **Created:** 2026-03-21  
@@ -6,9 +6,9 @@
 
 ---
 
-## What is TAO-OS?
+## What is CursiveOS?
 
-TAO-OS is a collection of **safe, reversible Linux kernel tweaks** that improve Bittensor mining performance without hardware changes or risky modifications.
+CursiveOS is a collection of **safe, reversible Linux kernel tweaks** that improve Bittensor mining performance without hardware changes or risky modifications.
 
 **Key facts:**
 - **No installation needed.** Just run a test script.
@@ -45,8 +45,8 @@ A set of system-level optimizations:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/connormatthewdouglas/TAO-OS.git
-cd TAO-OS
+git clone https://github.com/connormatthewdouglas/CursiveOS.git
+cd CursiveOS
 ```
 
 ### 2. Install Dependencies
@@ -62,7 +62,7 @@ ollama pull tinyllama
 ### 3. Run the Test
 
 ```bash
-# From the TAO-OS directory
+# From the CursiveOS directory
 ./tao-os-full-test-v1.4.sh
 ```
 
@@ -106,7 +106,7 @@ A: Yes. More data points are welcome. Run it once per week if possible.
 A: The script auto-reverts all kernel settings on completion or failure. If something goes wrong, reboot — all changes are in-memory or sysfs, not persistent.
 
 **Q: Who has access to my results?**  
-A: Only the TAO-OS core team (Connor Douglas, CopperClaw, board members). Results are used to validate across hardware and are eventually published anonymized (hardware specs only, no identifying info).
+A: Only the CursiveOS core team (Connor Douglas, CopperClaw, board members). Results are used to validate across hardware and are eventually published anonymized (hardware specs only, no identifying info).
 
 ---
 
@@ -127,7 +127,7 @@ A: Only the TAO-OS core team (Connor Douglas, CopperClaw, board members). Result
 
 ---
 
-**Thank you for helping validate TAO-OS.** Your data makes this real.
+**Thank you for helping validate CursiveOS.** Your data makes this real.
 
 — Connor Douglas & CopperClaw  
-TAO-OS Project
+CursiveOS Project

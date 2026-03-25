@@ -1,13 +1,15 @@
-# ForgeOS: AI-Guided Linux Optimization for Local Compute
-### Technical White Paper — v0.4 (March 2026)
+# CursiveOS: AI-Guided Linux Optimization for Local Compute
+### Technical White Paper — v0.4.1 (March 2026)
+
+> **v0.4.1 note:** This revision reflects the project rebrand to CursiveOS (2026-03-25). Recursive → Cursive: the self-improving data flywheel is literally recursive.
 
 ---
 
 ## Abstract
 
-ForgeOS is an open-source Linux optimization stack that delivers measurable, hardware-verified performance improvements for any local compute workload — local AI inference, crypto mining, or any P2P-networked process — through temporary, fully-reversible OS-level tuning. In validated testing across two distinct hardware configurations, ForgeOS delivered **+454–616% network throughput** and **-2.3–15.8% cold-start latency** improvement with zero permanent system changes.
+CursiveOS is an open-source Linux optimization stack that delivers measurable, hardware-verified performance improvements for any local compute workload — local AI inference, crypto mining, or any P2P-networked process — through temporary, fully-reversible OS-level tuning. In validated testing across two distinct hardware configurations, CursiveOS delivered **+454–616% network throughput** and **-2.3–15.8% cold-start latency** improvement with zero permanent system changes.
 
-The long-term vision is larger: ForgeOS is the seed of a self-improving OS flywheel. Every benchmark run contributes structured hardware performance data to **tao-forge** — a growing database of hardware profiles, applied tweaks, and measured outcomes. Over time, this dataset enables AI to generate optimized configurations for any hardware automatically, closing the loop between measurement, optimization, and reward.
+The long-term vision is larger: CursiveOS is the seed of a self-improving OS flywheel. Every benchmark run contributes structured hardware performance data to **tao-forge** — a growing database of hardware profiles, applied tweaks, and measured outcomes. Over time, this dataset enables AI to generate optimized configurations for any hardware automatically, closing the loop between measurement, optimization, and reward.
 
 The incentive layer — a decentralized "contribute data, earn rewards" mechanism — is the flywheel's fuel. The optimizations are available to everyone today, for free. The network effect of the database is the moat.
 
@@ -31,7 +33,7 @@ Linux also defaults to CUBIC congestion control, which degrades aggressively und
 
 Between inference requests or mining jobs, a GPU idles to its minimum frequency — as low as 300–600 MHz on Intel Arc hardware. When a request arrives, the GPU must ramp back to operating frequency before work can begin, adding measurable latency to every cold call. On Intel Arc A750 hardware this penalty is ~22ms per request. On older CPU-only hardware (AMD FX-8350), C-state and governor latency dominate — adding 366–395ms per cold request.
 
-These losses are invisible in standard benchmarks and untreated in default Linux configurations across every relevant community. ForgeOS fixes both bottlenecks, on any hardware, in one command. A local Ollama user, an llama.cpp cluster operator, and a Bittensor validator are solving the exact same OS-level problem.
+These losses are invisible in standard benchmarks and untreated in default Linux configurations across every relevant community. CursiveOS fixes both bottlenecks, on any hardware, in one command. A local Ollama user, an llama.cpp cluster operator, and a Bittensor validator are solving the exact same OS-level problem.
 
 ### 1.2 The data gap
 
@@ -41,25 +43,25 @@ The result: every operator individually rediscovers the same optimizations (or d
 
 ---
 
-## 2. The ForgeOS Approach
+## 2. The CursiveOS Approach
 
 ### 2.1 Design principles
 
 - **Temporary by default.** Every change reverts on reboot or with `--undo`. No permanent modifications.
 - **Benchmarked before shipping.** No tweak enters the preset stack without a paired before/after measurement across at least two hardware configurations.
 - **Hardware-aware.** The preset script detects available hardware features and skips inapplicable tweaks gracefully.
-- **Single command.** `./forgeos-full-test-v1.4.sh` runs all benchmarks, applies presets, measures the delta, and submits hardware-verified results to tao-forge automatically.
-- **Workload-agnostic.** The Linux bottlenecks ForgeOS fixes are universal — identical for local inference (Ollama, llama.cpp, vLLM) and any P2P-networked compute workload on Linux.
+- **Single command.** `./cursiveos-full-test-v1.4.sh` runs all benchmarks, applies presets, measures the delta, and submits hardware-verified results to tao-forge automatically.
+- **Workload-agnostic.** The Linux bottlenecks CursiveOS fixes are universal — identical for local inference (Ollama, llama.cpp, vLLM) and any P2P-networked compute workload on Linux.
 
 ### 2.2 The Virtuous Cycle
 
-ForgeOS is designed around a closed self-reinforcing loop:
+CursiveOS is designed around a closed self-reinforcing loop:
 
 ```
 DATA IN
 Operators run benchmarks → structured performance data submitted to tao-forge
         ↓
-DATA CONVERTED TO OPTIMIZATION  
+DATA CONVERTED TO OPTIMIZATION
 AI + contributors analyze the dataset → generate hardware-specific optimizations
         ↓
 OPTIMIZATION VALIDATED & REWARDED
@@ -149,7 +151,7 @@ This schema is designed for AI consumption from day one — every field an optim
 
 ### 3.2 Benchmark Methodology
 
-Three paired benchmarks run in the same thermal window via `forgeos-full-test-v1.4.sh`:
+Three paired benchmarks run in the same thermal window via `cursiveos-full-test-v1.4.sh`:
 
 **Network benchmark** — `tc netem` WAN simulation (25ms one-way + 0.5% loss), 5 × 10s iperf3 passes, CUBIC baseline vs BBR + 16MB buffers tuned.
 
@@ -196,7 +198,7 @@ The `tcp_rmem/wmem` fix applies to any Linux system on any networked compute wor
 - **Bittensor/Kaspa/Monero:** chain sync, validator gossip, P2P transaction propagation
 - **Any networked process:** pool connections, share submission, distributed coordination
 
-**The underlying Linux bottleneck is not workload-specific.** It affects any Linux machine on a WAN link. ForgeOS is the first tool to benchmark and package this fix for the local compute community at large.
+**The underlying Linux bottleneck is not workload-specific.** It affects any Linux machine on a WAN link. CursiveOS is the first tool to benchmark and package this fix for the local compute community at large.
 
 ---
 
@@ -211,13 +213,11 @@ Expand to 5+ external operators with close supervision. Gate conditions:
 - Documented ≥1.5% average gain confirmed by external testers
 - tao-forge receiving auto-submissions from machines outside the core fleet
 
-**At the v1.5 gate:** rebrand to a workload-agnostic identity reflecting the broader vision. The current public identity is appropriate for Phase 1–2; the rebrand aligns with the expanded local AI + compute positioning.
-
 ### Phase 3 — Public Release & Broader Compute
-Open to the broader community — local AI operators, inference clusters, crypto miners. Expand tao-forge to track results across diverse hardware and workloads. The hardware database becomes the canonical reference for "what does ForgeOS deliver on my hardware?"
+Open to the broader community — local AI operators, inference clusters, crypto miners. Expand tao-forge to track results across diverse hardware and workloads. The hardware database becomes the canonical reference for "what does CursiveOS deliver on my hardware?"
 
 ### Phase 4 — Incentive Layer
-Deploy a contribution-reward system for the tao-forge database. The precise token mechanics are intentionally deferred: the database must demonstrate its value on merit before economic incentives are introduced. What can be committed now is the architecture — the v1.4 hardware-fingerprint schema (SHA256 of CPU microcode + GPU VBIOS + kernel) cryptographically ties submissions to specific hardware, making the verification layer tamper-evident before any reward is attached. When incentives launch, the anti-gaming infrastructure is already in place and the dataset already has real value.
+Deploy a contribution-reward system for the tao-forge database. The precise token mechanics are intentionally deferred: the database must demonstrate its value on merit before economic incentives are introduced. What can be committed now is the architecture — the v1.4 hardware-fingerprint schema (SHA256 of CPU microcode + GPU VBIOS + kernel version) cryptographically ties submissions to specific hardware, making the verification layer tamper-evident before any reward is attached. When incentives launch, the anti-gaming infrastructure is already in place and the dataset already has real value.
 
 **Sequencing is the strategy.** Proven database first. Incentives second.
 
@@ -225,7 +225,7 @@ Deploy a contribution-reward system for the tao-forge database. The precise toke
 With sufficient tao-forge data (target: 500+ hardware profiles), train or fine-tune models to generate hardware-specific preset recommendations automatically. Given your CPU/GPU/kernel profile, the system recommends which tweaks to apply and predicts expected gains — without running the full benchmark suite.
 
 ### Phase 6 — Full Distribution
-ForgeOS as a bootable ISO with pre-applied optimizations, a custom kernel, and dedicated package repositories. The same kernel/scheduler/driver optimizations that benefit inference clusters and miners also benefit gaming rigs — the addressable market expands naturally. Goal: the default Linux for anyone who wants hardware running at its actual ceiling.
+CursiveOS as a bootable ISO with pre-applied optimizations, a custom kernel, and dedicated package repositories. The same kernel/scheduler/driver optimizations that benefit inference clusters and miners also benefit gaming rigs — the addressable market expands naturally. Goal: the default Linux for anyone who wants hardware running at its actual ceiling.
 
 ---
 
@@ -233,9 +233,9 @@ ForgeOS as a bootable ISO with pre-applied optimizations, a custom kernel, and d
 
 ### 6.1 Why local AI is the primary frame
 
-The standard Linux tuning conversation happens in crypto mining communities. ForgeOS was built and validated there — but the bottlenecks it fixes are structural to the OS, not specific to any workload. Anyone running Ollama locally, deploying llama.cpp in a small cluster, or operating a self-hosted inference endpoint hits the exact same TCP buffer ceiling and GPU frequency floor.
+The standard Linux tuning conversation happens in crypto mining communities. CursiveOS was built and validated there — but the bottlenecks it fixes are structural to the OS, not specific to any workload. Anyone running Ollama locally, deploying llama.cpp in a small cluster, or operating a self-hosted inference endpoint hits the exact same TCP buffer ceiling and GPU frequency floor.
 
-Local AI is structurally growing; crypto mining is cyclical. Positioning ForgeOS as a hardware optimizer for local compute addresses a larger, faster-growing market without abandoning the mining community that validated the core results.
+Local AI is structurally growing; crypto mining is cyclical. Positioning CursiveOS as a hardware optimizer for local compute addresses a larger, faster-growing market without abandoning the mining community that validated the core results.
 
 ### 6.2 The data moat vs script defensibility
 
@@ -251,12 +251,12 @@ Any contribution-reward system must solve the anti-gaming problem before rewards
 
 ## 7. Philosophy
 
-An operating system that gets better the more it is used. Local AI operators run ForgeOS and their inference gets faster. Miners run it and their rigs improve. Contributors discover better tweaks and share them. The network validates the best work. AI synthesizes the dataset into optimizations no individual would find alone.
+An operating system that gets better the more it is used. Local AI operators run CursiveOS and their inference gets faster. Miners run it and their rigs improve. Contributors discover better tweaks and share them. The network validates the best work. AI synthesizes the dataset into optimizations no individual would find alone.
 
-The bottlenecks Linux ships with today are invisible taxes on everyone doing serious local compute. ForgeOS makes them visible, measures them, and removes them. The benchmark tool is just the beginning.
+The name says it all: recursive → cursive. The self-improving flywheel is literally recursive. The bottlenecks Linux ships with today are invisible taxes on everyone doing serious local compute. CursiveOS makes them visible, measures them, and removes them. The benchmark tool is just the beginning.
 
 ---
 
-*ForgeOS is open source. Built by Frosty Condor (@frostycondor).*
+*CursiveOS is open source. Built by Frosty Condor (@frostycondor).*
 *Contributions, benchmark results, and hardware reports welcome.*
-*https://github.com/connormatthewdouglas/TAO-OS*
+*https://github.com/connormatthewdouglas/CursiveOS*

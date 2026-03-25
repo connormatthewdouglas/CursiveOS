@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-network-v0.1.sh
+# CursiveOS benchmark-network-v0.1.sh
 # Measures TCP throughput and latency under simulated WAN conditions.
 #
 # WHY THIS MATTERS FOR MINING:
@@ -21,7 +21,7 @@ set -euo pipefail
 
 PRESET_SCRIPT="${1:-../tao-os-presets-v0.6.sh}"
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
-    read -rsp "[TAO-OS] sudo password: " TAO_SUDO_PASS && echo
+    read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
@@ -149,7 +149,7 @@ run_pass() {
 }
 
 # ── Header ────────────────────────────────────────────────────────────────────
-log "TAO-OS Network Benchmark v0.1"
+log "CursiveOS Network Benchmark v0.1"
 log "Preset:   $PRESET_SCRIPT"
 log "WAN sim:  ${WAN_DELAY} one-way delay + ${WAN_LOSS} loss (loopback netem)"
 log "Duration: ${DURATION}s per run × ${RUNS} runs"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TAO-OS benchmark-v0.7-vanilla.sh
+# CursiveOS benchmark-v0.7-vanilla.sh
 # v0.7 – Fixed progress: now uses sysbench --report-interval=30 (built-in, reliable)
 # Vanilla mode: NO tweaks. Pure measurement + clean 30s progress.
 
@@ -10,7 +10,7 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/tao-os-bench-$(date +%Y%m%d-%H%M%S).log"
 BASELINE_FILE="$HOME/TAO-OS/last_baseline.txt"
 
-echo "TAO-OS Mining Benchmark v0.7 (Vanilla - No Tweaks)"
+echo "CursiveOS Mining Benchmark v0.7 (Vanilla - No Tweaks)"
 echo "Started: $(date)"
 echo "----------------------------------------"
 
