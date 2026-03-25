@@ -301,7 +301,14 @@ extract_sustained() {
     local log="$1"
     WARM_BASELINE=$(grep "Baseline:" "$log" | grep -oP '[0-9]+\.[0-9]+ tok/s' | head -1 || echo "?")
     WARM_TUNED=$(grep "Tuned:" "$log"       | grep -oP '[0-9]+\.[0-9]+ tok/s' | head -1 || echo "?")
-    WARM_DELTA=$(grep "Delta:" "$log"       | grep -oP '[+\-]?[0-9]*\.[0-9]+%' | head -1 || echo "?")
+    # Delta may be "N/A" (CPU inference suppressed) or a percentage
+    local raw_delta
+    raw_delta=$(grep "Delta:" "$log" | tail -1 || echo "")
+    if echo "$raw_delta" | grep -q "N/A"; then
+        WARM_DELTA="N/A"
+    else
+        WARM_DELTA=$(echo "$raw_delta" | grep -oP '[+\-]?[0-9]*\.[0-9]+%' | head -1 || echo "?")
+    fi
 }
 
 # ── Idle power — baseline ─────────────────────────────────────────────────────
@@ -385,7 +392,7 @@ Benchmark              Baseline          Tuned             Delta
 ------------------------------------------------------
 Network throughput     ${NET_BASELINE} Mbit/s      ${NET_TUNED} Mbit/s      ${NET_DELTA}%
 Cold-start latency     ${COLD_BASELINE}ms           ${COLD_TUNED}ms            ${COLD_DELTA}%
-Sustained inference    ${WARM_BASELINE}     ${WARM_TUNED}   ${WARM_DELTA}
+Sustained inference    ${WARM_BASELINE:-N/A}     ${WARM_TUNED:-N/A}   ${WARM_DELTA:-N/A}
 Idle power draw        ${PWR_IDLE}W               ${PWR_TUNED_IDLE}W             ${PWR_DELTA}W
 Stability              ${STABILITY_FLAG} (dmesg errors: ${STABILITY_ERRORS})
 
