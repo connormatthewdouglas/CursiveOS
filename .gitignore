@@ -4,44 +4,20 @@ logs/
 .env.local
 *.env
 
-# CopperClaw operational files — not for public repo
-router.py
-CLAUDE-TASK-v1.4.md
+# References — local dev context, not for public repo
 references/AGENTS-FULL.md
 references/CLAUDE.md
+CLAUDE-TASK-v1.4.md
 LEARNING.md
 LEARNING_CYCLE.md
-.cron/
 scripts/
 benchmarks/*.log
-dashboard/comms.jsonl
-dashboard/run_complete.json
-dashboard/processed_approvals.json
-dashboard/approvals.json
-dashboard/work_queue.json
 
-# CopperClaw private memory — never commit
-AGENTS.md
-SOUL.md
-MEMORY.md
-.MEMORY.md
-USER.md
-HEARTBEAT.md
-IDENTITY.md
-TOOLS.md
-memory/
-.openclaw/
-
-# Agent infrastructure — openclaw-specific, not for public repo
-agents/
-
-# Brain files — local experiments, not project code
+# Runtime / local state
 CLAUDE_SESSION.md
-dashboard/session_watchdog.py
+.cron/
+.openclaw/
 .local/
-
-# Runtime state — not for repo
-dashboard/spend_state.json
 
 # Nested repo copy — should not exist here
 TAO-OS/
