@@ -10,7 +10,7 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 
 **See live results from all machines:**
 ```bash
-./tao-forge-status.sh
+./cursiveroot-status.sh
 ```
 
 ---
@@ -117,9 +117,9 @@ Each benchmark is also runnable standalone:
 - **Done** → Preset stack v0.5 (14 tweaks, fully reversible)
 - **Done** → Network benchmark: +127% confirmed (BBR + 16MB buffers)
 - **Done** → Cold-start inference benchmark: -22ms confirmed (GPU freq lock)
-- **Done** → Full-test wrapper v1.2 (tao-forge auto-submit, zero setup)
+- **Done** → Full-test wrapper v1.2 (CursiveRoot auto-submit, zero setup)
 - **Done** → Preset stack v0.6 (18 tweaks, --dry-run support)
-- **Done** → tao-forge: live hardware database, auto-submit from any machine
+- **Done** → CursiveRoot: live hardware database, auto-submit from any machine
 - **Done** → Preset stack v0.7 (25 tweaks: +7 research-backed additions)
 - **Done** → v0.7 validated: ~1 Gbit/s network on Arc A750 + RX 580 confirmed
 - **Next** → Run v0.7 on remaining fleet (laptops, all-in-one, friends' PCs)
@@ -138,7 +138,7 @@ Bittensor can't thrive long-term on a single vendor's silicon. CursiveOS is buil
 
 Built for the TAO network. Star the repo if you're a miner, validator, or believe in decentralizing AI compute.
 
-**Got results?** Run the wrapper and they'll appear automatically in tao-forge. Or open an issue on GitHub.
+**Got results?** Run the wrapper and they'll appear automatically in CursiveRoot. Or open an issue on GitHub.
 
 Made by [@connormatthewdouglas](https://github.com/connormatthewdouglas)
 
@@ -154,7 +154,7 @@ This repo is built by two AIs working alongside the founder:
 | `benchmarks/` | Benchmark scripts |
 | `docs/` | White paper, action plan |
 | `tao-os-*.sh` | Preset + test scripts |
-| `tao-forge-status.sh` | Forge status reporter |
+| `cursiveroot-status.sh` | Forge status reporter |
 | `setup-intel-arc.sh` | Hardware setup |
 
 ### 🟤 CopperClaw (Async Executor — OpenClaw)

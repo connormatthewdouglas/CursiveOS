@@ -33,7 +33,7 @@ mkdir -p "$LOG_DIR"
 SUMMARY_LOG="$LOG_DIR/cursiveos-full-test-$(date +%Y%m%d-%H%M%S).log"
 HW_DB="$SCRIPT_DIR/hardware-profiles.json"
 
-# ── tao-forge (Supabase) ──────────────────────────────────────────────────────
+# ── CursiveRoot (Supabase) ──────────────────────────────────────────────────────
 SUPABASE_URL="https://iovvktpuoinmjdgfxgvm.supabase.co"
 SUPABASE_KEY="sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
 
@@ -400,9 +400,9 @@ echo "$SUMMARY" >> "$SUMMARY_LOG"
 echo ""
 echo "Full summary saved: $SUMMARY_LOG"
 
-# ── Submit to tao-forge (Supabase) ────────────────────────────────────────────
+# ── Submit to CursiveRoot (Supabase) ────────────────────────────────────────────
 echo ""
-echo "Submitting results to tao-forge..."
+echo "Submitting results to CursiveRoot..."
 
 to_json_num() {
     local v="${1//+/}"
@@ -526,9 +526,9 @@ RUN_RESP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
     -d "$RUN_JSON" 2>/dev/null || echo "000")
 
 if [[ "$RUN_RESP" == "201" ]]; then
-    echo "  → Results submitted to tao-forge. (machine: $MACHINE_ID)"
+    echo "  → Results submitted to CursiveRoot. (machine: $MACHINE_ID)"
 else
-    echo "  → tao-forge submit failed (HTTP $RUN_RESP) — results saved locally only."
+    echo "  → CursiveRoot submit failed (HTTP $RUN_RESP) — results saved locally only."
 fi
 
 # ── Append to local hardware-profiles.json (backup) ──────────────────────────

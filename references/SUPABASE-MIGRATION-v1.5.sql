@@ -1,4 +1,4 @@
--- TAO-OS tao-forge schema migration v1.5
+-- TAO-OS CursiveRoot schema migration v1.5
 -- Adds hardware_extended and stability_extended fields to the runs table.
 -- All columns are nullable — old rows remain valid, new data populates going forward.
 -- Run in Supabase SQL editor: https://supabase.com/dashboard/project/iovvktpuoinmjdgfxgvm/sql

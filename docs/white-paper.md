@@ -9,7 +9,7 @@
 
 CursiveOS is an open-source Linux optimization stack that delivers measurable, hardware-verified performance improvements for any local compute workload — local AI inference, crypto mining, or any P2P-networked process — through temporary, fully-reversible OS-level tuning. In validated testing across two distinct hardware configurations, CursiveOS delivered **+454–616% network throughput** and **-2.3–15.8% cold-start latency** improvement with zero permanent system changes.
 
-The long-term vision is larger: CursiveOS is the seed of a self-improving OS flywheel. Every benchmark run contributes structured hardware performance data to **tao-forge** — a growing database of hardware profiles, applied tweaks, and measured outcomes. Over time, this dataset enables AI to generate optimized configurations for any hardware automatically, closing the loop between measurement, optimization, and reward.
+The long-term vision is larger: CursiveOS is the seed of a self-improving OS flywheel. Every benchmark run contributes structured hardware performance data to **CursiveRoot** — a growing database of hardware profiles, applied tweaks, and measured outcomes. Over time, this dataset enables AI to generate optimized configurations for any hardware automatically, closing the loop between measurement, optimization, and reward.
 
 The incentive layer — a decentralized "contribute data, earn rewards" mechanism — is the flywheel's fuel. The optimizations are available to everyone today, for free. The network effect of the database is the moat.
 
@@ -50,7 +50,7 @@ The result: every operator individually rediscovers the same optimizations (or d
 - **Temporary by default.** Every change reverts on reboot or with `--undo`. No permanent modifications.
 - **Benchmarked before shipping.** No tweak enters the preset stack without a paired before/after measurement across at least two hardware configurations.
 - **Hardware-aware.** The preset script detects available hardware features and skips inapplicable tweaks gracefully.
-- **Single command.** `./cursiveos-full-test-v1.4.sh` runs all benchmarks, applies presets, measures the delta, and submits hardware-verified results to tao-forge automatically.
+- **Single command.** `./cursiveos-full-test-v1.4.sh` runs all benchmarks, applies presets, measures the delta, and submits hardware-verified results to CursiveRoot automatically.
 - **Workload-agnostic.** The Linux bottlenecks CursiveOS fixes are universal — identical for local inference (Ollama, llama.cpp, vLLM) and any P2P-networked compute workload on Linux.
 
 ### 2.2 The Virtuous Cycle
@@ -59,7 +59,7 @@ CursiveOS is designed around a closed self-reinforcing loop:
 
 ```
 DATA IN
-Operators run benchmarks → structured performance data submitted to tao-forge
+Operators run benchmarks → structured performance data submitted to CursiveRoot
         ↓
 DATA CONVERTED TO OPTIMIZATION
 AI + contributors analyze the dataset → generate hardware-specific optimizations
@@ -78,7 +78,7 @@ The benchmark tool provides immediate zero-day value (faster machines today). Th
 
 ### 2.3 The Data Moat
 
-tao-forge captures what no existing tool does: structured records of **hardware fingerprint → tweak applied → before/after measured delta → system stability**. As of v1.4, every submission includes:
+CursiveRoot captures what no existing tool does: structured records of **hardware fingerprint → tweak applied → before/after measured delta → system stability**. As of v1.4, every submission includes:
 
 | Field | Purpose |
 |-------|---------|
@@ -205,24 +205,24 @@ The `tcp_rmem/wmem` fix applies to any Linux system on any networked compute wor
 ## 5. Roadmap
 
 ### Phase 1 — Self-Fleet Validation (current)
-Validate v0.7 across all hardware in the Frosty fleet. Complete tao-forge schema v1.4 (hardware-bound submissions, stability flags, thermal data). Target: consistent, reproducible gains across 5+ distinct hardware configurations.
+Validate v0.7 across all hardware in the Frosty fleet. Complete CursiveRoot schema v1.4 (hardware-bound submissions, stability flags, thermal data). Target: consistent, reproducible gains across 5+ distinct hardware configurations.
 
 ### Phase 2 — Trusted Fleet (v1.5 milestone)
 Expand to 5+ external operators with close supervision. Gate conditions:
 - Clean safety record (no bricked systems)
 - Documented ≥1.5% average gain confirmed by external testers
-- tao-forge receiving auto-submissions from machines outside the core fleet
+- CursiveRoot receiving auto-submissions from machines outside the core fleet
 
 ### Phase 3 — Public Release & Broader Compute
-Open to the broader community — local AI operators, inference clusters, crypto miners. Expand tao-forge to track results across diverse hardware and workloads. The hardware database becomes the canonical reference for "what does CursiveOS deliver on my hardware?"
+Open to the broader community — local AI operators, inference clusters, crypto miners. Expand CursiveRoot to track results across diverse hardware and workloads. The hardware database becomes the canonical reference for "what does CursiveOS deliver on my hardware?"
 
 ### Phase 4 — Incentive Layer
-Deploy a contribution-reward system for the tao-forge database. The precise token mechanics are intentionally deferred: the database must demonstrate its value on merit before economic incentives are introduced. What can be committed now is the architecture — the v1.4 hardware-fingerprint schema (SHA256 of CPU microcode + GPU VBIOS + kernel version) cryptographically ties submissions to specific hardware, making the verification layer tamper-evident before any reward is attached. When incentives launch, the anti-gaming infrastructure is already in place and the dataset already has real value.
+Deploy a contribution-reward system for the CursiveRoot database. The precise token mechanics are intentionally deferred: the database must demonstrate its value on merit before economic incentives are introduced. What can be committed now is the architecture — the v1.4 hardware-fingerprint schema (SHA256 of CPU microcode + GPU VBIOS + kernel version) cryptographically ties submissions to specific hardware, making the verification layer tamper-evident before any reward is attached. When incentives launch, the anti-gaming infrastructure is already in place and the dataset already has real value.
 
 **Sequencing is the strategy.** Proven database first. Incentives second.
 
 ### Phase 5 — AI Optimization Loop
-With sufficient tao-forge data (target: 500+ hardware profiles), train or fine-tune models to generate hardware-specific preset recommendations automatically. Given your CPU/GPU/kernel profile, the system recommends which tweaks to apply and predicts expected gains — without running the full benchmark suite.
+With sufficient CursiveRoot data (target: 500+ hardware profiles), train or fine-tune models to generate hardware-specific preset recommendations automatically. Given your CPU/GPU/kernel profile, the system recommends which tweaks to apply and predicts expected gains — without running the full benchmark suite.
 
 ### Phase 6 — Full Distribution
 CursiveOS as a bootable ISO with pre-applied optimizations, a custom kernel, and dedicated package repositories. The same kernel/scheduler/driver optimizations that benefit inference clusters and miners also benefit gaming rigs — the addressable market expands naturally. Goal: the default Linux for anyone who wants hardware running at its actual ceiling.
@@ -241,7 +241,7 @@ Local AI is structurally growing; crypto mining is cyclical. Positioning Cursive
 
 The optimization scripts bundle well-understood Linux tuning knowledge. Sophisticated operators already apply some of these tweaks individually. The scripts are not the moat.
 
-**The database is the moat.** A structured, hardware-verified, AI-ready dataset of OS performance deltas across diverse compute hardware does not exist anywhere. Building it now — before any token incentive creates gaming pressure — means tao-forge accumulates genuine value with an established, trustworthy methodology. By the time incentives launch, the dataset is already defensible. A competitor starting later faces a database gap, not just a code gap.
+**The database is the moat.** A structured, hardware-verified, AI-ready dataset of OS performance deltas across diverse compute hardware does not exist anywhere. Building it now — before any token incentive creates gaming pressure — means CursiveRoot accumulates genuine value with an established, trustworthy methodology. By the time incentives launch, the dataset is already defensible. A competitor starting later faces a database gap, not just a code gap.
 
 ### 6.3 Hardware-bound verification
 

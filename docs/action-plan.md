@@ -8,9 +8,9 @@
 
 ## Current State
 
-Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/015 all passed individual + integration tests). Power bug fixed (RAPL reads, b7664f3). v1.4 schema live — hardware fingerprint, stability flag, split power fields. tao-forge auto-submitting from both fleet machines.
+Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/015 all passed individual + integration tests). Power bug fixed (RAPL reads, b7664f3). v1.4 schema live — hardware fingerprint, stability flag, split power fields. CursiveRoot auto-submitting from both fleet machines.
 
-**3 machines in tao-forge:**
+**3 machines in CursiveRoot:**
 - Vega — AMD Ryzen 7 5700 + Arc A750 — 25 runs, primary test rig
 - Stardust — AMD FX-8350 + RX 580 — 4 runs, needs full v1.4 validation run
 - bda4bd63 — AMD Ryzen 7 5700 + Arc A750 — 1 run (duplicate Vega entry, investigate)
@@ -36,7 +36,7 @@ Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/01
 ### 3. Run full v1.4 validation on Stardust (FX-8350 + RX 580)
 - Run `tao-os-full-test-v1.4.sh` on Stardust
 - Confirm v1.4 schema fields all populate (especially power readings)
-- Submit results to tao-forge
+- Submit results to CursiveRoot
 - Need ≥2 clean v0.8 runs on Stardust before it counts toward v1.5 gate
 
 ### 4. Implement Copper Autonomy Score
@@ -55,7 +55,7 @@ Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/01
 - **COMPLETE — executed 2026-03-25**
 - CursiveOS is the confirmed name (recursive → cursive: the self-improving flywheel is literally recursive)
 - All internal references updated; GitHub repo rename to follow separately
-- tao-forge database name unchanged (board decision)
+- CursiveRoot database name unchanged (board decision)
 - Script filenames preserved for benchmark history integrity
 - White paper bumped to v0.4.1
 
@@ -65,17 +65,17 @@ Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/01
 - Verify `--undo` works cleanly on every fleet machine before sending to anyone
 - Laptop + all-in-one: run v0.8 on remaining self-fleet hardware first
 - Write plain-English "what CursiveOS does to your system" explainer for external testers
-- **NVIDIA laptops:** run v0.8 as-is — wrapper detects NVIDIA, applies all GPU-agnostic tweaks (TCP, swappiness, scheduler), skips GPU-specific section gracefully, submits to tao-forge. Goal: NVIDIA hardware entries in database + proof that system-level gains apply regardless of GPU vendor. Do not attempt GPU clock/power tuning on laptop hardware.
+- **NVIDIA laptops:** run v0.8 as-is — wrapper detects NVIDIA, applies all GPU-agnostic tweaks (TCP, swappiness, scheduler), skips GPU-specific section gracefully, submits to CursiveRoot. Goal: NVIDIA hardware entries in database + proof that system-level gains apply regardless of GPU vendor. Do not attempt GPU clock/power tuning on laptop hardware.
 - **Pre-req:** add NVIDIA detection block to wrapper (~20 lines bash) so GPU-specific section skips cleanly instead of erroring. Do this before running laptops.
 
 ---
 
 ## v1.5 Gate Checklist
 
-- [ ] 5+ external machines running the wrapper with auto-submit to tao-forge
+- [ ] 5+ external machines running the wrapper with auto-submit to CursiveRoot
 - [ ] Clean safety record — no bricked systems, no data loss
 - [ ] ≥1.5% average mining/inference gain confirmed from external machines
-- [ ] tao-forge confirmed receiving auto-submit from machines we don't control
+- [ ] CursiveRoot confirmed receiving auto-submit from machines we don't control
 - [ ] Safety audit: `--undo` tested on every fleet machine
 - [ ] Wrapper works on fresh git clone
 - [ ] Plain-English explainer written for external testers

@@ -17,9 +17,9 @@
 | White paper version | v0.4 → v0.4.1 |
 
 ### What Did NOT Change
-- `tao-forge` database name — board decision: keep the brand equity
+- `CursiveRoot` database name — board decision: keep the brand equity
 - Script filenames (`tao-os-*.sh`, `benchmark-*.sh`) — benchmark history is sacred
-- `machine_id` values in tao-forge — hardware fingerprints stay
+- `machine_id` values in CursiveRoot — hardware fingerprints stay
 - Benchmark methodology — nothing scientific changes
 - `.openclaw/` config — Copper's runtime, not project-facing
 - Archive scripts — left as-is, they're history
