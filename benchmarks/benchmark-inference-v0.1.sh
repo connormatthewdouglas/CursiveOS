@@ -136,13 +136,13 @@ _MODEL_PREF_CHAIN=(llama3 mistral llama3.2 phi3 qwen2 tinyllama)
 # Validation uses the real benchmark prompt and 50 tokens — short runs (5 tokens, "Hi")
 # don't trigger the Arc A750 Vulkan crash; need actual inference load to expose it.
 _validate_model() {
-    curl -s --max-time 90 http://localhost:11434/api/generate \
-        -d "{\"model\":\"$1\",\"prompt\":\"$PROMPT\",\"stream\":false,\"options\":{\"num_predict\":50,\"num_ctx\":1024,\"num_batch\":128}}" \
+    curl -s --max-time 120 http://localhost:11434/api/generate \
+        -d "{\"model\":\"$1\",\"prompt\":\"$PROMPT\",\"stream\":false,\"options\":{\"num_predict\":100,\"num_ctx\":1024,\"num_batch\":128}}" \
         | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('eval_count',0))" 2>/dev/null || echo "0"
 }
 
 if [[ "$MODEL" != "tinyllama" ]]; then
-    echo "  Validating $MODEL (50-token test with benchmark prompt)..."
+    echo "  Validating $MODEL (100-token test — matches actual benchmark load)..."
     _tok=$(_validate_model "$MODEL")
     if [[ "$_tok" != "0" ]]; then
         echo "  ✓ $MODEL validated (${_tok} tokens)."

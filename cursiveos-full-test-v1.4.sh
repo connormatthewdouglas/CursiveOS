@@ -85,6 +85,47 @@ if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
     ollama pull "$MODEL"
 fi
 
+# ── Model validation ──────────────────────────────────────────────────────────
+# Validate before running any benchmark — catches Arc A750 Vulkan bug where
+# models 3B+ silently return 0 tokens. Uses num_predict:100 to match the actual
+# benchmark load (50-token tests pass but 100-token runs crash).
+# Validated MODEL is exported so both coldstart and sustained benchmarks use it.
+if [[ "$SKIP_INFERENCE" != "1" && "$MODEL" != "tinyllama" ]]; then
+    _VAL_PROMPT="Explain how Bittensor's proof of intelligence consensus mechanism works and why it rewards miners for useful AI computation rather than wasteful hash calculations. Be concise."
+    _VAL_PREF_CHAIN=(llama3 mistral llama3.2 phi3 qwen2 tinyllama)
+    _val_model() {
+        curl -s --max-time 120 http://localhost:11434/api/generate \
+            -d "{\"model\":\"$1\",\"prompt\":\"$_VAL_PROMPT\",\"stream\":false,\"options\":{\"num_predict\":100,\"num_ctx\":1024,\"num_batch\":128}}" \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('eval_count',0))" 2>/dev/null || echo "0"
+    }
+    echo "  Validating $MODEL (100-token test)..."
+    _vtok=$(_val_model "$MODEL")
+    if [[ "$_vtok" == "0" ]]; then
+        echo "  ✗ $MODEL returned 0 tokens — not compatible with this GPU/driver."
+        _vfound=false; _vpast=false
+        for _vfb in "${_VAL_PREF_CHAIN[@]}"; do
+            if [[ "$_vfb" == "$MODEL" ]]; then _vpast=true; continue; fi
+            [[ "$_vpast" == false ]] && continue
+            echo "  Trying $_vfb..."
+            if ! ollama list 2>/dev/null | grep -q "^${_vfb}:"; then
+                ollama pull "$_vfb" || { echo "  Pull failed — skipping."; continue; }
+            fi
+            _vtok=$(_val_model "$_vfb")
+            if [[ "$_vtok" != "0" ]]; then
+                MODEL="$_vfb"
+                echo "  ✓ $_vfb works on this hardware (${_vtok} tokens)."
+                _vfound=true; break
+            else
+                echo "  ✗ $_vfb also failed."
+            fi
+        done
+        [[ "$_vfound" == false ]] && MODEL="tinyllama" && echo "  → All models failed — using tinyllama."
+    else
+        echo "  ✓ $MODEL validated (${_vtok} tokens)."
+    fi
+fi
+export MODEL
+
 if ! command -v iperf3 &>/dev/null; then
     echo "Installing iperf3..."
     echo "$TAO_SUDO_PASS" | sudo -S DEBIAN_FRONTEND=noninteractive apt-get install -y iperf3 -qq 2>/dev/null || true
@@ -351,7 +392,7 @@ if [[ "$SKIP_INFERENCE" == "1" ]]; then
     echo "[3/3] Sustained inference — SKIPPED (ollama not installed)"
 else
     echo "[3/3] Sustained inference benchmark (steady-state tok/s)..."
-    bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.1.sh" "$PRESET" 2>&1
+    bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.1.sh" "$PRESET" "$MODEL" 2>&1
     WARM_LOG=$(ls -t "$LOG_DIR"/cursiveos-inference-*.log "$LOG_DIR"/tao-os-inference-*.log 2>/dev/null | head -1)
     extract_sustained "$WARM_LOG"
     echo "  → Sustained inference done."
