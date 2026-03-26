@@ -406,7 +406,7 @@ echo "  → Idle power (baseline): ${PWR_IDLE}W"
 echo ""
 echo "[1/3] Network throughput benchmark (BBR vs CUBIC, WAN simulation)..."
 bash "$SCRIPT_DIR/benchmarks/benchmark-network-v0.1.sh" "$PRESET" 2>&1
-NET_LOG=$(ls -t "$LOG_DIR"/tao-os-network-*.log 2>/dev/null | head -1)
+NET_LOG=$(ls -t "$LOG_DIR"/*network-*.log 2>/dev/null | head -1 || true)
 extract_network "$NET_LOG"
 echo "  → Network done."
 
@@ -417,7 +417,7 @@ if [[ "$SKIP_INFERENCE" == "1" ]]; then
 else
     echo "[2/3] Cold-start latency benchmark (GPU freq: idle vs pinned)..."
     bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.3.sh" "$PRESET" "$MODEL" 2>&1
-    COLD_LOG=$(ls -t "$LOG_DIR"/cursiveos-coldstart-*.log "$LOG_DIR"/tao-os-coldstart-*.log 2>/dev/null | head -1)
+    COLD_LOG=$(ls -t "$LOG_DIR"/*coldstart-*.log 2>/dev/null | head -1 || true)
     extract_coldstart "$COLD_LOG"
     echo "  → Cold-start done."
 fi
@@ -429,7 +429,7 @@ if [[ "$SKIP_INFERENCE" == "1" ]]; then
 else
     echo "[3/3] Sustained inference benchmark (steady-state tok/s)..."
     bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.1.sh" "$PRESET" "$MODEL" 2>&1
-    WARM_LOG=$(ls -t "$LOG_DIR"/cursiveos-inference-*.log "$LOG_DIR"/tao-os-inference-*.log 2>/dev/null | head -1)
+    WARM_LOG=$(ls -t "$LOG_DIR"/*inference-*.log 2>/dev/null | head -1 || true)
     extract_sustained "$WARM_LOG"
     echo "  → Sustained inference done."
 fi
