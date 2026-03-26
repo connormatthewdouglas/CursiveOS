@@ -136,7 +136,7 @@ if [[ "$SKIP_INFERENCE" != "1" ]]; then
             _vpast=false
             for _vfb in "${_VAL_PREF_CHAIN[@]}"; do
                 if [[ "$_vfb" == "$MODEL" ]]; then _vpast=true; continue; fi
-                [[ "$_vpast" == false ]] && continue
+                if [[ "$_vpast" == false ]]; then continue; fi
                 echo "  Trying $_vfb..."
                 if ! ollama list 2>/dev/null | grep -q "^${_vfb}:"; then
                     ollama pull "$_vfb" || { echo "  Pull failed — skipping."; continue; }

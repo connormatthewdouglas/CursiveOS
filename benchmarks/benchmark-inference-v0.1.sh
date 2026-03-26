@@ -153,7 +153,7 @@ if [[ "$MODEL" != "tinyllama" ]]; then
         _past_current=false
         for _fb in "${_MODEL_PREF_CHAIN[@]}"; do
             if [[ "$_fb" == "$MODEL" ]]; then _past_current=true; continue; fi
-            [[ "$_past_current" == false ]] && continue
+            if [[ "$_past_current" == false ]]; then continue; fi
             echo "  Trying $_fb..."
             if ! ollama list 2>/dev/null | grep -q "^${_fb}:"; then
                 echo "  Pulling $_fb..."
