@@ -327,7 +327,7 @@ run_pass() {
     # Check for "gpu" anywhere in the model's ps line rather than exact regex.
     local proc _ps_line
     _ps_line=$(ollama ps 2>/dev/null | grep -i "$MODEL" || true)
-    if echo "$_ps_line" | grep -qi "gpu"; then
+    if echo "$_ps_line" | grep -qiE 'gpu|rocm|radeon|gfx[0-9]+'; then
         proc=$(echo "$_ps_line" | grep -oP '[0-9]+% (GPU|CPU)' || echo "100% GPU")
     elif echo "$_ps_line" | grep -qi "cpu"; then
         proc="100% CPU"
@@ -335,6 +335,9 @@ run_pass() {
         proc="not loaded"
     fi
     log "  Processor: $proc"
+    if [[ "$proc" == "not loaded" ]]; then
+        log "  [guard] Could not classify ollama processor from: ${_ps_line:-<empty>}"
+    fi
     LAST_PASS_PROC="$proc"
 
     # Measured passes
@@ -408,8 +411,14 @@ bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a 
 # ── Results ───────────────────────────────────────────────────────────────────
 TUNED_PROC="$LAST_PASS_PROC"   # captured after the tuned pass
 
-if [[ "$BASELINE" == "N/A" || "$TUNED" == "N/A" ]]; then
+is_numeric() {
+    [[ "$1" =~ ^-?[0-9]+([.][0-9]+)?$ ]]
+}
+
+if ! is_numeric "$BASELINE" || ! is_numeric "$TUNED"; then
     DELTA="N/A"
+    log ""
+    log "  [guard] Delta skipped: missing/non-numeric side A/B (baseline='${BASELINE:-<empty>}', tuned='${TUNED:-<empty>}')."
 elif ! echo "$TUNED_PROC" | grep -qi "gpu"; then
     # Tuned pass still on CPU — C-state changes cause thermal variance,
     # delta is unreliable. Detect and explain.
@@ -430,6 +439,12 @@ elif ! echo "$TUNED_PROC" | grep -qi "gpu"; then
     else
         log "  (No discrete GPU — CPU inference delta suppressed due to thermal variance.)"
     fi
+elif (( $(echo "$BASELINE <= 0" | bc -l) )) || (( $(echo "$TUNED <= 0" | bc -l) )); then
+    # Guard against divide-by-zero/invalid output (would produce malformed "Delta: %")
+    DELTA="N/A"
+    log ""
+    log "  NOTE: Inference throughput reported as 0 tok/s in one or both passes."
+    log "  Delta suppressed until GPU inference is producing non-zero tokens."
 else
     DELTA=$(echo "scale=2; ($TUNED - $BASELINE) * 100 / $BASELINE" | bc -l | awk '{printf "%.2f", $1}')
 fi

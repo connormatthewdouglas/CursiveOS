@@ -392,7 +392,8 @@ extract_sustained() {
     if echo "$raw_delta" | grep -q "N/A"; then
         WARM_DELTA="N/A"
     else
-        WARM_DELTA=$(echo "$raw_delta" | grep -oP '[+\-]?[0-9]*\.[0-9]+%' | head -1 || echo "?")
+        # Accept integer or decimal percentages; if malformed, treat as N/A
+        WARM_DELTA=$(echo "$raw_delta" | grep -oP '[+\-]?[0-9]+(\.[0-9]+)?%' | head -1 || echo "N/A")
     fi
 }
 
@@ -496,8 +497,20 @@ echo "Full summary saved: $SUMMARY_LOG"
 echo ""
 echo "Submitting results to CursiveRoot..."
 
+normalize_num() {
+    local raw="${1:-}"
+    # normalize common units/suffixes used in benchmark logs (tok/s, %, ms, W)
+    raw="${raw//+/}"
+    raw="${raw//tok\/s/}"
+    raw="${raw//%/}"
+    raw="${raw//ms/}"
+    raw="${raw//W/}"
+    echo "$raw" | xargs
+}
+
 to_json_num() {
-    local v="${1//+/}"
+    local v
+    v=$(normalize_num "$1")
     [[ "$v" =~ ^-?[0-9]+(\.[0-9]+)?$ ]] && echo "$v" || echo "null"
 }
 
@@ -511,14 +524,21 @@ NET_D=$(to_json_num "$NET_DELTA")
 COLD_B=$(to_json_num "$COLD_BASELINE")
 COLD_T=$(to_json_num "$COLD_TUNED")
 COLD_D=$(to_json_num "$COLD_DELTA")
-WARM_B=$(to_json_num "${WARM_BASELINE%% *}")
-WARM_T=$(to_json_num "${WARM_TUNED%% *}")
-WARM_D=$(to_json_num "${WARM_DELTA%%%}")
+WARM_B=$(to_json_num "$WARM_BASELINE")
+WARM_T=$(to_json_num "$WARM_TUNED")
+WARM_D=$(to_json_num "$WARM_DELTA")
 PWR_B=$(to_json_num "$PWR_IDLE")
 PWR_T=$(to_json_num "$PWR_TUNED_IDLE")
 PWR_D=$(to_json_num "$PWR_DELTA")
 THERM=$(to_json_num "$THERMAL_HEADROOM")
 STAB=$(to_json_bool "$STABILITY_FLAG")
+
+if [[ "$WARM_B" == "null" || "$WARM_T" == "null" ]]; then
+    echo "  [guard] sustained delta side missing/non-numeric: baseline='${WARM_BASELINE:-<empty>}', tuned='${WARM_TUNED:-<empty>}'"
+fi
+if [[ "$WARM_D" == "null" ]]; then
+    echo "  [guard] sustained delta skipped/non-numeric: delta='${WARM_DELTA:-<empty>}'"
+fi
 
 SUPABASE_HEADERS=(
     -H "apikey: $SUPABASE_KEY"
