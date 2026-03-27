@@ -611,7 +611,7 @@ fi
 # Build JSON via python3 — bash vars interpolated before python sees the heredoc
 POWER_NOTE=""
 if [[ "$PWR_IDLE" == "N/A" || "$PWR_TUNED_IDLE" == "N/A" || "$PWR_DELTA" == "N/A" || -z "$PWR_IDLE" || -z "$PWR_TUNED_IDLE" || -z "$PWR_DELTA" ]]; then
-    POWER_NOTE=" power_telemetry:unavailable"
+    POWER_NOTE=" power:no_sensor"
 fi
 
 RUN_JSON=$(python3 - <<PYJSON
