@@ -1,19 +1,19 @@
 # CursiveOS: AI-Guided Linux Optimization for Local Compute
-### Technical White Paper — v0.4.1 (March 2026)
+### Technical White Paper — v0.5 (March 2026)
 
-> **v0.4.1 note:** This revision reflects the project rebrand to CursiveOS (2026-03-25). Recursive → Cursive: the self-improving data flywheel is literally recursive.
+> **v0.5 note:** Targeted polish revision directed by board for Phase 1 external-validation readiness. Scope: dual-audience framing, stronger CursiveRoot moat articulation, and current-status/roadmap alignment with human-gated validation reality.
 
 ---
 
 ## Abstract
 
-CursiveOS is an open-source Linux optimization stack that delivers measurable, hardware-verified performance improvements for any local compute workload — local AI inference, crypto mining, or any P2P-networked process — through temporary, fully-reversible OS-level tuning. In validated testing across two distinct hardware configurations, CursiveOS delivered **+454–616% network throughput** and **-2.3–15.8% cold-start latency** improvement with zero permanent system changes.
+CursiveOS is an open-source Linux optimization stack for **two equal core audiences**: (1) crypto miners operating on thin margins, and (2) local AI/LLM operators running Ollama, llama.cpp, and self-hosted inference nodes. Both groups hit the same invisible OS-level bottlenecks (network transport ceilings, scheduler/governor latency, power/perf tradeoffs). CursiveOS applies temporary, reversible system tuning and proves impact with paired before/after benchmarks.
 
-The long-term vision is larger: CursiveOS is the seed of a self-improving OS flywheel. Every benchmark run contributes structured hardware performance data to **CursiveRoot** — a growing database of hardware profiles, applied tweaks, and measured outcomes. Over time, this dataset enables AI to generate optimized configurations for any hardware automatically, closing the loop between measurement, optimization, and reward.
+In validated testing across two distinct hardware configurations, CursiveOS delivered **+454–616% network throughput** and **-2.3–15.8% cold-start latency** improvement, with no permanent system changes.
 
-The incentive layer — a decentralized "contribute data, earn rewards" mechanism — is the flywheel's fuel. The optimizations are available to everyone today, for free. The network effect of the database is the moat.
+The long-term product is a self-improving optimization flywheel powered by **CursiveRoot**: each run contributes structured evidence about what works on specific hardware, under specific kernel/runtime conditions. That evidence accumulates into a dataset AI can learn from to produce increasingly accurate hardware-specific recommendations.
 
-**This is fundamentally a data problem.** The benchmark tool is the data collection mechanism. The database is the asset. The AI optimization loop is the product. The token is the incentive — deployed after the database has proven its value, not before.
+**This is fundamentally a data-compounding system.** Scripts create immediate value; CursiveRoot captures durable value; AI converts stored evidence into better presets; incentives (deployed later) accelerate contribution velocity once database value is already proven.
 
 ---
 
@@ -76,9 +76,17 @@ The benchmark tool provides immediate zero-day value (faster machines today). Th
 
 **Every component has standalone value.** The scripts work without the database. The database has value without the token. The token makes the database grow faster. Together they compound.
 
-### 2.3 The Data Moat
+### 2.3 CursiveRoot: The Living Root System (Data Moat)
 
-CursiveRoot captures what no existing tool does: structured records of **hardware fingerprint → tweak applied → before/after measured delta → system stability**. As of v1.4, every submission includes:
+CursiveRoot is not a static table; it is the project's **living root system**. Each benchmark submission is a new root strand connecting hardware identity, applied configuration, measured deltas, and stability outcomes. As more strands interconnect, recommendation quality improves and the system becomes harder to replicate.
+
+Competitors can copy scripts. They cannot instantly copy a living, continuously-updated evidence graph built from real operators running real hardware over time.
+
+CursiveRoot captures what no existing tool does in one structured chain:
+
+**hardware fingerprint → tweak applied → before/after measured delta → system stability**
+
+As of v1.4, every submission includes:
 
 | Field | Purpose |
 |-------|---------|
@@ -202,34 +210,51 @@ The `tcp_rmem/wmem` fix applies to any Linux system on any networked compute wor
 
 ---
 
-## 5. Roadmap
+## 5. Current Status (March 2026)
 
-### Phase 1 — Self-Fleet Validation (current)
-Validate v0.7 across all hardware in the Frosty fleet. Complete CursiveRoot schema v1.4 (hardware-bound submissions, stability flags, thermal data). Target: consistent, reproducible gains across 5+ distinct hardware configurations.
+- **Rebrand complete:** TAO-OS → CursiveOS
+- **Production benchmark wrapper live:** `cursiveos-full-test-v1.4.sh`
+- **CursiveRoot live:** schema ingesting hardware-bound submissions with stability/thermal metadata
+- **Validation completed on two rigs:**
+  - Ryzen 7 5700 + Intel Arc A750
+  - FX-8350 + RX 580 (Stardust)
+- **Recent parser/telemetry hardening shipped:** sustained delta and power telemetry null regressions resolved and confirmed on fresh Stardust runs
 
-### Phase 2 — Trusted Fleet (v1.5 milestone)
-Expand to 5+ external operators with close supervision. Gate conditions:
-- Clean safety record (no bricked systems)
-- Documented ≥1.5% average gain confirmed by external testers
-- CursiveRoot receiving auto-submissions from machines outside the core fleet
-
-### Phase 3 — Public Release & Broader Compute
-Open to the broader community — local AI operators, inference clusters, crypto miners. Expand CursiveRoot to track results across diverse hardware and workloads. The hardware database becomes the canonical reference for "what does CursiveOS deliver on my hardware?"
-
-### Phase 4 — Incentive Layer
-Deploy a contribution-reward system for the CursiveRoot database. The precise token mechanics are intentionally deferred: the database must demonstrate its value on merit before economic incentives are introduced. What can be committed now is the architecture — the v1.4 hardware-fingerprint schema (SHA256 of CPU microcode + GPU VBIOS + kernel version) cryptographically ties submissions to specific hardware, making the verification layer tamper-evident before any reward is attached. When incentives launch, the anti-gaming infrastructure is already in place and the dataset already has real value.
-
-**Sequencing is the strategy.** Proven database first. Incentives second.
-
-### Phase 5 — AI Optimization Loop
-With sufficient CursiveRoot data (target: 500+ hardware profiles), train or fine-tune models to generate hardware-specific preset recommendations automatically. Given your CPU/GPU/kernel profile, the system recommends which tweaks to apply and predicts expected gains — without running the full benchmark suite.
-
-### Phase 6 — Full Distribution
-CursiveOS as a bootable ISO with pre-applied optimizations, a custom kernel, and dedicated package repositories. The same kernel/scheduler/driver optimizations that benefit inference clusters and miners also benefit gaming rigs — the addressable market expands naturally. Goal: the default Linux for anyone who wants hardware running at its actual ceiling.
+Phase 1 is active and intentionally human-gated: new claims are accepted only after manual verification on real hardware, with Stardust serving as the conservative gate path for regression confidence.
 
 ---
 
-## 6. Strategic Context
+## 6. Roadmap
+
+### Phase A — Human-Gated Validation (current)
+Continue validating the v1.4 toolchain on internal hardware with manual review of each run. Stardust (FX-8350 + RX 580) remains the conservative gate path for parser and telemetry regressions before broader claims are promoted.
+
+Exit criteria:
+- Reproducible deltas across multiple reruns per machine
+- No sustained/power ingest null regressions on fresh runs
+- Stable rollback/safety behavior under real operator workflows
+
+### Phase B — Trusted External Validation (v1.5 gate)
+Expand to a small supervised external cohort after Phase A stability is maintained. Gate conditions:
+- Clean safety record (no destructive system outcomes)
+- Documented ≥1.5% average gain validated by external operators
+- Reliable CursiveRoot submissions from machines outside the core fleet
+
+### Phase C — Public Release (miners + local AI operators)
+Open CursiveOS publicly to both core user groups as equal pillars. Publish clear per-hardware expected ranges and caveats from CursiveRoot evidence.
+
+### Phase D — Incentive Layer
+Deploy contribution rewards only after data quality and anti-gaming controls have proven robust in production.
+
+### Phase E — AI Optimization Loop
+Train recommendation models on CursiveRoot evidence to generate hardware-specific presets and expected outcome bands.
+
+### Phase F — Distribution Expansion
+Move toward turnkey distribution options (installer/ISO/custom kernel path) once recommendation quality and safety thresholds are consistently met.
+
+---
+
+## 7. Strategic Context
 
 ### 6.1 Why local AI is the primary frame
 
@@ -249,7 +274,7 @@ Any contribution-reward system must solve the anti-gaming problem before rewards
 
 ---
 
-## 7. Philosophy
+## 8. Philosophy
 
 An operating system that gets better the more it is used. Local AI operators run CursiveOS and their inference gets faster. Miners run it and their rigs improve. Contributors discover better tweaks and share them. The network validates the best work. AI synthesizes the dataset into optimizations no individual would find alone.
 
