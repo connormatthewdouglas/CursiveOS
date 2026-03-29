@@ -51,7 +51,7 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 
 **See live results from all machines:**
 ```bash
-./cursiveroot-status.sh
+./scripts/cursiveroot-status.sh
 ```
 
 ---
