@@ -600,6 +600,11 @@ MACHINE_EXISTS=$(curl -s \
     -H "Authorization: Bearer $SUPABASE_KEY" \
     "$SUPABASE_URL/rest/v1/machines?machine_id=eq.$MACHINE_ID&select=machine_id" 2>/dev/null)
 
+GPU_VENDOR_JSON="null"
+if [[ "$GPU_VENDOR" != "unknown" ]]; then
+    GPU_VENDOR_JSON="\"$GPU_VENDOR\""
+fi
+
 if [[ "$MACHINE_EXISTS" == "[]" ]]; then
     MACHINE_JSON=$(cat <<JSON
 {
@@ -608,7 +613,7 @@ if [[ "$MACHINE_EXISTS" == "[]" ]]; then
   "cpu": "$CPU_MODEL",
   "cpu_cores_logical": $CPU_CORES,
   "gpu": "$GPU_MODEL",
-  "gpu_vendor": "$GPU_VENDOR",
+  "gpu_vendor": $GPU_VENDOR_JSON,
   "ram_gb": $RAM_GB,
   "os": "$OS_NAME",
   "kernel": "$KERNEL"
@@ -622,6 +627,10 @@ JSON
         -d "$MACHINE_JSON" 2>/dev/null || echo "000")
 else
     MACHINE_RESP="200"  # already exists, skip insert
+fi
+
+if [[ "$MACHINE_RESP" != "200" && "$MACHINE_RESP" != "201" ]]; then
+    echo "  [guard] machines upsert returned HTTP $MACHINE_RESP"
 fi
 
 # Insert run (columns matching current DB schema + v1.5 extended fields)
