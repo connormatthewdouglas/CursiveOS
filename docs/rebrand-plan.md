@@ -32,13 +32,13 @@
 | File | Change |
 |------|--------|
 | `README.md` | Title, clone URL, all display name refs → CursiveOS |
-| `docs/white-paper.md` | Full rebrand, v0.4.1, CursiveOS identity throughout |
+| `white-paper.md` | Full rebrand, v0.4.1, CursiveOS identity throughout |
 | `docs/action-plan.md` | Project name refs, task #6 marked COMPLETE |
 | `references/CLAUDE.md` | Project name, rebrand section updated, last updated date |
 | `references/README.md` | Project name refs |
 | `references/CHANGELOG.md` | v0.4.1 entry added at top |
 | `docs/rebrand-plan.md` | This file — status updated to EXECUTED |
-| `docs/external-tester-guide.md` | Project name refs |
+| `external-tester-guide.md` | Project name refs |
 | `references/ONBOARDING_EXTERNAL.md` | Project name refs |
 | `references/BENCHMARK-INTEGRATION-v1.5.md` | Project name refs |
 | `docs/RESEARCH.md` | Project name refs |
