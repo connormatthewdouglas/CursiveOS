@@ -389,7 +389,7 @@ BASELINE="$PASS_RESULT"
 # ── Apply presets ─────────────────────────────────────────────────────────────
 log ""
 log "Applying presets: $PRESET_SCRIPT"
-bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE"
+bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
 log "Presets applied. Starting tuned pass..."
 
 # Restart ollama so GPU freq/power settings take effect for inference
@@ -406,7 +406,7 @@ TUNED="$PASS_RESULT"
 # ── Undo presets ──────────────────────────────────────────────────────────────
 log ""
 log "Reverting presets..."
-bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE"
+bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
 
 # ── Results ───────────────────────────────────────────────────────────────────
 TUNED_PROC="$LAST_PASS_PROC"   # captured after the tuned pass
