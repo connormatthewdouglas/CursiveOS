@@ -2,6 +2,15 @@
 
 This package is for both **crypto miners** and **local AI/LLM operators**.
 
+## What gets uploaded (and why)
+
+At the end of the run, CursiveOS submits benchmark metadata to **CursiveRoot**.
+
+- Uploaded: CPU/GPU model, OS/kernel, measured benchmark deltas, and a hardware fingerprint hash
+- Not uploaded: personal files, documents, photos, browser history, shell history, or private app data
+
+Why we collect it: to build a hardware-verified performance map so we can improve tuning quality and provide reliable expected gains per hardware profile.
+
 ## Single copy-paste command
 
 ```bash
