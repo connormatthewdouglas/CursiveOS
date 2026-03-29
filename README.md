@@ -17,7 +17,7 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 
 ---
 
-## Results (v0.7 presets — validated across 2 machines)
+## Results (v0.8-locked presets — validated across 3 machines)
 
 ### AMD Ryzen 7 5700 · Intel Arc A750
 
@@ -36,7 +36,16 @@ Runs all benchmarks, applies presets, shows you exactly what you gain. All chang
 | **Cold-start latency** | 2462–2493ms | 2095–2098ms | **-366–395ms (-14.9 to -15.8%)** |
 | Sustained inference (warm model, CPU-bound) | 19.5 tok/s | 20.5 tok/s | +4.5–5% |
 
-**Network is the headline.** Two bugs in default Linux cap your throughput regardless of link speed: a 212KB socket buffer (smaller than the bandwidth-delay product on any real WAN link) and CUBIC congestion control (degrades under packet loss). CursiveOS fixes both — 16MB buffers, BBR, and the v0.7 tcp_rmem/wmem fix that closes the auto-tuner ceiling gap. Result: both test rigs now saturate ~1 Gbit/s tuned vs ~380 Mbit/s on v0.6.
+### Lenovo IdeaPad Gaming 3 · 11th Gen i5 + GTX (Laptop)
+
+| Benchmark | Default | CursiveOS Presets | Delta |
+|-----------|---------|---------------|-------|
+| **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 237.8 Mbit/s | **1429.8 Mbit/s** | **+501.26%** |
+| **Cold-start latency** | 889.1ms | 630.8ms | **-29.05%** |
+| Sustained inference (warm model, steady-state) | 32.86 tok/s | 33.25 tok/s | +1.19% |
+| **Idle power draw** | 3.48W | 4.36W | +0.9W |
+
+**Network is the headline.** Two bugs in default Linux cap your throughput regardless of link speed: a 212KB socket buffer (smaller than the bandwidth-delay product on any real WAN link) and CUBIC congestion control (degrades under packet loss). CursiveOS fixes both — 16MB buffers, BBR, and the v0.7 tcp_rmem/wmem fix that closes the auto-tuner ceiling gap. Result: all validated rigs now show strong WAN uplift.
 
 **Power tradeoff is real.** Disabled C-states keep the CPU in C0 continuously. Measured cost varies by system — expect +8–14W at idle. For 24/7 mining at $0.12/kWh that's ~$8–15/year. The network and latency gains justify it in active mining workloads, but it's worth knowing.
 
