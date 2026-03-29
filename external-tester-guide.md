@@ -6,7 +6,7 @@
 
 ## The short version
 
-CursiveOS runs a set of performance tweaks on your Linux machine, measures whether they help, and uploads benchmark results to CursiveRoot. **Every change it makes is temporary.** The script automatically reverts presets when the run completes. Reboot is optional and only a fallback if you want an extra reset.
+CursiveOS runs a set of performance tweaks on your Linux machine, measures whether they help, and uploads benchmark results to CursiveRoot. **Every change it makes is temporary.** The script automatically reverts presets when the run completes. Reboot is optional, but will also immediatly revert all presets even mid test.
 
 ## What gets uploaded (and why)
 
