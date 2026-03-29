@@ -1,7 +1,7 @@
 # CursiveOS: AI-Guided Linux Optimization for Local Compute
-### Technical White Paper — v0.5 (March 2026)
+### Technical White Paper — v0.5.2 (March 2026)
 
-> **v0.5 note:** Targeted polish revision directed by board for Phase 1 external-validation readiness. Scope: dual-audience framing, stronger CursiveRoot moat articulation, and current-status/roadmap alignment with human-gated validation reality.
+> **v0.5.2 note:** Board-directed polish update. Adds third validated rig (IdeaPad i5 + GTX laptop), refreshes Current Status to three-machine green state, and keeps roadmap aligned with human-gated validation.
 
 ---
 
@@ -198,7 +198,20 @@ The network breakthrough is the `tcp_rmem/wmem` fix. Setting `rmem_max=16MB` rai
 
 No GPU tweaks were applied — RX 580 has no Intel Arc sysfs interface. All cold-start improvement came from CPU governor + C-state changes alone. The -14.87% result is strategically important: the tool delivers its largest gains where they matter most — older, slower hardware that was marginal becomes meaningfully more competitive.
 
-### 4.3 Why the network result matters universally
+### 4.3 Tertiary Rig — Lenovo IdeaPad Gaming 3 (11th Gen i5 + GTX, kernel 6.14)
+
+**v0.8-locked presets — validated run:**
+
+| Benchmark | Baseline | Tuned | Delta |
+|-----------|---------|-------|-------|
+| Network throughput (WAN sim) | 237.8 Mbit/s | **1429.8 Mbit/s** | **+501.26%** |
+| Cold-start latency | 889.1ms | 630.8ms | **-29.05%** |
+| Sustained inference | 32.86 tok/s | 33.25 tok/s | **+1.19%** |
+| Idle power draw | 3.48W | 4.36W | +0.9W |
+
+This third validation closes an important gap: modern consumer laptop hardware also shows strong positive uplift, not just desktop mining rigs. It strengthens the dual-audience case for both miners and local AI operators.
+
+### 4.4 Why the network result matters universally
 
 The `tcp_rmem/wmem` fix applies to any Linux system on any networked compute workload:
 - **Local AI (Ollama/llama.cpp):** API traffic, model weight delivery, remote client connections
@@ -215,10 +228,11 @@ The `tcp_rmem/wmem` fix applies to any Linux system on any networked compute wor
 - **Rebrand to CursiveOS complete**
 - **Production benchmark wrapper live:** `cursiveos-full-test-v1.4.sh`
 - **CursiveRoot live:** schema ingesting hardware-bound submissions with stability/thermal metadata
-- **Validation completed on two rigs:**
+- **Validation completed on three rigs (all green):**
   - Ryzen 7 5700 + Intel Arc A750
   - FX-8350 + RX 580 (Stardust)
-- **Recent parser/telemetry hardening shipped:** sustained delta and power telemetry null regressions resolved and confirmed on fresh Stardust runs
+  - Lenovo IdeaPad Gaming 3 (11th Gen i5 + GTX laptop)
+- **Recent parser/telemetry hardening shipped:** sustained delta and power telemetry null regressions resolved and confirmed on fresh Stardust + laptop runs
 
 Phase 1 is active and intentionally human-gated: new claims are accepted only after manual verification on real hardware, with Stardust serving as the conservative gate path for regression confidence.
 
