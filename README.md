@@ -8,6 +8,8 @@ git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git
 
 Runs all benchmarks, applies presets, shows you exactly what you gain. All changes revert automatically. Works whether you've cloned before or not.
 
+**Data transparency (important):** At the end of a run, CursiveOS uploads benchmark results to **CursiveRoot** (the project’s hardware-performance database). It uploads hardware/performance metadata (CPU/GPU model, OS/kernel, and benchmark deltas) — **not** personal files, documents, browser data, or shell history. We need this data to learn which optimizations work on which hardware and improve recommendations safely over time.
+
 **See live results from all machines:**
 ```bash
 ./scripts/cursiveroot-status.sh

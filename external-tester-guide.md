@@ -6,7 +6,16 @@
 
 ## The short version
 
-CursiveOS runs a set of performance tweaks on your Linux machine, measures whether they help, and uploads the results. **Every change it makes is temporary.** Nothing is permanent. If you reboot, your machine is back to exactly how it was.
+CursiveOS runs a set of performance tweaks on your Linux machine, measures whether they help, and uploads benchmark results to CursiveRoot. **Every change it makes is temporary.** Nothing is permanent. If you reboot, your machine is back to exactly how it was.
+
+## What gets uploaded (and why)
+
+At the end of the run, CursiveOS sends benchmark metadata to **CursiveRoot** (the project’s hardware-performance database).
+
+- Uploaded: CPU/GPU model, OS/kernel, benchmark deltas, and a one-way hardware fingerprint hash
+- Not uploaded: personal files, documents, photos, browser history, shell history, or private app data
+
+Why: this lets us learn which optimizations work on which hardware and improve recommendations with real evidence instead of guesswork.
 
 ---
 
@@ -61,7 +70,7 @@ The wrapper reverts everything automatically when it finishes. If something goes
 
 If you want to manually revert without rebooting:
 ```bash
-cd ~/CursiveOS && bash tao-os-presets-v0.8.sh --undo
+cd ~/CursiveOS && bash presets/cursiveos-presets-v0.8.sh --undo
 ```
 
 ---
