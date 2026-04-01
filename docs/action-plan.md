@@ -92,10 +92,7 @@ Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/01
 
 ## Copper Execution Docket (deferred to Copper)
 
-These are approved tasks ready for Copper to execute — do not re-debate strategy, just implement:
-
-- **Whitepaper rewrite** (`white-paper.md`) — update to reflect expanded audience (crypto miners + local AI/LLM users). Lead with data moat + DePIN vision. Position both audiences as identical beneficiaries of the same OS-level bottleneck fixes.
-- **README rewrite** (`README.md`) — expand from crypto mining focus to include local AI users (Ollama, llama.cpp, home inference clusters). Lead with the network win (+454–616%). Add local AI use case section after mining results. Keep technical, no hype.
+*No pending items.*
 
 ---
 
