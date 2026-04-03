@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CursiveOS Hub (MVP)</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>CursiveOS Hub</h1>
+      <p class="subtitle">MVP · internal credits rail</p>
+    </div>
+    <div class="cycle-card" id="cycleCard">Cycle: -- · Status: -- · Pool: --</div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="install" class="active">Install</button>
+    <button data-tab="machines">Machines</button>
+    <button data-tab="rewards">Rewards</button>
+    <button data-tab="contributions">Contributions</button>
+    <button data-tab="governance">Governance</button>
+  </nav>
+
+  <main>
+    <section id="install" class="panel active">
+      <h2>Install</h2>
+      <p>One-command install/run:</p>
+      <pre id="installCmd"></pre>
+      <h3>Cycle Runner (Admin)</h3>
+      <div class="inline-form">
+        <input id="cycleIdInput" type="number" placeholder="cycle id (e.g. 11)" />
+        <input id="poolOpenInput" type="number" placeholder="pool open (e.g. 1030.25)" />
+        <button id="runCycleBtn">Run Cycle</button>
+      </div>
+      <p id="runCycleResult" class="muted"></p>
+    </section>
+
+    <section id="machines" class="panel">
+      <h2>Machines</h2>
+      <div class="inline-form">
+        <input id="planMachineId" placeholder="machine_id" />
+        <select id="planValue"><option value="stable">stable</option><option value="fast">fast</option></select>
+        <button id="setPlanBtn">Set Plan</button>
+      </div>
+      <p id="setPlanResult" class="muted"></p>
+      <table><thead><tr><th>Machine</th><th>Plan</th><th>Fee</th><th>Last Burn Cycle</th></tr></thead><tbody id="machinesBody"></tbody></table>
+    </section>
+
+    <section id="rewards" class="panel">
+      <h2>Rewards</h2>
+      <div id="rewardsSummary" class="grid"></div>
+      <h3>Recent Ledger Events</h3>
+      <table><thead><tr><th>Type</th><th>Bucket</th><th>Amount</th><th>Cycle</th></tr></thead><tbody id="ledgerBody"></tbody></table>
+    </section>
+
+    <section id="contributions" class="panel">
+      <h2>Contributions</h2>
+      <div class="inline-form">
+        <input id="contribAccount" placeholder="account_id" />
+        <input id="contribHash" placeholder="submission_hash" />
+        <input id="contribTitle" placeholder="title" />
+        <select id="contribClass"><option value="preset">preset</option><option value="security">security</option><option value="driver">driver</option><option value="reliability">reliability</option></select>
+        <button id="createContribBtn">Create Submission</button>
+      </div>
+      <p id="createContribResult" class="muted"></p>
+      <table><thead><tr><th>Hash</th><th>Class</th><th>State</th><th>Verdict</th></tr></thead><tbody id="contribBody"></tbody></table>
+    </section>
+
+    <section id="governance" class="panel">
+      <h2>Governance / Appeals</h2>
+      <div class="inline-form">
+        <input id="appealSubmissionId" placeholder="submission_id" />
+        <input id="appealAccountId" placeholder="opened_by_account_id" />
+        <input id="appealReason" placeholder="reason" />
+        <button id="openAppealBtn">Open Appeal</button>
+      </div>
+      <p id="openAppealResult" class="muted"></p>
+      <table><thead><tr><th>Appeal</th><th>Submission</th><th>State</th><th>Deadline</th></tr></thead><tbody id="appealsBody"></tbody></table>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
