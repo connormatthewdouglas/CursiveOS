@@ -7,14 +7,11 @@ let ACTIVE_ACCOUNT_ID = null;
 let ACTIVE_SESSION_TOKEN = null;
 
 function withScope(path) {
-  if (!ACTIVE_ACCOUNT_ID) return path;
-  const sep = path.includes('?') ? '&' : '?';
-  return `${path}${sep}account_id=${encodeURIComponent(ACTIVE_ACCOUNT_ID)}`;
+  return path;
 }
 
 function authHeaders() {
   return {
-    ...(ACTIVE_ACCOUNT_ID ? { 'x-account-id': ACTIVE_ACCOUNT_ID } : {}),
     ...(ACTIVE_SESSION_TOKEN ? { 'x-session-token': ACTIVE_SESSION_TOKEN } : {})
   };
 }
@@ -68,7 +65,7 @@ async function establishSession(accountId) {
   }
   const session = await fetch(`${API}/hub/session/create`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(accountId ? { 'x-account-id': accountId } : {}) },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ account_id: accountId })
   }).then(r => r.json());
 

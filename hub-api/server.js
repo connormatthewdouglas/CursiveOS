@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/hub', enforceRateLimit);
+app.use('/hub', requireHubSession);
 
 const PORT = process.env.PORT || 8787;
 const REF = process.env.SUPABASE_PROJECT_REF;
@@ -100,11 +101,30 @@ async function resolveAccountFromSession(req) {
   return accountId;
 }
 
-async function resolveAccount(req) {
-  const accountFromSession = await resolveAccountFromSession(req);
-  const scoped = scopeAccount(req);
-  if (accountFromSession && scoped && scoped !== accountFromSession) return null;
-  return accountFromSession || scoped || null;
+function isSessionOptionalPath(path) {
+  // req.path is relative inside app.use('/hub', ...), so it is '/session/...'
+  return path === '/session/bootstrap' || path === '/session/create';
+}
+
+async function requireHubSession(req, res, next) {
+  try {
+    if (isSessionOptionalPath(req.path)) return next();
+
+    const accountFromSession = await resolveAccountFromSession(req);
+    if (!accountFromSession) {
+      return res.status(401).json({ ok: false, error: 'unauthorized_session_required' });
+    }
+
+    const scoped = scopeAccount(req);
+    if (scoped && scoped !== accountFromSession) {
+      return res.status(403).json({ ok: false, error: 'forbidden_account_scope_mismatch' });
+    }
+
+    req.authAccountId = accountFromSession;
+    return next();
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
 }
 
 async function logAction({ action, actorAccountId = null, req, status = 'ok', details = {} }) {
@@ -193,7 +213,7 @@ app.get('/hub/cycle/latest', async (_req, res) => {
 
 app.post('/hub/cycle/run', async (req, res) => {
   try {
-    const actorId = (await resolveAccount(req)) || req.body?.actor_account_id;
+    const actorId = req.authAccountId;
     const role = await getAccountRole(actorId);
     if (!canAdmin(role)) return res.status(403).json({ ok: false, error: 'forbidden_admin_only' });
 
@@ -211,7 +231,7 @@ app.post('/hub/cycle/run', async (req, res) => {
 
 app.get('/hub/machines', async (req, res) => {
   try {
-    const accountId = await resolveAccount(req);
+    const accountId = req.authAccountId;
     const where = accountId ? `where account_id='${esc(accountId)}'` : '';
     const data = await sql(`select machine_id,account_id,plan,fast_cycle_fee,last_burn_cycle_id,plan_updated_at
       from l5_machine_entitlements ${where} order by plan_updated_at desc limit 200;`);
@@ -223,7 +243,7 @@ app.get('/hub/machines', async (req, res) => {
 
 app.post('/hub/machines/:machineId/plan', async (req, res) => {
   try {
-    const actorId = (await resolveAccount(req)) || req.body?.actor_account_id;
+    const actorId = req.authAccountId;
     const actorRole = await getAccountRole(actorId);
     const { machineId } = req.params;
     const { plan } = req.body;
@@ -248,7 +268,7 @@ app.post('/hub/machines/:machineId/plan', async (req, res) => {
 app.get('/hub/rewards/ledger', async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit || 50), 200);
-    const accountId = await resolveAccount(req);
+    const accountId = req.authAccountId;
     const where = accountId
       ? `where source_account_id='${esc(accountId)}' or target_account_id='${esc(accountId)}'`
       : '';
@@ -262,7 +282,7 @@ app.get('/hub/rewards/ledger', async (req, res) => {
 
 app.get('/hub/rewards/balances', async (req, res) => {
   try {
-    const accountId = await resolveAccount(req);
+    const accountId = req.authAccountId;
     const [pool, accounts] = await Promise.all([
       sql(`select * from v_l5_pool_balance;`),
       sql(accountId
@@ -277,7 +297,7 @@ app.get('/hub/rewards/balances', async (req, res) => {
 
 app.get('/hub/contributions', async (req, res) => {
   try {
-    const accountId = await resolveAccount(req);
+    const accountId = req.authAccountId;
     const where = accountId ? `where account_id='${esc(accountId)}'` : '';
     const data = await sql(`select submission_id,account_id,submission_hash,title,class,state,verdict,measured_score,appeal_deadline,updated_at
       from l5_contributor_submissions ${where} order by updated_at desc limit 200;`);
@@ -289,25 +309,17 @@ app.get('/hub/contributions', async (req, res) => {
 
 app.post('/hub/contributions', async (req, res) => {
   try {
-    let { account_id, submission_hash, title, class_name = 'preset', stake_amount = 5 } = req.body || {};
+    const actorId = req.authAccountId;
+    const { account_id, submission_hash, title, class_name = 'preset', stake_amount = 5 } = req.body || {};
     if (!submission_hash || !title) return res.status(400).json({ ok: false, error: 'missing_fields' });
-
-    if (!account_id) {
-      const acct = await sql(`select account_id from l5_accounts where role in ('contributor','mixed') order by created_at asc limit 1;`);
-      account_id = acct[0]?.account_id;
-      if (!account_id) {
-        await sql(`insert into l5_accounts (role, status) values ('contributor','active');`);
-        const acct2 = await sql(`select account_id from l5_accounts where role='contributor' order by created_at asc limit 1;`);
-        account_id = acct2[0]?.account_id;
-      }
-    }
+    if (account_id && account_id !== actorId) return res.status(403).json({ ok: false, error: 'forbidden_actor_mismatch' });
 
     await sql(`insert into l5_contributor_submissions (account_id, submission_hash, title, class, stake_amount, state)
-      values ('${esc(account_id)}', '${esc(submission_hash)}', '${esc(title)}', '${esc(class_name)}', ${Number(stake_amount)}, 'stake_locked')
+      values ('${esc(actorId)}', '${esc(submission_hash)}', '${esc(title)}', '${esc(class_name)}', ${Number(stake_amount)}, 'stake_locked')
       on conflict (submission_hash) do update set updated_at = now();`);
 
-    await logAction({ action: 'contribution_upsert', actorAccountId: account_id, req, details: { submission_hash, class_name } });
-    res.json({ ok: true, account_id });
+    await logAction({ action: 'contribution_upsert', actorAccountId: actorId, req, details: { submission_hash, class_name } });
+    res.json({ ok: true, account_id: actorId });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }
@@ -315,7 +327,7 @@ app.post('/hub/contributions', async (req, res) => {
 
 app.get('/hub/governance/appeals', async (req, res) => {
   try {
-    const accountId = await resolveAccount(req);
+    const accountId = req.authAccountId;
     const where = accountId
       ? `where opened_by_account_id='${esc(accountId)}' or submission_id in (select submission_id from l5_contributor_submissions where account_id='${esc(accountId)}')`
       : '';
@@ -329,7 +341,7 @@ app.get('/hub/governance/appeals', async (req, res) => {
 
 app.post('/hub/governance/appeals', async (req, res) => {
   try {
-    const actorId = (await resolveAccount(req)) || req.body?.opened_by_account_id;
+    const actorId = req.authAccountId;
     const { submission_id, opened_by_account_id, reason, evidence_uri = null, fee_amount = 0.10 } = req.body || {};
     if (!submission_id || !opened_by_account_id || !reason) return res.status(400).json({ ok: false, error: 'missing_fields' });
     if (actorId !== opened_by_account_id) return res.status(403).json({ ok: false, error: 'forbidden_actor_mismatch' });
@@ -344,7 +356,7 @@ app.post('/hub/governance/appeals', async (req, res) => {
 
 app.get('/hub/governance/votes', async (req, res) => {
   try {
-    const accountId = await resolveAccount(req);
+    const accountId = req.authAccountId;
     const where = accountId ? `where voter_account_id='${esc(accountId)}'` : '';
     const data = await sql(`select vote_id,appeal_id,voter_account_id,vote,weight,voted_at
       from l5_governance_votes ${where} order by voted_at desc limit 200;`);
@@ -356,7 +368,7 @@ app.get('/hub/governance/votes', async (req, res) => {
 
 app.post('/hub/governance/votes', async (req, res) => {
   try {
-    const actorId = (await resolveAccount(req)) || req.body?.voter_account_id;
+    const actorId = req.authAccountId;
     const actorRole = await getAccountRole(actorId);
     const { appeal_id, voter_account_id, vote, weight = 1 } = req.body || {};
     if (!appeal_id || !voter_account_id || !['yes', 'no', 'abstain'].includes(vote)) {
@@ -378,7 +390,7 @@ app.post('/hub/governance/votes', async (req, res) => {
 
 app.get('/hub/identity', async (req, res) => {
   try {
-    const accountId = await resolveAccount(req);
+    const accountId = req.authAccountId;
     if (!accountId) return res.status(400).json({ ok: false, error: 'missing_account_scope' });
 
     await ensureWalletTable();
@@ -403,7 +415,7 @@ app.get('/hub/identity', async (req, res) => {
 
 app.post('/hub/identity/wallet/bind', async (req, res) => {
   try {
-    const actorId = (await resolveAccount(req)) || req.body?.actor_account_id;
+    const actorId = req.authAccountId;
     const { account_id, wallet_address, chain_id = 'evm:1' } = req.body || {};
 
     if (!actorId || !account_id || !wallet_address) {
@@ -476,7 +488,7 @@ app.post('/hub/session/create', async (req, res) => {
 
 app.get('/hub/audit/actions', async (req, res) => {
   try {
-    const actorId = await resolveAccount(req);
+    const actorId = req.authAccountId;
     if (!actorId) return res.status(401).json({ ok: false, error: 'unauthorized' });
 
     const role = await getAccountRole(actorId);
