@@ -29,8 +29,8 @@ Status: In progress
 
 6) Permission safety
 - Status: PASS (strict token + abuse controls)
-- Current: admin-only cycle run, owner/admin plan guard, actor-match checks, session token -> account mapping, strict token-required access for `/hub/*` (except session bootstrap/create), per-route rate limit, account controls (`normal`/`slow`/`blocked`), anomaly stream, and temporary network lockout policy.
-- Missing (post-pilot hardening): external IP reputation/ASN/geo enrichment and automated resolution workflows.
+- Current: admin-only cycle run, owner/admin plan guard, actor-match checks, session token -> account mapping, strict token-required access for `/hub/*` (except session bootstrap/create), per-route rate limit, account controls (`normal`/`slow`/`blocked`), anomaly stream, temporary network lockout policy, geo/ASN/reputation context capture, and admin runbook/resolve endpoints.
+- Missing (post-pilot hardening): external reputation feed integration and automated reputation sync jobs.
 
 7) No-SQL operator journey validated
 - Status: PASS
@@ -57,7 +57,7 @@ Status: In progress
 
 ## Next execution order
 1) Run supervised pilot cohort and monitor action trail/rate-limit behavior.
-2) Add external enrichment for anomaly signals (IP reputation, geo/ASN context) and auto-resolution runbooks.
-3) Reassess GO/NO-GO for broader public rollout.
-4) Prepare migration to stronger auth provider once pilot behavior data is stable.
-5) Define token-rail activation policy gates tied to abuse metrics.
+2) Reassess GO/NO-GO for broader public rollout.
+3) Prepare migration to stronger auth provider once pilot behavior data is stable.
+4) Define token-rail activation policy gates tied to abuse metrics.
+5) Integrate external reputation feed + scheduled sync as post-pilot hardening.
