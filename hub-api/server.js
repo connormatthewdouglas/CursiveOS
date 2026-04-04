@@ -24,6 +24,8 @@ const HUB_SLOW_MODE_DELAY_MS = Number(process.env.HUB_SLOW_MODE_DELAY_MS || 1500
 const HUB_NETWORK_STRIKE_THRESHOLD = Number(process.env.HUB_NETWORK_STRIKE_THRESHOLD || 6);
 const HUB_NETWORK_STRIKE_WINDOW_SECONDS = Number(process.env.HUB_NETWORK_STRIKE_WINDOW_SECONDS || 120);
 const HUB_NETWORK_LOCKOUT_MINUTES = Number(process.env.HUB_NETWORK_LOCKOUT_MINUTES || 10);
+const HUB_IP_REPUTATION_DENYLIST = (process.env.HUB_IP_REPUTATION_DENYLIST || '').split(',').map(s => s.trim()).filter(Boolean);
+const HUB_IP_REPUTATION_WATCHLIST = (process.env.HUB_IP_REPUTATION_WATCHLIST || '').split(',').map(s => s.trim()).filter(Boolean);
 
 const rateWindowMs = 60 * 1000;
 const rateBuckets = new Map();
@@ -50,12 +52,28 @@ function clientIp(req) {
   return (req.ip || '').toString();
 }
 
+function ipReputation(ip) {
+  if (!ip) return { tier: 'unknown', reason: 'missing_ip' };
+  if (HUB_IP_REPUTATION_DENYLIST.includes(ip)) return { tier: 'denylisted', reason: 'config_denylist' };
+  if (HUB_IP_REPUTATION_WATCHLIST.includes(ip)) return { tier: 'watchlist', reason: 'config_watchlist' };
+  return { tier: 'unknown', reason: 'no_external_feed' };
+}
+
 function networkSnapshot(req) {
+  const ip = clientIp(req);
+  const reputation = ipReputation(ip);
   return {
-    ip: clientIp(req),
+    ip,
     forwarded_for: (req.headers['x-forwarded-for'] || '').toString() || null,
     user_agent: (req.headers['user-agent'] || '').toString() || null,
-    accept_language: (req.headers['accept-language'] || '').toString() || null
+    accept_language: (req.headers['accept-language'] || '').toString() || null,
+    country: (req.headers['cf-ipcountry'] || req.headers['x-vercel-ip-country'] || req.headers['x-country-code'] || '').toString() || null,
+    region: (req.headers['x-vercel-ip-country-region'] || req.headers['x-region-code'] || '').toString() || null,
+    city: (req.headers['x-vercel-ip-city'] || req.headers['x-city'] || '').toString() || null,
+    asn: (req.headers['x-asn'] || req.headers['cf-connecting-asn'] || '').toString() || null,
+    organization: (req.headers['x-org'] || req.headers['x-organization'] || '').toString() || null,
+    reputation_tier: reputation.tier,
+    reputation_reason: reputation.reason
   };
 }
 
@@ -292,7 +310,18 @@ async function enforceNetworkLockout(req, res, next) {
     const ip = clientIp(req);
     if (!ip) return next();
 
-    const lockout = await getActiveNetworkLockout(`ip:${ip}`);
+    const reputation = ipReputation(ip);
+    const lockoutKey = `ip:${ip}`;
+    if (reputation.tier === 'denylisted') {
+      await setNetworkLockout({
+        lockoutKey,
+        reason: 'denylist_ip',
+        strikeCount: Number(HUB_NETWORK_STRIKE_THRESHOLD),
+        details: { ...networkSnapshot(req), source: 'HUB_IP_REPUTATION_DENYLIST' }
+      });
+    }
+
+    const lockout = await getActiveNetworkLockout(lockoutKey);
     if (!lockout) return next();
 
     await recordAnomaly({
@@ -913,6 +942,65 @@ app.post('/hub/admin/network-lockouts/clear', async (req, res) => {
 
     await logAction({ action: 'network_lockout_cleared', actorAccountId: actorId, req, details: { lockout_key } });
     res.json({ ok: true, lockout_key });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+app.post('/hub/admin/network-lockouts/resolve-expired', async (req, res) => {
+  try {
+    const actorId = req.authAccountId;
+    const role = await getAccountRole(actorId);
+    if (!canAdmin(role)) return res.status(403).json({ ok: false, error: 'forbidden_admin_only' });
+
+    await ensureNetworkLockoutTable();
+    const expired = await sql(`select lockout_key from l5_hub_network_lockouts where lockout_until <= now();`);
+    await sql(`delete from l5_hub_network_lockouts where lockout_until <= now();`);
+
+    for (const row of expired || []) {
+      if (row?.lockout_key) networkStrikeBuckets.delete(row.lockout_key);
+    }
+
+    await logAction({ action: 'network_lockout_resolve_expired', actorAccountId: actorId, req, details: { deleted_count: (expired || []).length } });
+    res.json({ ok: true, deleted_count: (expired || []).length });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+app.get('/hub/admin/runbooks/network-abuse', async (req, res) => {
+  try {
+    const actorId = req.authAccountId;
+    const role = await getAccountRole(actorId);
+    if (!canAdmin(role)) return res.status(403).json({ ok: false, error: 'forbidden_admin_only' });
+
+    res.json({
+      ok: true,
+      runbook: {
+        version: '2026-04-03',
+        title: 'Network Abuse Response Runbook',
+        thresholds: {
+          strike_threshold: Number(HUB_NETWORK_STRIKE_THRESHOLD),
+          strike_window_seconds: Number(HUB_NETWORK_STRIKE_WINDOW_SECONDS),
+          lockout_minutes: Number(HUB_NETWORK_LOCKOUT_MINUTES)
+        },
+        steps: [
+          '1) Inspect recent anomalies: GET /hub/admin/anomalies?limit=200',
+          '2) Inspect active lockouts: GET /hub/admin/network-lockouts?active_only=true',
+          '3) If false positive: POST /hub/admin/network-lockouts/clear with lockout_key',
+          '4) If resolved naturally: POST /hub/admin/network-lockouts/resolve-expired',
+          '5) Escalate repeat offenders with account controls (slow/blocked)',
+          '6) Add IP to denylist/watchlist env when confirmed malicious'
+        ],
+        env_controls: {
+          HUB_IP_REPUTATION_DENYLIST: 'comma-separated IPs for immediate lockout',
+          HUB_IP_REPUTATION_WATCHLIST: 'comma-separated IPs for watch-tier context',
+          HUB_NETWORK_STRIKE_THRESHOLD: 'signals required to trigger lockout',
+          HUB_NETWORK_STRIKE_WINDOW_SECONDS: 'window for strike accumulation',
+          HUB_NETWORK_LOCKOUT_MINUTES: 'temporary lockout duration'
+        }
+      }
+    });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }
