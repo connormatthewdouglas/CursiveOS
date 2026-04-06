@@ -566,7 +566,7 @@ app.get('/hub/contributions', async (req, res) => {
     const role = await getAccountRole(accountId);
     // Validators and admins see all submissions; contributors/consumers see only their own
     const where = (canVote(role) || canAdmin(role)) ? '' : (accountId ? `where account_id='${esc(accountId)}'` : '');
-    const data = await sql(`select submission_id,account_id,submission_hash,title,class,state,verdict,measured_score,appeal_deadline,updated_at
+    const data = await sql(`select submission_id,account_id,submission_hash,title,class,description,state,verdict,measured_score,appeal_deadline,updated_at
       from l5_contributor_submissions ${where} order by updated_at desc limit 200;`);
     res.json({ ok: true, data, viewer_role: role || null });
   } catch (e) {
@@ -577,17 +577,21 @@ app.get('/hub/contributions', async (req, res) => {
 app.post('/hub/contributions', async (req, res) => {
   try {
     const actorId = req.authAccountId;
-    const { account_id, submission_hash, title, class_name = 'preset', stake_amount = 5 } = req.body || {};
-    if (!submission_hash || !title) return res.status(400).json({ ok: false, error: 'missing_fields' });
+    const { account_id, submission_hash, title, class_name = 'preset', description = null, stake_amount = 5 } = req.body || {};
+    if (!title) return res.status(400).json({ ok: false, error: 'missing_title' });
     if (account_id && account_id !== actorId) return res.status(403).json({ ok: false, error: 'forbidden_actor_mismatch' });
 
-    const rows = await sql(`insert into l5_contributor_submissions (account_id, submission_hash, title, class, stake_amount, state)
-      values ('${esc(actorId)}', '${esc(submission_hash)}', '${esc(title)}', '${esc(class_name)}', ${Number(stake_amount)}, 'stake_locked')
-      on conflict (submission_hash) do update set updated_at = now()
+    // Auto-generate a hash if none provided (title + account + timestamp fingerprint)
+    const hash = submission_hash || `auto:${actorId}:${esc(title)}:${Date.now()}`;
+    const descVal = description ? `'${esc(description)}'` : 'null';
+
+    const rows = await sql(`insert into l5_contributor_submissions (account_id, submission_hash, title, class, description, stake_amount, state)
+      values ('${esc(actorId)}', '${esc(hash)}', '${esc(title)}', '${esc(class_name)}', ${descVal}, ${Number(stake_amount)}, 'stake_locked')
+      on conflict (submission_hash) do update set title='${esc(title)}', description=${descVal}, updated_at=now()
       returning submission_id;`);
     const submission_id = rows[0]?.submission_id || null;
 
-    await logAction({ action: 'contribution_upsert', actorAccountId: actorId, req, details: { submission_hash, class_name, submission_id } });
+    await logAction({ action: 'contribution_upsert', actorAccountId: actorId, req, details: { submission_hash: hash, class_name, submission_id } });
     res.json({ ok: true, account_id: actorId, submission_id });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
@@ -1640,6 +1644,8 @@ async function initDb() {
   await ensureLifetimeVotesTable();
   // Add username column if schema predates it
   await sql(`alter table if exists l5_accounts add column if not exists username text;`);
+  // Add description column to submissions if schema predates it
+  await sql(`alter table if exists l5_contributor_submissions add column if not exists description text;`);
 }
 
 initDb()
