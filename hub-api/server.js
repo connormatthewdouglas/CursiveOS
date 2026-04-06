@@ -277,7 +277,7 @@ async function resolveAccountFromSession(req) {
 
 function isSessionOptionalPath(path) {
   // req.path is relative inside app.use('/hub', ...), so it is '/session/...'
-  return path === '/session/bootstrap' || path === '/session/create';
+  return path === '/session/bootstrap' || path === '/session/create' || path === '/accounts/create';
 }
 
 async function requireHubSession(req, res, next) {
@@ -572,12 +572,14 @@ app.post('/hub/contributions', async (req, res) => {
     if (!submission_hash || !title) return res.status(400).json({ ok: false, error: 'missing_fields' });
     if (account_id && account_id !== actorId) return res.status(403).json({ ok: false, error: 'forbidden_actor_mismatch' });
 
-    await sql(`insert into l5_contributor_submissions (account_id, submission_hash, title, class, stake_amount, state)
+    const rows = await sql(`insert into l5_contributor_submissions (account_id, submission_hash, title, class, stake_amount, state)
       values ('${esc(actorId)}', '${esc(submission_hash)}', '${esc(title)}', '${esc(class_name)}', ${Number(stake_amount)}, 'stake_locked')
-      on conflict (submission_hash) do update set updated_at = now();`);
+      on conflict (submission_hash) do update set updated_at = now()
+      returning submission_id;`);
+    const submission_id = rows[0]?.submission_id || null;
 
-    await logAction({ action: 'contribution_upsert', actorAccountId: actorId, req, details: { submission_hash, class_name } });
-    res.json({ ok: true, account_id: actorId });
+    await logAction({ action: 'contribution_upsert', actorAccountId: actorId, req, details: { submission_hash, class_name, submission_id } });
+    res.json({ ok: true, account_id: actorId, submission_id });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }
@@ -1293,20 +1295,43 @@ app.post('/hub/cycle/close-v31', async (req, res) => {
     }
     const allLifetimeVotes = Object.values(lifetimeMap).reduce((s, v) => s + v, 0);
 
-    const payouts = [];
     const BTC_PRICE = Number(pool.btc_price_usd);
     const payout_pot = Number(pool.payout_pot_btc);
     const cycle_yield = Number(pool.cycle_yield_btc);
+
+    // --- Pass 1: per-submission payout pot distribution ---
+    // Aggregate total payout per contributor across all their qualifying submissions
+    const payoutByAccount = {}; // accountId → total payout_btc this cycle
+    const submissionPayouts = [];
 
     for (const row of qualifying) {
       const accountId = subAccountMap[row.submission_id];
       if (!accountId) continue;
       const voteShare = Number(row.total_points) / totalCycleVotes;
       const payout_btc = voteShare * payout_pot;
-      const lifetime_share = allLifetimeVotes > 0 ? (lifetimeMap[accountId] || 0) / allLifetimeVotes : 0;
-      const royalty_btc = lifetime_share * cycle_yield;
+      payoutByAccount[accountId] = (payoutByAccount[accountId] || 0) + payout_btc;
+      submissionPayouts.push({
+        account_id: accountId,
+        submission_id: row.submission_id,
+        cycle_votes: Number(row.total_points),
+        vote_share_pct: (voteShare * 100).toFixed(2),
+        payout_btc: payout_btc.toFixed(8),
+        payout_usd: (payout_btc * BTC_PRICE).toFixed(4),
+      });
+    }
 
-      // Upsert lifetime votes
+    // --- Pass 2: yield royalty — once per contributor, based on lifetime share ---
+    const royaltyByAccount = {}; // accountId → royalty_btc this cycle
+    const contributorIds = [...new Set(Object.keys(payoutByAccount))];
+    for (const accountId of contributorIds) {
+      const lifetime_share = allLifetimeVotes > 0 ? (lifetimeMap[accountId] || 0) / allLifetimeVotes : 0;
+      royaltyByAccount[accountId] = lifetime_share * cycle_yield;
+    }
+
+    // --- Pass 3: write lifetime votes ledger (once per contributor) ---
+    for (const accountId of contributorIds) {
+      const payout_btc = payoutByAccount[accountId] || 0;
+      const royalty_btc = royaltyByAccount[accountId] || 0;
       await sql(`insert into l5_lifetime_votes_v31 (account_id, lifetime_votes, total_payout_btc, total_royalty_btc, updated_at)
         values ('${esc(accountId)}', ${(lifetimeMap[accountId] || 0).toFixed(4)},
                 ${payout_btc.toFixed(8)}, ${royalty_btc.toFixed(8)}, now())
@@ -1315,19 +1340,20 @@ app.post('/hub/cycle/close-v31', async (req, res) => {
               total_payout_btc=l5_lifetime_votes_v31.total_payout_btc+${payout_btc.toFixed(8)},
               total_royalty_btc=l5_lifetime_votes_v31.total_royalty_btc+${royalty_btc.toFixed(8)},
               updated_at=now();`);
+    }
 
-      payouts.push({
-        account_id: accountId,
-        submission_id: row.submission_id,
-        cycle_votes: Number(row.total_points),
-        vote_share_pct: (voteShare * 100).toFixed(2),
-        payout_btc: payout_btc.toFixed(8),
-        payout_usd: (payout_btc * BTC_PRICE).toFixed(4),
+    // Build response payouts array (per submission, royalty shown on first submission per contributor)
+    const royaltyShown = new Set();
+    const payouts = submissionPayouts.map(sp => {
+      const royalty_btc = !royaltyShown.has(sp.account_id) ? (royaltyByAccount[sp.account_id] || 0) : 0;
+      royaltyShown.add(sp.account_id);
+      return {
+        ...sp,
         royalty_btc: royalty_btc.toFixed(8),
         royalty_usd: (royalty_btc * BTC_PRICE).toFixed(6),
-        lifetime_votes_after: (lifetimeMap[accountId] || 0).toFixed(4),
-      });
-    }
+        lifetime_votes_after: (lifetimeMap[sp.account_id] || 0).toFixed(4),
+      };
+    });
 
     // Mark cycle closed
     await sql(`update l5_pool_state_v31 set status='closed', closed_at=now() where cycle_id=${Number(cycle_id)};`);
@@ -1396,7 +1422,7 @@ app.post('/hub/admin/dispense', async (req, res) => {
 
     await sql(`insert into l5_credit_ledger
       (event_type, bucket, amount, cycle_id, idempotency_key, source_account_id, target_account_id)
-      values ('test_dispense', 'test_btc', ${amount_btc.toFixed(8)}, 0, '${esc(ikey)}', '${esc(actorId)}', '${esc(account_id)}');`);
+      values ('test_dispense', 'account', ${amount_btc.toFixed(8)}, 0, '${esc(ikey)}', '${esc(actorId)}', '${esc(account_id)}');`);
 
     await logAction({ action: 'admin_dispense', actorAccountId: actorId, req, details: { account_id, amount_usd, amount_btc: amount_btc.toFixed(8), note: note || null } });
     res.json({
@@ -1406,6 +1432,135 @@ app.post('/hub/admin/dispense', async (req, res) => {
       dispensed_btc: amount_btc.toFixed(8),
       btc_price_used: BTC_PRICE,
     });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+// ─── all cycles history ───────────────────────────────────────────────────────
+
+app.get('/hub/pool/cycles', async (req, res) => {
+  try {
+    await ensurePoolStateTable();
+    const rows = await sql(`select * from l5_pool_state_v31 order by cycle_id asc;`);
+    const BTC_PRICE = Number(process.env.BTC_PRICE_USD || 85000);
+    res.json({
+      ok: true,
+      data: rows.map(r => ({
+        ...r,
+        pool_principal_usd: (Number(r.pool_principal_btc) * BTC_PRICE).toFixed(2),
+        payout_pot_usd: (Number(r.payout_pot_btc) * BTC_PRICE).toFixed(2),
+        cycle_yield_usd: (Number(r.cycle_yield_btc) * BTC_PRICE).toFixed(4),
+      }))
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+// ─── account balance ──────────────────────────────────────────────────────────
+
+// Returns the running balance for the authenticated account from the credit ledger.
+// Sums: incoming events (target_account_id = me) minus outgoing debits (source_account_id = me, event_type=fast_burn etc.)
+// For now, test_dispense credits are the main source. This is test-mode only.
+app.get('/hub/rewards/my-balance', async (req, res) => {
+  try {
+    const accountId = req.authAccountId;
+    if (!accountId) return res.status(400).json({ ok: false, error: 'missing_account_scope' });
+
+    const BTC_PRICE = Number(process.env.BTC_PRICE_USD || 85000);
+
+    // Credits: anything where this account is the target
+    const credits = await sql(`select coalesce(sum(amount),0) as total
+      from l5_credit_ledger where target_account_id='${esc(accountId)}';`);
+    // Debits: fast_burn or other outgoing events where this account is the source
+    const debits = await sql(`select coalesce(sum(amount),0) as total
+      from l5_credit_ledger where source_account_id='${esc(accountId)}'
+        and event_type not in ('test_dispense');`);
+
+    const balance_btc = Number(credits[0]?.total || 0) - Number(debits[0]?.total || 0);
+    const balance_usd = balance_btc * BTC_PRICE;
+
+    // Also get lifetime payout + royalty from v3.1 ledger
+    await ensureLifetimeVotesTable();
+    const lifetime = await sql(`select total_payout_btc, total_royalty_btc
+      from l5_lifetime_votes_v31 where account_id='${esc(accountId)}' limit 1;`);
+    const payout_btc = Number(lifetime[0]?.total_payout_btc || 0);
+    const royalty_btc = Number(lifetime[0]?.total_royalty_btc || 0);
+
+    res.json({
+      ok: true,
+      account_id: accountId,
+      balance_btc: balance_btc.toFixed(8),
+      balance_usd: balance_usd.toFixed(2),
+      total_payout_earned_btc: payout_btc.toFixed(8),
+      total_royalty_earned_btc: royalty_btc.toFixed(8),
+      total_earned_btc: (payout_btc + royalty_btc).toFixed(8),
+      total_earned_usd: ((payout_btc + royalty_btc) * BTC_PRICE).toFixed(2),
+      btc_price_used: BTC_PRICE,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+// ─── account creation ─────────────────────────────────────────────────────────
+
+app.post('/hub/accounts/create', async (req, res) => {
+  try {
+    // Anyone can create an account — no auth required (pilot: open sign-up)
+    const { role = 'contributor', label } = req.body || {};
+    const validRoles = ['contributor', 'validator', 'consumer', 'mixed'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ ok: false, error: 'invalid_role', valid_roles: validRoles });
+    }
+    // mixed role requires admin session
+    if (role === 'mixed') {
+      const actorId = req.authAccountId;
+      const actorRole = await getAccountRole(actorId);
+      if (!canAdmin(actorRole)) return res.status(403).json({ ok: false, error: 'forbidden_mixed_role_requires_admin' });
+    }
+
+    const newId = crypto.randomUUID();
+    await sql(`insert into l5_accounts (account_id, role, status)
+      values ('${esc(newId)}', '${esc(role)}', 'active');`);
+
+    await logAction({ action: 'account_create', actorAccountId: req.authAccountId || null, req, details: { new_account_id: newId, role, label: label || null } });
+    res.json({ ok: true, account_id: newId, role, status: 'active', label: label || null });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+// ─── submission verdict (accept/reject) ───────────────────────────────────────
+
+app.post('/hub/contributions/:submissionId/verdict', async (req, res) => {
+  try {
+    const actorId = req.authAccountId;
+    const role = await getAccountRole(actorId);
+    if (!canVote(role) && !canAdmin(role)) {
+      return res.status(403).json({ ok: false, error: 'forbidden_validator_or_admin_only' });
+    }
+
+    const { submissionId } = req.params;
+    const { verdict } = req.body || {};
+    const validVerdicts = ['accepted', 'rejected', 'pending'];
+    if (!validVerdicts.includes(verdict)) {
+      return res.status(400).json({ ok: false, error: 'invalid_verdict', valid: validVerdicts });
+    }
+
+    const existing = await sql(`select submission_id from l5_contributor_submissions
+      where submission_id='${esc(submissionId)}' limit 1;`);
+    if (!existing[0]) return res.status(404).json({ ok: false, error: 'submission_not_found' });
+
+    // Map verdict to state
+    const newState = verdict === 'accepted' ? 'accepted' : verdict === 'rejected' ? 'rejected' : 'stake_locked';
+    await sql(`update l5_contributor_submissions
+      set state='${esc(newState)}', verdict='${esc(verdict)}', updated_at=now()
+      where submission_id='${esc(submissionId)}';`);
+
+    await logAction({ action: `submission_${verdict}`, actorAccountId: actorId, req, details: { submissionId } });
+    res.json({ ok: true, submission_id: submissionId, state: newState, verdict });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }

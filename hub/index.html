@@ -20,6 +20,7 @@
   </header>
 
   <nav class="tabs" id="tabs">
+    <button data-tab="guide">Guide</button>
     <button data-tab="pool" class="active">Pool</button>
     <button data-tab="cycle">Cycle</button>
     <button data-tab="vote">Vote</button>
@@ -30,6 +31,106 @@
   </nav>
 
   <main>
+
+    <!-- GUIDE -->
+    <section id="guide" class="panel">
+      <div class="guide-wrap">
+
+        <h2>Welcome to CursiveOS Hub</h2>
+        <p class="guide-lead">CursiveOS is an open-source Linux optimizer. The Hub is where the incentive layer lives — contributors earn Bitcoin for improving the system, validators vote on what's worth paying for, and the pool grows automatically over time.</p>
+
+        <div class="guide-section">
+          <h3>Getting Started</h3>
+          <ol class="guide-steps">
+            <li><b>Pick your role</b> — use the account selector in the top bar to switch between accounts. Your role is shown next to it (admin, validator, contributor, consumer).</li>
+            <li><b>Bind your wallet</b> — go to the <b>Identity</b> tab, paste your Ethereum wallet address, bind it, then sign a challenge to verify you own it. This is required to receive payouts.</li>
+            <li><b>Contributors:</b> go to <b>Submissions</b> and submit your work (a git hash or content hash + short title). Validators review and vote on it each cycle.</li>
+            <li><b>Validators:</b> go to <b>Vote</b>, load the open cycle, and distribute your 100 points across accepted submissions. Your votes determine who gets paid.</li>
+            <li><b>Everyone:</b> check the <b>Pool</b> tab to see how the money is moving — what came in, what's locked, and what got paid out.</li>
+          </ol>
+        </div>
+
+        <div class="guide-section">
+          <h3>How It Works</h3>
+          <div class="guide-cards">
+            <div class="guide-card">
+              <div class="guide-card-icon">💸</div>
+              <b>Fast users pay $2/month per machine.</b>
+              <p>60% goes into the payout pot this cycle. 40% is locked in the pool forever and earns yield.</p>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-icon">🗳️</div>
+              <b>Validators vote on contributions.</b>
+              <p>Each validator gets 100 points to spread across accepted submissions. More votes = bigger payout share.</p>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-icon">📈</div>
+              <b>Contributors earn two ways.</b>
+              <p><b>Payout share</b> — your cut of this cycle's pot, based on votes. Resets every cycle.<br><b>Yield royalty</b> — your permanent share of the pool's Bitcoin yield. Grows with the pool, never removed.</p>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-icon">🔒</div>
+              <b>The pool grows forever.</b>
+              <p>The locked 40% is never withdrawn. It earns yield through Babylon Protocol (~3.25% annually). Early contributors keep their royalty share permanently.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <h3>The Cycle</h3>
+          <p>Everything runs in monthly cycles:</p>
+          <div class="guide-timeline">
+            <div class="guide-step"><span class="step-num">1</span><span>Admin opens the cycle — revenue splits 60/40</span></div>
+            <div class="guide-step"><span class="step-num">2</span><span>Contributors submit work</span></div>
+            <div class="guide-step"><span class="step-num">3</span><span>Validators review submissions and vote (100 pts each)</span></div>
+            <div class="guide-step"><span class="step-num">4</span><span>Admin closes the cycle — payouts calculated and recorded</span></div>
+            <div class="guide-step"><span class="step-num">5</span><span>Repeat — pool grows, yield royalties accumulate</span></div>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <h3>Roles at a Glance</h3>
+          <table class="guide-table">
+            <thead><tr><th>Role</th><th>What you do</th><th>What you earn</th><th>Cost</th></tr></thead>
+            <tbody>
+              <tr><td><b>Fast User</b></td><td>Run CursiveOS on your machines</td><td>Faster updates, hardware recommendations</td><td>$2/month per machine</td></tr>
+              <tr><td><b>Validator</b></td><td>Test submissions, vote each cycle</td><td>Nothing directly — you're the quality gate</td><td>$2/month (fully refunded)</td></tr>
+              <tr><td><b>Contributor</b></td><td>Submit improvements to the system</td><td>Payout pot share + permanent yield royalty</td><td>Free</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="guide-section">
+          <h3>FAQ</h3>
+          <div class="faq">
+            <details><summary>Is this real money right now?</summary><p>Not yet. We're in a supervised pilot using test funds. When we're confident the system works, we'll fund the pool with real Bitcoin and open it publicly.</p></details>
+            <details><summary>What is the yield royalty and why does it matter?</summary><p>Every cycle, the locked pool earns Bitcoin yield (~3.25% annually). That yield is split among contributors in proportion to their lifetime votes. Your lifetime votes never go away — so even if you stop contributing, you still earn yield on past work forever. The longer you contribute early, the larger your permanent share.</p></details>
+            <details><summary>What counts as a contribution?</summary><p>Anything that improves CursiveOS: new performance presets, benchmark improvements, hardware profiles, tooling, documentation. Submit a git commit hash or content hash with a short title. Validators decide if it's worth paying for.</p></details>
+            <details><summary>What happens if my submission gets no votes?</summary><p>No payout that cycle, and no lifetime vote accrual. Three cycles in a row with less than 1% of votes triggers a 5-cycle cooldown before you can submit again. This keeps low-quality submissions from clogging the pipeline.</p></details>
+            <details><summary>Can I be a contributor and a validator?</summary><p>Yes — an admin account has all roles. For the pilot, Connor is playing all roles to test the system before opening it up.</p></details>
+            <details><summary>How do I get paid?</summary><p>Bind and verify your wallet in the Identity tab. When real Bitcoin is enabled, payouts will be sent to that address at cycle close. During the pilot, earnings are tracked internally.</p></details>
+            <details><summary>What is Babylon Protocol?</summary><p>A Bitcoin staking network that lets you earn yield on locked BTC without giving custody to anyone. The pool's locked principal earns ~6.5% gross annually (we stake 50%, giving ~3.25% effective). No trust required.</p></details>
+            <details><summary>Who controls the pool?</summary><p>Right now, the founder. Before going public we'll move to a multisig wallet (no single person can move funds) and eventually validator governance. The goal is for no single person to hold the keys.</p></details>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <h3>New Here? Create an Account</h3>
+          <p class="muted">During the pilot, accounts are created manually. Ask the admin to add you, or use the form below if you have an invite.</p>
+          <div class="inline-form">
+            <select id="newAccountRole">
+              <option value="contributor">Contributor — submit work, earn rewards</option>
+              <option value="validator">Validator — review and vote on submissions</option>
+              <option value="consumer">Fast User — get early updates for your machines</option>
+            </select>
+            <input id="newAccountLabel" placeholder="your name or handle (for display only)" style="width:220px" />
+            <button id="createAccountBtn">Create Account</button>
+          </div>
+          <p id="createAccountResult" class="muted"></p>
+        </div>
+
+      </div>
+    </section>
 
     <!-- POOL -->
     <section id="pool" class="panel active">
