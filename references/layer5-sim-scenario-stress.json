@@ -1,37 +1,23 @@
 {
-  "seed": 7,
+  "_comment": "v3.1 stress scenario — 60 cycles, growing fast user base, 8 contributors",
+  "fast_user_count": 50,
+  "validator_count": 8,
   "cycles": 60,
-  "pool_open": 900,
-  "validators_per_cycle": 45,
-  "contributors_per_cycle": 30,
-  "params": {
-    "F_fast": 3,
-    "alpha_pool": 1.0,
-    "fast_fee_burn_rate": 0.0,
-    "g": 0.00025,
-    "S": 4.0,
-    "flat_fee": 0.15,
-    "burn_payout_pct": 0.01,
-    "pool_target": 10000,
-    "alpha_ema": 0.05,
-    "spend_rate": 0.60,
-    "min_scale": 0.25,
-    "max_scale": 2.0,
-    "pool_floor": 500
-  },
-  "wallets": [
-    {"id": "wallet_alice", "initial_credits": 150, "fast_machines": 1},
-    {"id": "wallet_bob", "initial_credits": 140, "fast_machines": 1},
-    {"id": "wallet_carol", "initial_credits": 135, "fast_machines": 1},
-    {"id": "wallet_dan", "initial_credits": 130, "fast_machines": 1},
-    {"id": "wallet_erin", "initial_credits": 120, "fast_machines": 1},
-    {"id": "wallet_frank", "initial_credits": 110, "fast_machines": 1}
+  "acceptance_rate": 0.80,
+  "contributor_accounts": [
+    "alice", "bob", "carol", "dan", "erin", "frank", "grace", "henry"
   ],
-  "wallet_ops": [
-    {"cycle": 10, "wallet_id": "wallet_alice", "type": "subtract", "amount": 80},
-    {"cycle": 20, "wallet_id": "wallet_bob", "type": "subtract", "amount": 70},
-    {"cycle": 30, "wallet_id": "wallet_carol", "type": "subtract", "amount": 60},
-    {"cycle": 40, "wallet_id": "wallet_dan", "type": "subtract", "amount": 50},
-    {"cycle": 50, "wallet_id": "wallet_erin", "type": "subtract", "amount": 40}
-  ]
+  "params": {
+    "F_fast_usd": 2.00,
+    "btc_price_usd": 85000,
+    "payout_pot_fraction": 0.60,
+    "pool_fraction": 0.40,
+    "babylon_gross_yield": 0.065,
+    "staking_fraction": 0.50,
+    "cycles_per_year": 12,
+    "validator_vote_points": 100,
+    "min_vote_threshold": 0.01,
+    "low_vote_cooldown_trigger": 3,
+    "cooldown_cycles": 5
+  }
 }
