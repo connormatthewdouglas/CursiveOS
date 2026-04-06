@@ -556,10 +556,12 @@ app.get('/hub/rewards/balances', async (req, res) => {
 app.get('/hub/contributions', async (req, res) => {
   try {
     const accountId = req.authAccountId;
-    const where = accountId ? `where account_id='${esc(accountId)}'` : '';
+    const role = await getAccountRole(accountId);
+    // Validators and admins see all submissions; contributors/consumers see only their own
+    const where = (canVote(role) || canAdmin(role)) ? '' : (accountId ? `where account_id='${esc(accountId)}'` : '');
     const data = await sql(`select submission_id,account_id,submission_hash,title,class,state,verdict,measured_score,appeal_deadline,updated_at
       from l5_contributor_submissions ${where} order by updated_at desc limit 200;`);
-    res.json({ ok: true, data });
+    res.json({ ok: true, data, viewer_role: role || null });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }
