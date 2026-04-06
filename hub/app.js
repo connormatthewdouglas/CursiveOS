@@ -1,655 +1,789 @@
 const API = window.HUB_API_BASE || 'http://localhost:8787';
-const installCmd = `git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git -C ~/CursiveOS pull --ff-only 2>/dev/null || echo "Local changes detected"; chmod +x ~/CursiveOS/cursiveos-full-test-v1.4.sh; cd ~/CursiveOS && bash cursiveos-full-test-v1.4.sh`;
-document.getElementById('installCmd').textContent = installCmd;
 
-let ACTIVE_ACCOUNT_ID = null;
-let ACTIVE_SESSION_TOKEN = null;
-let ACTIVE_WALLET_CHALLENGE = null;
-let ACTIVE_ROLE = null;
-let ALL_ACCOUNTS = [];
-let CURRENT_OPEN_CYCLE_ID = null;
+// ── State ────────────────────────────────────────────────────────────────────
+let SESSION_TOKEN = null;
+let ACCOUNT_ID    = null;
+let ACCOUNT_ROLE  = null;
+let USERNAME      = null;
+let ALL_ACCOUNTS  = [];
+let OPEN_CYCLE_ID = null;
+let WALLET_CHALLENGE = null;
 
 // ── API helpers ──────────────────────────────────────────────────────────────
+const authH = () => SESSION_TOKEN ? { 'x-session-token': SESSION_TOKEN } : {};
 
-function authHeaders() {
-  return ACTIVE_SESSION_TOKEN ? { 'x-session-token': ACTIVE_SESSION_TOKEN } : {};
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', ...authH() },
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(`${API}${path}`, opts);
+  return r.json();
 }
 
-async function jget(path) {
-  const res = await fetch(`${API}${path}`, { headers: authHeaders() });
-  return res.json();
-}
+const get  = path       => api('GET',  path);
+const post = (path, b)  => api('POST', path, b || {});
 
-async function jpost(path, body) {
-  const payload = { ...(body || {}) };
-  if (ACTIVE_ACCOUNT_ID && !payload.actor_account_id) payload.actor_account_id = ACTIVE_ACCOUNT_ID;
-  const res = await fetch(`${API}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(payload)
-  });
-  return res.json();
-}
-
-function setResult(id, text, ok = true) {
+// ── UI helpers ───────────────────────────────────────────────────────────────
+function msg(id, text, type = 'ok') {
   const el = document.getElementById(id);
   if (!el) return;
+  el.className = `form-msg ${type}`;
   el.textContent = text;
-  el.className = ok ? 'muted status-ok' : 'muted status-err';
 }
-
-function setLoading(id, msg = 'Loading…') {
+function clearMsg(id) {
   const el = document.getElementById(id);
-  if (el) { el.innerHTML = `<tr><td colspan="99"><span class="loading">${msg}</span></td></tr>`; }
+  if (el) { el.className = 'form-msg'; el.textContent = ''; }
 }
 
-function apiMsg(r, fallback = 'Something went wrong') {
-  if (!r) return fallback;
-  return r.error || r.message || fallback;
-}
-
-function rows(id, data, render, colspan = 4) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = (data || []).length
-    ? data.map(render).join('')
-    : `<tr><td colspan='${colspan}' style='color:var(--muted)'>Nothing here yet</td></tr>`;
-}
-
-function shortId(id) {
-  return id ? id.slice(0, 8) + '…' : '--';
-}
+function shortId(id) { return id ? id.slice(0, 8) + '…' : '–'; }
 
 function friendlyRole(role) {
   return { mixed: 'Admin', validator: 'Validator', contributor: 'Contributor', consumer: 'Fast User' }[role] || role;
 }
 
-function friendlyState(state) {
-  return {
-    stake_locked: 'Pending Review',
-    accepted: 'Accepted',
-    rejected: 'Rejected',
-    settled: 'Settled',
-    pending: 'Pending',
-  }[state] || state;
-}
-
 function accountLabel(a) {
-  return `${a.username ? a.username : friendlyRole(a.role)} · ${shortId(a.account_id)}`;
+  return a?.username ? `${a.username} (${friendlyRole(a.role)})` : `${friendlyRole(a.role)} · ${shortId(a?.account_id)}`;
 }
 
-// ── Bootstrap ────────────────────────────────────────────────────────────────
-
-async function establishSession(accountId) {
-  if (!accountId) { ACTIVE_SESSION_TOKEN = null; return; }
-  const s = await fetch(`${API}/hub/session/create`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ account_id: accountId })
-  }).then(r => r.json());
-  if (!s.ok || !s.session_token) throw new Error(`Session failed: ${apiMsg(s)}`);
-  ACTIVE_SESSION_TOKEN = s.session_token;
+function badgeHtml(text, cls) {
+  return `<span class="badge ${cls}">${text}</span>`;
 }
 
-async function bootstrapAccount() {
+function submissionBadge(state) {
+  const map = {
+    stake_locked: ['Pending Review', 'badge-review'],
+    accepted:     ['Accepted',       'badge-accepted'],
+    rejected:     ['Rejected',       'badge-rejected'],
+    settled:      ['Settled',        'badge-accepted'],
+    pending:      ['Pending',        'badge-pending'],
+  };
+  const [label, cls] = map[state] || [state, 'badge-pending'];
+  return badgeHtml(label, cls);
+}
+
+function emptyRow(colspan, icon, text) {
+  return `<tr><td colspan="${colspan}">
+    <div class="empty-state">
+      <div class="empty-icon">${icon}</div>
+      <p>${text}</p>
+    </div>
+  </td></tr>`;
+}
+
+function isAdmin()     { return ACCOUNT_ROLE === 'mixed'; }
+function isValidator() { return ACCOUNT_ROLE === 'validator' || isAdmin(); }
+function isContributor(){ return ACCOUNT_ROLE === 'contributor' || isAdmin(); }
+
+// ── Login Flow ───────────────────────────────────────────────────────────────
+async function tryLogin(accountId) {
+  const r = await post('/hub/session/create', { account_id: accountId });
+  if (!r.ok) throw new Error(r.error === 'account_not_found' ? 'Account not found. Check your ID and try again.' : r.error);
+  SESSION_TOKEN = r.session_token;
+  ACCOUNT_ID    = accountId;
+}
+
+async function loadAccountInfo() {
   const boot = await fetch(`${API}/hub/session/bootstrap`).then(r => r.json());
   ALL_ACCOUNTS = boot.accounts || [];
-  const sel = document.getElementById('accountSelect');
-  sel.innerHTML = ALL_ACCOUNTS.map(a => `<option value="${a.account_id}">${accountLabel(a)}</option>`).join('');
-  ACTIVE_ACCOUNT_ID = boot.suggested_account_id || ALL_ACCOUNTS[0]?.account_id || null;
-  ACTIVE_ROLE = ALL_ACCOUNTS.find(a => a.account_id === ACTIVE_ACCOUNT_ID)?.role || null;
-  if (ACTIVE_ACCOUNT_ID) sel.value = ACTIVE_ACCOUNT_ID;
-  await establishSession(ACTIVE_ACCOUNT_ID);
-  populateAccountSelects();
+  const mine = ALL_ACCOUNTS.find(a => a.account_id === ACCOUNT_ID);
+  ACCOUNT_ROLE = mine?.role || null;
+  USERNAME     = mine?.username || null;
+}
 
-  sel.addEventListener('change', async () => {
-    ACTIVE_ACCOUNT_ID = sel.value;
-    ACTIVE_ROLE = ALL_ACCOUNTS.find(a => a.account_id === ACTIVE_ACCOUNT_ID)?.role || null;
-    await establishSession(ACTIVE_ACCOUNT_ID);
-    await load();
+function saveSession() {
+  localStorage.setItem('hub_account_id', ACCOUNT_ID);
+}
+
+function clearSession() {
+  SESSION_TOKEN = null; ACCOUNT_ID = null; ACCOUNT_ROLE = null; USERNAME = null;
+  localStorage.removeItem('hub_account_id');
+}
+
+async function bootApp() {
+  await loadAccountInfo();
+  renderHeader();
+  renderNav();
+  await loadBalance();
+  await loadPanel('overview');
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+// ── Header ───────────────────────────────────────────────────────────────────
+function renderHeader() {
+  const name = USERNAME || friendlyRole(ACCOUNT_ROLE);
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userAvatar').textContent = (name[0] || '?').toUpperCase();
+
+  const roleMap = {
+    mixed: ['Admin', 'rb-admin'],
+    validator: ['Validator', 'rb-validator'],
+    contributor: ['Contributor', 'rb-contributor'],
+    consumer: ['Fast User', 'rb-consumer'],
+  };
+  const [label, cls] = roleMap[ACCOUNT_ROLE] || [ACCOUNT_ROLE, 'rb-consumer'];
+  const badge = document.getElementById('userRoleBadge');
+  badge.textContent = label;
+  badge.className = `role-badge ${cls}`;
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { id: 'overview',  label: 'Overview',     roles: ['mixed','validator','contributor','consumer'] },
+  { id: 'submit',    label: 'Submit Work',  roles: ['contributor','mixed'] },
+  { id: 'vote',      label: 'Vote',         roles: ['validator','mixed'] },
+  { id: 'pool',      label: 'Pool',         roles: ['mixed','validator','contributor','consumer'] },
+  { id: 'earnings',  label: 'Earnings',     roles: ['mixed','validator','contributor','consumer'] },
+  { id: 'settings',  label: 'Settings',     roles: ['mixed','validator','contributor','consumer'] },
+  { id: 'admin',     label: 'Admin',        roles: ['mixed'] },
+];
+
+function renderNav() {
+  const nav = document.getElementById('appNav');
+  const visible = NAV_ITEMS.filter(n => n.roles.includes(ACCOUNT_ROLE));
+  nav.innerHTML = visible.map(n =>
+    `<button data-panel="${n.id}" class="${n.id === 'overview' ? 'active' : ''}">${n.label}</button>`
+  ).join('');
+  nav.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => switchPanel(btn.dataset.panel));
   });
 }
 
-function populateAccountSelects() {
-  ['dispenseAccountSelect', 'controlAccountSelect', 'deleteAccountSelect'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = ALL_ACCOUNTS.map(a =>
-      `<option value="${a.account_id}">${accountLabel(a)}</option>`
-    ).join('');
-  });
+// ── Panel switching ───────────────────────────────────────────────────────────
+let activePanel = 'overview';
+
+async function switchPanel(id) {
+  document.querySelectorAll('#appNav button').forEach(b => b.classList.toggle('active', b.dataset.panel === id));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${id}`)?.classList.add('active');
+  activePanel = id;
+  await loadPanel(id);
 }
 
-// ── Load all panels ──────────────────────────────────────────────────────────
-
-async function load() {
-  await Promise.all([
-    loadPoolState(),
-    loadIdentity(),
-    loadBalance(),
-    loadMachines(),
-    loadLedger(),
-    loadContributions(),
-    loadLifetimeVotes(),
-  ]);
+async function loadPanel(id) {
+  switch (id) {
+    case 'overview':  return loadOverview();
+    case 'submit':    return loadSubmissions();
+    case 'vote':      return loadVote();
+    case 'pool':      return loadPool();
+    case 'earnings':  return loadEarnings();
+    case 'settings':  return loadSettings();
+    case 'admin':     return loadAdmin();
+  }
 }
 
-// ── Balance bar ──────────────────────────────────────────────────────────────
-
+// ── Balance strip ─────────────────────────────────────────────────────────────
 async function loadBalance() {
   try {
-    const b = await jget('/hub/rewards/my-balance');
-    const bar = document.getElementById('balanceBar');
-    if (!bar) return;
-    if (b.ok) {
-      bar.innerHTML = `
-        <span class="bal-label">Your balance</span>
-        <span class="bal-value">${Number(b.balance_btc).toFixed(8)} BTC</span>
-        <span class="bal-label">~$${b.balance_usd}</span>
-        <span style="margin-left:16px;border-left:1px solid var(--line);padding-left:16px" class="bal-label">Total earned (payouts + royalties)</span>
-        <span class="bal-value">${Number(b.total_earned_btc).toFixed(8)} BTC</span>
-        <span class="bal-label">~$${b.total_earned_usd}</span>`;
+    const b = await get('/hub/rewards/my-balance');
+    const strip = document.getElementById('balanceStrip');
+    if (b.ok && Number(b.balance_btc) > 0) {
+      strip.style.display = 'flex';
+      strip.innerHTML = `
+        <span class="bl">Balance</span>
+        <span class="bv">${Number(b.balance_btc).toFixed(8)} BTC</span>
+        <span class="bl">~$${b.balance_usd}</span>
+        <div class="bs"></div>
+        <span class="bl">Total earned</span>
+        <span class="bv">${Number(b.total_earned_btc).toFixed(8)} BTC</span>
+        <span class="bl">~$${b.total_earned_usd}</span>`;
     } else {
-      bar.innerHTML = `<span class="bal-label">Balance unavailable</span>`;
+      strip.style.display = 'none';
     }
-  } catch (_e) {}
+  } catch (_) {}
 }
 
-// ── Pool state ───────────────────────────────────────────────────────────────
+// ── Overview ──────────────────────────────────────────────────────────────────
+async function loadOverview() {
+  const [poolData, contrib, balance, lifetime] = await Promise.all([
+    get('/hub/pool/state').catch(() => ({})),
+    get('/hub/contributions').catch(() => ({ data: [] })),
+    get('/hub/rewards/my-balance').catch(() => ({})),
+    get('/hub/contributors/lifetime-votes').catch(() => ({})),
+  ]);
 
-async function loadPoolState() {
-  try {
-    const [s, hist] = await Promise.all([
-      jget('/hub/pool/state'),
-      jget('/hub/pool/cycles'),
-    ]);
-    const cur = s.current_cycle;
-    const cfg = s.config || {};
-    if (cur?.status === 'open') CURRENT_OPEN_CYCLE_ID = cur.cycle_id;
-    const bp = cur?.btc_price_usd || cfg.btc_price_usd || 85000;
+  const cur = poolData.current_cycle;
+  if (cur?.status === 'open') OPEN_CYCLE_ID = cur.cycle_id;
 
-    document.getElementById('cycleCard').textContent = cur
-      ? `Cycle ${cur.cycle_id} · ${cur.status} · Pool $${(Number(cur.pool_principal_btc) * bp).toFixed(0)}`
-      : 'No cycles yet';
+  const greet = USERNAME ? `Hey, ${USERNAME}.` : 'Welcome.';
+  document.getElementById('overviewHeading').textContent = greet;
 
-    document.getElementById('poolPrincipal').textContent = cur
-      ? `${Number(cur.pool_principal_btc).toFixed(8)} BTC\n~$${(Number(cur.pool_principal_btc) * bp).toFixed(2)}`
-      : '--';
-    document.getElementById('payoutPot').textContent = cur
-      ? `${Number(cur.payout_pot_btc).toFixed(8)} BTC\n~$${(Number(cur.payout_pot_btc) * bp).toFixed(2)}`
-      : '--';
-    document.getElementById('cycleYield').textContent = cur
-      ? `${Number(cur.cycle_yield_btc).toFixed(8)} BTC\n~$${(Number(cur.cycle_yield_btc) * bp).toFixed(4)}`
-      : '--';
-    document.getElementById('fastRevenue').textContent = cur
-      ? `$${Number(cur.fast_revenue_usd).toFixed(2)} USD → ${Number(cur.fast_revenue_btc).toFixed(8)} BTC`
-      : '--';
-    document.getElementById('effectiveYield').textContent = cfg.effective_per_cycle_yield
-      ? `${(cfg.effective_per_cycle_yield * 100).toFixed(3)}%/cycle\n(${(cfg.effective_per_cycle_yield * 12 * 100).toFixed(2)}% annually)`
-      : '--';
-    document.getElementById('cycleStatus').textContent = cur ? (cur.status === 'open' ? 'Open — accepting votes' : 'Closed') : '--';
+  const myLifetime = lifetime.data?.find(r => r.account_id === ACCOUNT_ID);
+  const btcPrice = cur?.btc_price_usd || 85000;
 
-    const allCycles = hist.data || (cur ? [cur] : []);
-    rows('allCyclesBody', allCycles, r => `<tr>
-      <td>${r.cycle_id}</td>
-      <td>${r.fast_user_count}</td>
-      <td>$${Number(r.fast_revenue_usd).toFixed(2)}</td>
-      <td>${Number(r.payout_pot_btc).toFixed(8)}</td>
-      <td>${Number(r.pool_principal_btc).toFixed(8)}</td>
-      <td>${Number(r.cycle_yield_btc).toFixed(8)}</td>
-      <td><span class="badge ${r.status === 'open' ? 'badge-verified' : ''}">${r.status}</span></td>
-    </tr>`, 7);
-  } catch (e) {
-    document.getElementById('cycleCard').textContent = `Error loading pool: ${e.message}`;
+  let content = '';
+
+  // ── Cycle status banner
+  if (cur) {
+    const isOpen = cur.status === 'open';
+    content += `<div class="cta-banner ${isOpen ? 'green' : ''}">
+      <div class="cta-text">
+        <h3>${isOpen ? `Cycle ${cur.cycle_id} is open` : `Cycle ${cur.cycle_id} is closed`}</h3>
+        <p>${isOpen
+          ? `Payout pot: ${Number(cur.payout_pot_btc).toFixed(8)} BTC (~$${(Number(cur.payout_pot_btc)*btcPrice).toFixed(2)}) · Pool: $${(Number(cur.pool_principal_btc)*btcPrice).toFixed(0)} locked`
+          : 'No open cycle. The admin will open a new one soon.'
+        }</p>
+      </div>
+      ${isOpen && isValidator() ? `<button class="btn-primary" onclick="switchPanel('vote')">Go Vote →</button>` : ''}
+      ${isOpen && isContributor() ? `<button class="btn-primary green" onclick="switchPanel('submit')">Submit Work →</button>` : ''}
+    </div>`;
+  } else {
+    content += `<div class="cta-banner"><div class="cta-text"><h3>No cycles yet</h3><p>The admin hasn't opened a cycle yet.</p></div></div>`;
   }
-}
 
-// ── Identity ──────────────────────────────────────────────────────────────────
+  // ── Stats row
+  const balanceBtc = Number(balance.balance_btc || 0);
+  const totalEarned = Number(balance.total_earned_btc || 0);
+  const ltvShare   = myLifetime?.lifetime_share_pct || '0.00';
+  const poolUsd    = cur ? (Number(cur.pool_principal_btc) * btcPrice).toFixed(0) : '0';
 
-async function loadIdentity() {
-  try {
-    const [identity, audit] = await Promise.all([
-      jget('/hub/identity'),
-      jget('/hub/audit/actions?limit=5')
-    ]);
-    const wi = identity.wallet_identity;
-    const ctrl = identity?.account_control?.control_mode || 'normal';
-    const verifyBadge = wi?.verification_status === 'verified'
-      ? '<span class="badge badge-verified">Wallet Verified</span>'
-      : '<span class="badge badge-unverified">Wallet Not Verified</span>';
-    const ctrlBadge = ctrl === 'blocked'
-      ? '<span class="badge badge-blocked">Blocked</span>'
-      : ctrl === 'slow' ? '<span class="badge badge-slow">Slow Mode</span>' : '';
+  content += `<div class="stats-row">
+    <div class="stat-card sc-green">
+      <div class="stat-label">Your Balance</div>
+      <div class="stat-value">${balanceBtc.toFixed(8)}</div>
+      <div class="stat-sub">BTC · ~$${(balanceBtc * btcPrice).toFixed(2)}</div>
+    </div>
+    <div class="stat-card sc-blue">
+      <div class="stat-label">Total Earned</div>
+      <div class="stat-value">${totalEarned.toFixed(8)}</div>
+      <div class="stat-sub">BTC all time</div>
+    </div>
+    <div class="stat-card sc-purple">
+      <div class="stat-label">Pool Size</div>
+      <div class="stat-value">$${poolUsd}</div>
+      <div class="stat-sub">locked principal</div>
+    </div>
+    <div class="stat-card sc-amber">
+      <div class="stat-label">Your Yield Share</div>
+      <div class="stat-value">${ltvShare}%</div>
+      <div class="stat-sub">of pool yield, forever</div>
+    </div>
+  </div>`;
 
-    document.getElementById('identityCard').innerHTML = identity.ok
-      ? `${friendlyRole(ACTIVE_ROLE)} · ${shortId(ACTIVE_ACCOUNT_ID)} ${ctrlBadge} ${verifyBadge}${wi?.wallet_address ? ` · ${wi.wallet_address.slice(0, 12)}…` : ''}`
-      : 'Identity unavailable';
-
-    if (wi?.verification_status === 'verified') {
-      ACTIVE_WALLET_CHALLENGE = null;
-      document.getElementById('walletChallengeMessage').textContent = 'Wallet verified.';
-    }
-
-    const auditItems = (audit?.data || []).map(a => `${a.action} at ${a.created_at?.slice(11, 19) || '--'}`);
-    document.getElementById('actionTrailSummary').textContent =
-      `Recent actions: ${auditItems.join(' · ') || 'none yet'}`;
-  } catch (_e) {}
-}
-
-// ── Machines ──────────────────────────────────────────────────────────────────
-
-async function loadMachines() {
-  try {
-    const m = await jget('/hub/machines');
-    rows('machinesBody', m.data, r => `<tr>
-      <td title="${r.machine_id}">${shortId(r.machine_id)}</td>
-      <td>${r.plan === 'fast' ? '⚡ Fast' : '🔵 Stable'}</td>
-      <td>${r.fast_cycle_fee ?? '--'}</td>
-      <td>${r.last_burn_cycle_id ?? 'Never'}</td>
-    </tr>`);
-  } catch (_e) {}
-}
-
-// ── Ledger ────────────────────────────────────────────────────────────────────
-
-async function loadLedger() {
-  try {
-    const l = await jget('/hub/rewards/ledger?limit=30');
-    const friendlyType = t => ({
-      test_dispense: 'Test funds added',
-      fast_burn: 'Fast plan fee',
-      contributor_payout: 'Contribution payout',
-      contributor_royalty: 'Yield royalty',
-    }[t] || t);
-    rows('ledgerBody', l.data, e => `<tr>
-      <td>${friendlyType(e.event_type)}</td>
-      <td>${e.bucket}</td>
-      <td>${Number(e.amount).toFixed(8)}</td>
-      <td>${e.cycle_id || '--'}</td>
-    </tr>`);
-  } catch (_e) {}
-}
-
-// ── Contributions ─────────────────────────────────────────────────────────────
-
-async function loadContributions() {
-  try {
-    const c = await jget('/hub/contributions');
-    const isValidator = ACTIVE_ROLE === 'validator' || ACTIVE_ROLE === 'mixed';
-    rows('contribBody', c.data, s => {
-      const verdictBtns = isValidator
-        ? `<button class="btn-sm btn-accept" onclick="setVerdict('${s.submission_id}','accepted')">Accept</button>
-           <button class="btn-sm btn-reject" onclick="setVerdict('${s.submission_id}','rejected')">Reject</button>`
-        : '';
-      return `<tr>
-        <td title="${s.submission_id}">${shortId(s.submission_id)}</td>
-        <td>${s.title}</td>
-        <td>${s.class}</td>
-        <td><span class="badge">${friendlyState(s.state)}</span></td>
-        <td>${verdictBtns}</td>
-      </tr>`;
-    }, 5);
-  } catch (_e) {}
-}
-
-// ── Lifetime votes ────────────────────────────────────────────────────────────
-
-async function loadLifetimeVotes() {
-  try {
-    const lv = await jget('/hub/contributors/lifetime-votes');
-    document.getElementById('allLifetimeVotesDisplay').textContent =
-      `Total lifetime votes across all contributors: ${Number(lv.all_lifetime_votes || 0).toFixed(2)}`;
-    const acctMap = Object.fromEntries(ALL_ACCOUNTS.map(a => [a.account_id, a.username || friendlyRole(a.role)]));
-    rows('lifetimeVotesBody', lv.data, r => `<tr>
-      <td title="${r.account_id}">${acctMap[r.account_id] || shortId(r.account_id)}</td>
-      <td>${Number(r.lifetime_votes).toFixed(2)}</td>
-      <td>${r.lifetime_share_pct}%</td>
-      <td>${Number(r.total_payout_btc || 0).toFixed(8)}</td>
-      <td>${Number(r.total_royalty_btc || 0).toFixed(8)}</td>
-      <td>${r.cooldown_remaining > 0 ? `${r.cooldown_remaining} cycles` : '—'}</td>
-    </tr>`, 6);
-  } catch (_e) {}
-}
-
-// ── Verdict (accept / reject submission) ─────────────────────────────────────
-
-window.setVerdict = async function(submissionId, verdict) {
-  try {
-    const r = await jpost(`/hub/contributions/${submissionId}/verdict`, { verdict });
-    if (r.ok) await loadContributions();
-    else alert(`Could not set verdict: ${apiMsg(r)}`);
-  } catch (e) {
-    alert(`Error: ${e.message}`);
+  // ── Role-specific action section
+  if (isAdmin()) {
+    content += `<p class="section-label">Quick Actions</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="switchPanel('admin')">Open / Close Cycle</button>
+      <button class="btn-primary" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2)" onclick="switchPanel('pool')">View Pool</button>
+    </div>`;
   }
-};
 
-// ── Cycle runner ─────────────────────────────────────────────────────────────
-
-document.getElementById('runCycleV31Btn').addEventListener('click', async () => {
-  try {
-    const cycle_id = Number(document.getElementById('cycleIdInput').value);
-    const fast_user_count = Number(document.getElementById('fastUserCountInput').value || 5);
-    const btcPrice = document.getElementById('btcPriceInput').value;
-    if (!Number.isFinite(cycle_id) || cycle_id <= 0) {
-      setResult('runCycleResult', 'Enter a valid cycle number.', false); return;
-    }
-    const body = { cycle_id, fast_user_count };
-    if (btcPrice) body.btc_price_usd = Number(btcPrice);
-    const r = await jpost('/hub/cycle/run-v31', body);
-    setResult('runCycleResult',
-      r.ok
-        ? `Cycle ${r.cycle_id} is now open.\n\nRevenue: $${r.fast_revenue_usd}\n60% payout pot: ${r.payout_pot_btc} BTC (~$${r.payout_pot_usd})\n40% locked in pool: ${r.pool_inflow_btc} BTC\nPool total: ${r.pool_principal_btc} BTC (~$${r.pool_principal_usd})\nBabylon yield this cycle: ${r.cycle_yield_btc} BTC (~$${r.cycle_yield_usd})`
-        : `Error: ${apiMsg(r)}`,
-      r.ok);
-    if (r.ok) await load();
-  } catch (e) {
-    setResult('runCycleResult', `Error: ${e.message}`, false);
+  if (isValidator() && !isAdmin()) {
+    const myVote = ''; // could check if already voted this cycle
+    content += `<p class="section-label">Your Role</p>
+    <div class="cta-banner blue">
+      <div class="cta-text">
+        <h3>You're a Validator</h3>
+        <p>When a cycle is open, go to Vote and distribute your 100 points across accepted submissions. Validators who vote get a full refund of their $2 fee.</p>
+      </div>
+      ${OPEN_CYCLE_ID ? `<button class="btn-primary" onclick="switchPanel('vote')">Go Vote →</button>` : ''}
+    </div>`;
   }
-});
 
-document.getElementById('closeCycleBtn').addEventListener('click', async () => {
-  try {
-    const cycle_id = Number(document.getElementById('closeCycleIdInput').value);
-    if (!Number.isFinite(cycle_id) || cycle_id <= 0) {
-      setResult('closeCycleResult', 'Enter a valid cycle number.', false); return;
-    }
-    const r = await jpost('/hub/cycle/close-v31', { cycle_id });
-    if (r.ok) {
-      const lines = (r.payouts || []).map(p =>
-        `  ${shortId(p.account_id)} — vote share: ${p.vote_share_pct}% — payout: ${p.payout_btc} BTC${Number(p.royalty_btc) > 0 ? ` + ${p.royalty_btc} BTC yield royalty` : ''}`
-      ).join('\n');
-      setResult('closeCycleResult',
-        `Cycle ${r.cycle_id} closed and settled.\nTotal votes cast: ${r.total_cycle_votes}\nQualifying submissions: ${r.qualifying_submissions}\n\nPayouts:\n${lines || '  (no qualifying submissions this cycle)'}`,
-        true);
-      await load();
-    } else {
-      setResult('closeCycleResult', `Error: ${apiMsg(r)}`, false);
-    }
-  } catch (e) {
-    setResult('closeCycleResult', `Error: ${e.message}`, false);
+  if (isContributor() && !isAdmin()) {
+    const mySubmissions = (contrib.data || []).filter(s => s.account_id === ACCOUNT_ID);
+    const pending = mySubmissions.filter(s => s.state === 'stake_locked').length;
+    const accepted = mySubmissions.filter(s => s.state === 'accepted').length;
+    content += `<p class="section-label">Your Contributions</p>
+    <div class="cta-banner">
+      <div class="cta-text">
+        <h3>${mySubmissions.length} submission${mySubmissions.length !== 1 ? 's' : ''}</h3>
+        <p>${accepted} accepted · ${pending} pending review${myLifetime ? ` · ${myLifetime.lifetime_votes} lifetime votes` : ''}</p>
+      </div>
+      <button class="btn-primary green" onclick="switchPanel('submit')">Submit Work →</button>
+    </div>`;
   }
-});
 
-// ── Contribution voting ───────────────────────────────────────────────────────
-
-let currentVoteCycleId = null;
-
-document.getElementById('loadSubmissionsForVoteBtn').addEventListener('click', async () => {
-  try {
-    const cid = Number(document.getElementById('voteCycleIdInput').value);
-    if (!Number.isFinite(cid)) return;
-    currentVoteCycleId = cid;
-
-    const c = await jget('/hub/contributions');
-    // Show accepted submissions for voting
-    const accepted = (c.data || []).filter(s => s.state === 'accepted' || s.state === 'stake_locked');
-
-    const allocDiv = document.getElementById('voteAllocatorRows');
-    if (accepted.length === 0) {
-      allocDiv.innerHTML = '<p class="muted">No accepted submissions found. Accept submissions in the Submissions tab first.</p>';
-      document.getElementById('voteAllocator').style.display = 'block';
-      return;
-    }
-
-    allocDiv.innerHTML = accepted.map(s => `
-      <div class="inline-form" style="margin:4px 0;align-items:center">
-        <span style="width:300px;display:inline-block;font-size:13px" title="${s.submission_id}">
-          <b>${s.title}</b> <span style="color:var(--muted)">(${s.class})</span>
-        </span>
-        <input type="number" min="0" max="100" step="1" value="0"
-          id="votePoints_${s.submission_id}" data-subid="${s.submission_id}"
-          style="width:70px" class="vote-points-input" />
-        <span style="color:var(--muted);font-size:12px">pts</span>
-      </div>`).join('');
-
-    document.getElementById('voteAllocator').style.display = 'block';
-    document.querySelectorAll('.vote-points-input').forEach(inp => {
-      inp.addEventListener('input', updatePointsRemaining);
-    });
-    updatePointsRemaining();
-  } catch (e) {
-    alert(`Error loading submissions: ${e.message}`);
-  }
-});
-
-function updatePointsRemaining() {
-  const inputs = document.querySelectorAll('.vote-points-input');
-  const used = Array.from(inputs).reduce((s, i) => s + Number(i.value || 0), 0);
-  const el = document.getElementById('votePointsRemaining');
-  el.textContent = `Points used: ${used} / 100${used > 100 ? ' — too many! Reduce before submitting.' : ''}`;
-  el.className = used > 100 ? 'muted status-err' : 'muted';
+  document.getElementById('overviewContent').innerHTML = content;
+  document.getElementById('overviewSub').textContent =
+    `${friendlyRole(ACCOUNT_ROLE)} · ${ACCOUNT_ID ? shortId(ACCOUNT_ID) : ''}`;
 }
-
-document.getElementById('submitVotesBtn').addEventListener('click', async () => {
-  try {
-    if (!currentVoteCycleId) { setResult('voteSubmitResult', 'Load submissions first.', false); return; }
-    const inputs = document.querySelectorAll('.vote-points-input');
-    const allocations = Array.from(inputs)
-      .map(i => ({ submission_id: i.dataset.subid, points: Number(i.value || 0) }))
-      .filter(a => a.points > 0);
-    const total = allocations.reduce((s, a) => s + a.points, 0);
-    if (total > 100.001) { setResult('voteSubmitResult', `Total points (${total}) exceeds 100.`, false); return; }
-    if (!allocations.length) { setResult('voteSubmitResult', 'Allocate at least some points first.', false); return; }
-    const r = await jpost('/hub/contributions/votes', { cycle_id: currentVoteCycleId, allocations });
-    setResult('voteSubmitResult',
-      r.ok ? `Vote submitted. You used ${r.total_points_used.toFixed(1)} out of 100 points.` : `Error: ${apiMsg(r)}`,
-      r.ok);
-  } catch (e) { setResult('voteSubmitResult', `Error: ${e.message}`, false); }
-});
-
-document.getElementById('loadVoteTotalsBtn').addEventListener('click', async () => {
-  try {
-    const cid = Number(document.getElementById('voteViewCycleId').value);
-    if (!Number.isFinite(cid)) return;
-    const r = await jget(`/hub/contributions/votes?cycle_id=${cid}`);
-    rows('voteTotalsBody', r.data, row => `<tr>
-      <td title="${row.submission_id}">${shortId(row.submission_id)}</td>
-      <td>${Number(row.total_points).toFixed(1)}</td>
-      <td>${row.vote_share_pct}%</td>
-      <td>${row.voter_count}</td>
-    </tr>`, 4);
-  } catch (_e) { rows('voteTotalsBody', [], _ => '', 4); }
-});
-
-// ── Lifetime votes ────────────────────────────────────────────────────────────
-
-document.getElementById('refreshLifetimeBtn').addEventListener('click', loadLifetimeVotes);
 
 // ── Submissions ───────────────────────────────────────────────────────────────
+async function loadSubmissions() {
+  const c = await get('/hub/contributions').catch(() => ({ data: [] }));
+  const mine = (c.data || []).filter(s => s.account_id === ACCOUNT_ID);
+  const tbody = document.getElementById('submitHistory');
+  if (!mine.length) {
+    tbody.innerHTML = emptyRow(4, '📝', 'No submissions yet. Share your first improvement above.');
+    return;
+  }
+  tbody.innerHTML = mine.map(s => `<tr>
+    <td>
+      <strong style="font-size:13px">${s.title}</strong>
+      ${s.description ? `<div style="font-size:12px;color:var(--text3);margin-top:2px">${s.description.slice(0,100)}${s.description.length>100?'…':''}</div>` : ''}
+    </td>
+    <td class="td-dim">${s.class}</td>
+    <td>${submissionBadge(s.state)}</td>
+    <td style="text-align:right">${s.verdict ? `<span style="color:var(--text2);font-size:12px">${s.verdict}</span>` : '–'}</td>
+  </tr>`).join('');
+}
 
-document.getElementById('createContribBtn').addEventListener('click', async () => {
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const title = document.getElementById('submitTitle').value.trim();
+  const description = document.getElementById('submitDescription').value.trim();
+  const hash = document.getElementById('submitHash').value.trim();
+  const class_name = document.getElementById('submitType').value;
+
+  clearMsg('submitMsg');
+  if (!title) { msg('submitMsg', 'Give your submission a title.', 'err'); return; }
+  if (!description) { msg('submitMsg', 'Add a description so validators know what to review.', 'err'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
   try {
-    const hash = document.getElementById('contribHash').value.trim();
-    const title = document.getElementById('contribTitle').value.trim();
-    if (!hash || !title) { setResult('createContribResult', 'Fill in both the submission ID and title.', false); return; }
-    const r = await jpost('/hub/contributions', {
-      account_id: ACTIVE_ACCOUNT_ID,
-      submission_hash: hash,
-      title,
-      class_name: document.getElementById('contribClass').value,
-    });
-    setResult('createContribResult', r.ok ? 'Submission received. A validator will review it.' : `Error: ${apiMsg(r)}`, r.ok);
-    if (r.ok) { document.getElementById('contribHash').value = ''; document.getElementById('contribTitle').value = ''; await loadContributions(); }
-  } catch (e) { setResult('createContribResult', `Error: ${e.message}`, false); }
-});
-
-// ── Identity ──────────────────────────────────────────────────────────────────
-
-document.getElementById('setUsernameBtn').addEventListener('click', async () => {
-  try {
-    const username = document.getElementById('usernameInput').value.trim();
-    if (!username) { setResult('setUsernameResult', 'Enter a name first.', false); return; }
-    const r = await jpost('/hub/accounts/username', { username });
+    const r = await post('/hub/contributions', { title, description, submission_hash: hash || undefined, class_name });
     if (r.ok) {
-      setResult('setUsernameResult', `Name set to "${r.username}". Reload to see it in the account switcher.`, true);
-      // Update local account list so selector reflects it immediately
-      const a = ALL_ACCOUNTS.find(x => x.account_id === ACTIVE_ACCOUNT_ID);
-      if (a) a.username = r.username;
-      const sel = document.getElementById('accountSelect');
-      sel.innerHTML = ALL_ACCOUNTS.map(a => `<option value="${a.account_id}">${accountLabel(a)}</option>`).join('');
-      sel.value = ACTIVE_ACCOUNT_ID;
-      populateAccountSelects();
+      msg('submitMsg', 'Submitted! Validators will review it soon.', 'ok');
+      document.getElementById('submitTitle').value = '';
+      document.getElementById('submitDescription').value = '';
+      document.getElementById('submitHash').value = '';
+      await loadSubmissions();
     } else {
-      setResult('setUsernameResult', `Error: ${apiMsg(r)}`, false);
+      msg('submitMsg', r.error || 'Something went wrong.', 'err');
     }
-  } catch (e) { setResult('setUsernameResult', `Error: ${e.message}`, false); }
+  } catch (e) { msg('submitMsg', e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Submit for Review'; }
 });
 
-document.getElementById('bindWalletBtn').addEventListener('click', async () => {
+// ── Vote ──────────────────────────────────────────────────────────────────────
+async function loadVote() {
+  const el = document.getElementById('voteContent');
+  el.innerHTML = `<div class="empty-state"><div class="spinner"></div></div>`;
+
+  const [pool, contrib] = await Promise.all([
+    get('/hub/pool/state').catch(() => ({})),
+    get('/hub/contributions').catch(() => ({ data: [] })),
+  ]);
+
+  const cur = pool.current_cycle;
+  if (cur?.status === 'open') OPEN_CYCLE_ID = cur.cycle_id;
+
+  if (!OPEN_CYCLE_ID || !cur || cur.status !== 'open') {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🗳️</div>
+      <p class="hint">No open cycle right now.</p>
+      <p>Come back when the admin opens a new cycle.</p>
+    </div>`;
+    return;
+  }
+
+  const accepted = (contrib.data || []).filter(s => s.state === 'accepted' || s.state === 'stake_locked');
+  if (!accepted.length) {
+    el.innerHTML = `<div class="cta-banner amber"><div class="cta-text">
+      <h3>Cycle ${OPEN_CYCLE_ID} is open</h3>
+      <p>No accepted submissions yet. Wait for the admin to accept contributions before voting.</p>
+    </div></div>`;
+    return;
+  }
+
+  const btcPrice = cur.btc_price_usd || 85000;
+  el.innerHTML = `
+    <div class="cta-banner green">
+      <div class="cta-text">
+        <h3>Cycle ${OPEN_CYCLE_ID} — ${accepted.length} submission${accepted.length!==1?'s':''} to review</h3>
+        <p>Payout pot: ${Number(cur.payout_pot_btc).toFixed(8)} BTC (~$${(Number(cur.payout_pot_btc)*btcPrice).toFixed(2)})</p>
+      </div>
+    </div>
+    <div class="form-section">
+      <h3>Allocate Your 100 Points</h3>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px">
+        You don't have to use all 100 points. Any submission getting less than 1% of total votes won't receive a payout.
+      </p>
+      <div id="voteRows">${accepted.map(s => `
+        <div class="vote-row">
+          <div class="vote-info">
+            <strong>${s.title}</strong>
+            <span>${s.class}${s.submission_hash && !s.submission_hash.startsWith('auto:') ? ` · <code>${s.submission_hash.slice(0,12)}</code>` : ''}</span>
+            ${s.description ? `<div class="vote-desc">${s.description.slice(0,160)}${s.description.length>160?'…':''}</div>` : ''}
+          </div>
+          <input type="number" class="vote-input" data-subid="${s.submission_id}" min="0" max="100" step="1" value="0" />
+          <span style="color:var(--text3);font-size:12px">pts</span>
+        </div>`).join('')}
+      </div>
+      <div class="vote-budget-row">
+        <span>Points used</span>
+        <span class="vote-budget-num" id="voteBudgetNum">0 / 100</span>
+      </div>
+      <div class="vote-bar"><div class="vote-bar-fill" id="voteBudgetFill" style="width:0%"></div></div>
+      <button class="btn-primary" id="submitVoteBtn">Submit Vote</button>
+      <div class="form-msg" id="voteMsg"></div>
+    </div>`;
+
+  document.querySelectorAll('.vote-input').forEach(inp => inp.addEventListener('input', updateVoteBudget));
+  document.getElementById('submitVoteBtn').addEventListener('click', submitVote);
+}
+
+function updateVoteBudget() {
+  const inputs = document.querySelectorAll('.vote-input');
+  const used = Array.from(inputs).reduce((s, i) => s + Number(i.value || 0), 0);
+  const numEl = document.getElementById('voteBudgetNum');
+  const fillEl = document.getElementById('voteBudgetFill');
+  if (numEl) numEl.textContent = `${used} / 100`;
+  if (numEl) numEl.className = `vote-budget-num${used > 100 ? ' over' : ''}`;
+  if (fillEl) {
+    fillEl.style.width = `${Math.min(used, 100)}%`;
+    fillEl.className = `vote-bar-fill${used > 100 ? ' over' : ''}`;
+  }
+}
+
+async function submitVote() {
+  const inputs = document.querySelectorAll('.vote-input');
+  const allocations = Array.from(inputs)
+    .map(i => ({ submission_id: i.dataset.subid, points: Number(i.value || 0) }))
+    .filter(a => a.points > 0);
+  const total = allocations.reduce((s, a) => s + a.points, 0);
+  if (total > 100.001) { msg('voteMsg', `Total is ${total} — reduce to 100 or less.`, 'err'); return; }
+  if (!allocations.length) { msg('voteMsg', 'Allocate at least some points before submitting.', 'err'); return; }
+
+  const btn = document.getElementById('submitVoteBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
   try {
-    const wallet_address = document.getElementById('walletAddressInput').value.trim();
-    const chain_id = document.getElementById('walletChainInput').value.trim() || 'evm:1';
-    if (!wallet_address) { setResult('bindWalletResult', 'Enter your wallet address first.', false); return; }
-    const r = await jpost('/hub/identity/wallet/bind', { account_id: ACTIVE_ACCOUNT_ID, wallet_address, chain_id });
-    setResult('bindWalletResult',
-      r.ok ? 'Wallet saved. Now click "Generate Challenge" and sign the message to verify you own it.' : `Error: ${apiMsg(r)}`,
-      r.ok);
-    if (r.ok) await loadIdentity();
-  } catch (e) { setResult('bindWalletResult', `Error: ${e.message}`, false); }
+    const r = await post('/hub/contributions/votes', { cycle_id: OPEN_CYCLE_ID, allocations });
+    if (r.ok) msg('voteMsg', `Vote submitted. You used ${r.total_points_used} of 100 points.`, 'ok');
+    else      msg('voteMsg', r.error || 'Error submitting vote.', 'err');
+  } catch (e) { msg('voteMsg', e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Submit Vote'; }
+}
+
+// ── Pool ──────────────────────────────────────────────────────────────────────
+async function loadPool() {
+  const [state, hist] = await Promise.all([
+    get('/hub/pool/state').catch(() => ({})),
+    get('/hub/pool/cycles').catch(() => ({ data: [] })),
+  ]);
+
+  const cur = state.current_cycle;
+  const cfg = state.config || {};
+  if (cur?.status === 'open') OPEN_CYCLE_ID = cur.cycle_id;
+  const bp = cur?.btc_price_usd || 85000;
+
+  const statsEl = document.getElementById('poolStats');
+  statsEl.innerHTML = `
+    <div class="stat-card sc-purple">
+      <div class="stat-label">Pool Principal</div>
+      <div class="stat-value">$${cur ? (Number(cur.pool_principal_btc)*bp).toFixed(0) : '–'}</div>
+      <div class="stat-sub">${cur ? Number(cur.pool_principal_btc).toFixed(8)+' BTC locked' : 'no cycles yet'}</div>
+    </div>
+    <div class="stat-card sc-blue">
+      <div class="stat-label">Payout Pot</div>
+      <div class="stat-value">${cur ? Number(cur.payout_pot_btc).toFixed(8) : '–'}</div>
+      <div class="stat-sub">BTC this cycle</div>
+    </div>
+    <div class="stat-card sc-amber">
+      <div class="stat-label">Cycle Yield</div>
+      <div class="stat-value">${cur ? Number(cur.cycle_yield_btc).toFixed(8) : '–'}</div>
+      <div class="stat-sub">BTC this cycle</div>
+    </div>
+    <div class="stat-card sc-green">
+      <div class="stat-label">Effective Yield</div>
+      <div class="stat-value">${cfg.effective_per_cycle_yield ? (cfg.effective_per_cycle_yield*100).toFixed(3)+'%' : '0.27%'}</div>
+      <div class="stat-sub">per cycle (~3.25% annual)</div>
+    </div>`;
+
+  const cycles = hist.data || (cur ? [cur] : []);
+  const tbody = document.getElementById('poolHistory');
+  if (!cycles.length) {
+    tbody.innerHTML = emptyRow(7, '🌊', 'No cycles run yet.');
+    return;
+  }
+  tbody.innerHTML = cycles.map(r => `<tr>
+    <td>${r.cycle_id}</td>
+    <td>${r.fast_user_count}</td>
+    <td>$${Number(r.fast_revenue_usd).toFixed(2)}</td>
+    <td class="td-dim">${Number(r.payout_pot_btc).toFixed(8)}</td>
+    <td class="td-dim">${Number(r.pool_principal_btc).toFixed(8)}</td>
+    <td class="td-dim">${Number(r.cycle_yield_btc).toFixed(8)}</td>
+    <td>${badgeHtml(r.status, r.status==='open' ? 'badge-open' : 'badge-closed')}</td>
+  </tr>`).join('');
+}
+
+// ── Earnings ──────────────────────────────────────────────────────────────────
+async function loadEarnings() {
+  const [balance, lifetime, ledger] = await Promise.all([
+    get('/hub/rewards/my-balance').catch(() => ({})),
+    get('/hub/contributors/lifetime-votes').catch(() => ({ data: [] })),
+    get('/hub/rewards/ledger?limit=20').catch(() => ({ data: [] })),
+  ]);
+
+  const btcPrice = Number(process?.env?.BTC_PRICE_USD || 85000);
+  const balBtc   = Number(balance.balance_btc || 0);
+  const earnedBtc= Number(balance.total_earned_btc || 0);
+  const allLTV   = Number(lifetime.all_lifetime_votes || 0);
+  const mine     = lifetime.data?.find(r => r.account_id === ACCOUNT_ID);
+
+  document.getElementById('earningsStats').innerHTML = `
+    <div class="stat-card sc-green">
+      <div class="stat-label">Balance</div>
+      <div class="stat-value">${balBtc.toFixed(8)}</div>
+      <div class="stat-sub">BTC · ~$${(balBtc*85000).toFixed(2)}</div>
+    </div>
+    <div class="stat-card sc-blue">
+      <div class="stat-label">Total Earned</div>
+      <div class="stat-value">${earnedBtc.toFixed(8)}</div>
+      <div class="stat-sub">BTC all time</div>
+    </div>
+    <div class="stat-card sc-purple">
+      <div class="stat-label">Lifetime Votes</div>
+      <div class="stat-value">${mine ? Number(mine.lifetime_votes).toFixed(0) : '0'}</div>
+      <div class="stat-sub">of ${allLTV.toFixed(0)} total</div>
+    </div>
+    <div class="stat-card sc-amber">
+      <div class="stat-label">Yield Share</div>
+      <div class="stat-value">${mine?.lifetime_share_pct || '0.00'}%</div>
+      <div class="stat-sub">permanent royalty share</div>
+    </div>`;
+
+  const acctMap = Object.fromEntries(ALL_ACCOUNTS.map(a => [a.account_id, a.username || friendlyRole(a.role)]));
+  const ltvTbody = document.getElementById('earningsLedger');
+  const ltvRows = lifetime.data || [];
+  ltvTbody.innerHTML = ltvRows.length
+    ? ltvRows.map(r => `<tr ${r.account_id === ACCOUNT_ID ? 'style="background:rgba(91,141,239,.06)"' : ''}>
+        <td><strong>${acctMap[r.account_id] || shortId(r.account_id)}</strong>
+          ${r.account_id === ACCOUNT_ID ? ' <span style="font-size:11px;color:var(--blue)">(you)</span>' : ''}</td>
+        <td>${Number(r.lifetime_votes).toFixed(1)}</td>
+        <td>${r.lifetime_share_pct}%</td>
+        <td class="td-dim">${Number(r.total_payout_btc||0).toFixed(8)}</td>
+        <td class="td-dim">${Number(r.total_royalty_btc||0).toFixed(8)}</td>
+      </tr>`).join('')
+    : emptyRow(5, '📊', 'No contributors yet.');
+
+  const eventLabels = {
+    test_dispense:       'Test funds added',
+    fast_burn:           'Fast plan fee',
+    contributor_payout:  'Contribution payout',
+    contributor_royalty: 'Yield royalty',
+  };
+  const histTbody = document.getElementById('earningsHistory');
+  const histRows = ledger.data || [];
+  histTbody.innerHTML = histRows.length
+    ? histRows.map(e => `<tr>
+        <td>${eventLabels[e.event_type] || e.event_type}</td>
+        <td class="td-dim">${Number(e.amount).toFixed(8)} BTC</td>
+        <td class="td-dim">${e.cycle_id || '–'}</td>
+      </tr>`).join('')
+    : emptyRow(3, '📋', 'No activity yet.');
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function loadSettings() {
+  document.getElementById('settingsAccountId').textContent = ACCOUNT_ID || '';
+  if (USERNAME) document.getElementById('settingsUsername').value = USERNAME;
+  document.getElementById('settingsInstallCmd').textContent =
+    `git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null\ngit -C ~/CursiveOS pull --ff-only 2>/dev/null\nchmod +x ~/CursiveOS/cursiveos-full-test-v1.4.sh\nbash ~/CursiveOS/cursiveos-full-test-v1.4.sh`;
+}
+
+document.getElementById('settingsUsernameBtn').addEventListener('click', async () => {
+  const username = document.getElementById('settingsUsername').value.trim();
+  if (!username) { msg('settingsUsernameMsg', 'Enter a name first.', 'err'); return; }
+  const r = await post('/hub/accounts/username', { username });
+  if (r.ok) {
+    USERNAME = r.username;
+    renderHeader();
+    msg('settingsUsernameMsg', `Name saved as "${r.username}".`, 'ok');
+  } else {
+    msg('settingsUsernameMsg', r.error || 'Error saving name.', 'err');
+  }
 });
 
-document.getElementById('walletChallengeBtn').addEventListener('click', async () => {
-  try {
-    const r = await jpost('/hub/identity/wallet/challenge', { account_id: ACTIVE_ACCOUNT_ID });
-    if (r.ok) {
-      ACTIVE_WALLET_CHALLENGE = r;
-      document.getElementById('walletChallengeMessage').textContent = r.message;
-      setResult('walletVerifyResult', 'Sign this exact message with your wallet app, then paste the result below and click Verify.', true);
-    } else {
-      setResult('walletVerifyResult', `Error: ${apiMsg(r)}`, false);
-    }
-  } catch (e) { setResult('walletVerifyResult', `Error: ${e.message}`, false); }
+document.getElementById('settingsBindWalletBtn').addEventListener('click', async () => {
+  const wallet_address = document.getElementById('settingsWalletAddress').value.trim();
+  const chain_id = document.getElementById('settingsWalletChain').value.trim() || 'evm:1';
+  if (!wallet_address) { msg('settingsBindMsg', 'Enter your wallet address.', 'err'); return; }
+  const r = await post('/hub/identity/wallet/bind', { account_id: ACCOUNT_ID, wallet_address, chain_id });
+  msg('settingsBindMsg', r.ok ? 'Wallet saved. Now generate a challenge and verify.' : r.error || 'Error.', r.ok ? 'ok' : 'err');
 });
 
-document.getElementById('walletVerifyBtn').addEventListener('click', async () => {
-  try {
-    const signature = document.getElementById('walletSignatureInput').value.trim();
-    if (!signature) { setResult('walletVerifyResult', 'Paste your signed message first.', false); return; }
-    if (!ACTIVE_WALLET_CHALLENGE?.nonce) { setResult('walletVerifyResult', 'Generate a challenge first.', false); return; }
-    const r = await jpost('/hub/identity/wallet/verify', { account_id: ACTIVE_ACCOUNT_ID, signature });
-    setResult('walletVerifyResult', r.ok ? 'Wallet verified! You\'re good to receive payouts.' : `Error: ${apiMsg(r)}`, r.ok);
-    if (r.ok) { document.getElementById('walletSignatureInput').value = ''; await loadIdentity(); }
-  } catch (e) { setResult('walletVerifyResult', `Error: ${e.message}`, false); }
+document.getElementById('settingsChallengeBtn').addEventListener('click', async () => {
+  const r = await post('/hub/identity/wallet/challenge', { account_id: ACCOUNT_ID });
+  if (r.ok) {
+    WALLET_CHALLENGE = r;
+    const el = document.getElementById('settingsChallengeText');
+    el.textContent = r.message;
+    el.style.display = 'block';
+    msg('settingsVerifyMsg', 'Sign this exact message with your wallet app, then paste the signature below.', 'info');
+  } else {
+    msg('settingsVerifyMsg', r.error || 'Error generating challenge.', 'err');
+  }
 });
 
-// ── Account creation ──────────────────────────────────────────────────────────
+document.getElementById('settingsVerifyBtn').addEventListener('click', async () => {
+  const signature = document.getElementById('settingsSignature').value.trim();
+  if (!signature) { msg('settingsVerifyMsg', 'Paste your signed message first.', 'err'); return; }
+  if (!WALLET_CHALLENGE?.nonce) { msg('settingsVerifyMsg', 'Generate a challenge first.', 'err'); return; }
+  const r = await post('/hub/identity/wallet/verify', { account_id: ACCOUNT_ID, signature });
+  if (r.ok) {
+    msg('settingsVerifyMsg', 'Wallet verified. You can now receive payouts.', 'ok');
+    document.getElementById('settingsSignature').value = '';
+  } else {
+    msg('settingsVerifyMsg', r.error || 'Verification failed.', 'err');
+  }
+});
 
-document.getElementById('createAccountBtn').addEventListener('click', async () => {
+// ── Admin ─────────────────────────────────────────────────────────────────────
+function loadAdmin() {
+  // Populate account selects
+  const opts = ALL_ACCOUNTS
+    .filter(a => a.account_id !== ACCOUNT_ID)
+    .map(a => `<option value="${a.account_id}">${accountLabel(a)}</option>`)
+    .join('');
+  ['adminDispenseAccount','adminControlAccount','adminDeleteAccount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+
+  // Auto-fill cycle IDs
+  if (OPEN_CYCLE_ID) {
+    const cid = document.getElementById('adminCycleId');
+    if (cid && !cid.value) cid.value = OPEN_CYCLE_ID;
+    const ccid = document.getElementById('adminCloseCycleId');
+    if (ccid && !ccid.value) ccid.value = OPEN_CYCLE_ID;
+  }
+}
+
+document.getElementById('adminOpenCycleBtn').addEventListener('click', async () => {
+  const cycle_id     = Number(document.getElementById('adminCycleId').value);
+  const fast_user_count = Number(document.getElementById('adminFastUsers').value || 5);
+  const btcPrice     = document.getElementById('adminBtcPrice').value;
+  if (!cycle_id) { msg('adminOpenMsg', 'Enter a cycle number.', 'err'); return; }
+  const body = { cycle_id, fast_user_count };
+  if (btcPrice) body.btc_price_usd = Number(btcPrice);
+  const r = await post('/hub/cycle/run-v31', body);
+  if (r.ok) {
+    OPEN_CYCLE_ID = r.cycle_id;
+    msg('adminOpenMsg', `Cycle ${r.cycle_id} opened. Revenue: $${r.fast_revenue_usd} · Pot: ${r.payout_pot_btc} BTC · Pool: ${r.pool_principal_btc} BTC`, 'ok');
+  } else {
+    msg('adminOpenMsg', r.error || 'Error.', 'err');
+  }
+});
+
+document.getElementById('adminCloseCycleBtn').addEventListener('click', async () => {
+  const cycle_id = Number(document.getElementById('adminCloseCycleId').value);
+  if (!cycle_id) { msg('adminCloseMsg', 'Enter the cycle number to close.', 'err'); return; }
+  const r = await post('/hub/cycle/close-v31', { cycle_id });
+  if (r.ok) {
+    msg('adminCloseMsg', `Cycle ${r.cycle_id} settled. ${r.qualifying_submissions} qualifying submissions, ${r.total_cycle_votes} total votes.`, 'ok');
+    const lines = (r.payouts||[]).map(p =>
+      `${shortId(p.account_id)}  ${p.vote_share_pct}% vote share → ${p.payout_btc} BTC payout${Number(p.royalty_btc)>0?` + ${p.royalty_btc} BTC yield`:''}`
+    ).join('\n');
+    const pre = document.getElementById('adminCloseResult');
+    pre.textContent = lines || '(no qualifying submissions)';
+    pre.style.display = 'block';
+    OPEN_CYCLE_ID = null;
+  } else {
+    msg('adminCloseMsg', r.error || 'Error.', 'err');
+  }
+});
+
+document.getElementById('adminDispenseBtn').addEventListener('click', async () => {
+  const account_id  = document.getElementById('adminDispenseAccount').value;
+  const amount_usd  = Number(document.getElementById('adminDispenseAmount').value);
+  if (!account_id || !amount_usd) { msg('adminDispenseMsg', 'Select an account and enter an amount.', 'err'); return; }
+  const r = await post('/hub/admin/dispense', { account_id, amount_usd });
+  msg('adminDispenseMsg', r.ok ? `Done. Added $${r.dispensed_usd} → ${r.dispensed_btc} BTC` : r.error||'Error.', r.ok ? 'ok' : 'err');
+});
+
+document.getElementById('adminSetControlBtn').addEventListener('click', async () => {
+  const account_id   = document.getElementById('adminControlAccount').value;
+  const control_mode = document.getElementById('adminControlMode').value;
+  const reason       = document.getElementById('adminControlReason').value.trim() || null;
+  const r = await post('/hub/admin/account-controls/set', { account_id, control_mode, reason });
+  msg('adminControlMsg', r.ok ? `Updated to: ${control_mode}` : r.error||'Error.', r.ok ? 'ok' : 'err');
+});
+
+document.getElementById('adminDeleteAccountBtn').addEventListener('click', async () => {
+  const account_id = document.getElementById('adminDeleteAccount').value;
+  if (!account_id) return;
+  const a = ALL_ACCOUNTS.find(x => x.account_id === account_id);
+  if (!confirm(`Delete ${accountLabel(a||{account_id})}? This cannot be undone.`)) return;
+  const r = await post('/hub/admin/accounts/delete', { account_id });
+  if (r.ok) {
+    msg('adminDeleteMsg', 'Account deleted.', 'ok');
+    ALL_ACCOUNTS = ALL_ACCOUNTS.filter(a => a.account_id !== account_id);
+    loadAdmin();
+  } else {
+    msg('adminDeleteMsg', r.error||'Error.', 'err');
+  }
+});
+
+// ── Sign Out ──────────────────────────────────────────────────────────────────
+document.getElementById('signOutBtn').addEventListener('click', () => {
+  clearSession();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginAccountId').value = '';
+  clearMsg('loginError');
+});
+
+// ── Login Screen Events ───────────────────────────────────────────────────────
+document.getElementById('showCreatePath').addEventListener('click', () => {
+  document.getElementById('loginPath').style.display = 'none';
+  document.getElementById('createPath').style.display = 'block';
+});
+
+document.getElementById('showLoginPath').addEventListener('click', () => {
+  document.getElementById('createPath').style.display = 'none';
+  document.getElementById('loginPath').style.display = 'block';
+});
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const id = document.getElementById('loginAccountId').value.trim();
+  if (!id) { document.getElementById('loginError').textContent = 'Paste your account ID first.'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
   try {
-    const role = document.getElementById('newAccountRole').value;
-    const label = document.getElementById('newAccountLabel').value.trim();
+    await tryLogin(id);
+    saveSession();
+    await bootApp();
+  } catch (e) {
+    document.getElementById('loginError').textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+});
+
+document.getElementById('loginAccountId').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+
+document.getElementById('createBtn').addEventListener('click', async () => {
+  const name = document.getElementById('signupName').value.trim();
+  const role = document.getElementById('signupRole').value;
+  if (!name) { document.getElementById('createError').textContent = 'Enter a name or handle.'; return; }
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
     const r = await fetch(`${API}/hub/accounts/create`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ role, label })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, label: name }),
     }).then(res => res.json());
-    if (r.ok) {
-      const name = r.username ? `"${r.username}" (${friendlyRole(r.role)})` : friendlyRole(r.role);
-      setResult('createAccountResult',
-        `Account created! You're now ${name}.\nAccount ID: ${r.account_id}\n\nYou're now selected in the top bar. Share your account ID with the admin if needed.`,
-        true);
-      // Refresh account list and switch to new account
-      const boot = await fetch(`${API}/hub/session/bootstrap`).then(res => res.json());
-      ALL_ACCOUNTS = boot.accounts || [];
-      const sel = document.getElementById('accountSelect');
-      sel.innerHTML = ALL_ACCOUNTS.map(a => `<option value="${a.account_id}">${accountLabel(a)}</option>`).join('');
-      sel.value = r.account_id;
-      ACTIVE_ACCOUNT_ID = r.account_id;
-      ACTIVE_ROLE = r.role;
-      await establishSession(r.account_id);
-      populateAccountSelects();
-    } else {
-      setResult('createAccountResult', `Could not create account: ${apiMsg(r)}`, false);
-    }
-  } catch (e) { setResult('createAccountResult', `Error: ${e.message}`, false); }
-});
-
-// ── Admin ──────────────────────────────────────────────────────────────────────
-
-document.getElementById('dispenseBtn').addEventListener('click', async () => {
-  try {
-    const account_id = document.getElementById('dispenseAccountSelect').value;
-    const amount_usd = Number(document.getElementById('dispenseAmountUsd').value);
-    if (!account_id || !amount_usd) { setResult('dispenseResult', 'Select an account and enter an amount.', false); return; }
-    const r = await jpost('/hub/admin/dispense', { account_id, amount_usd });
-    setResult('dispenseResult',
-      r.ok ? `Done. Added $${r.dispensed_usd} → ${r.dispensed_btc} BTC to that account.` : `Error: ${apiMsg(r)}`,
-      r.ok);
-    if (r.ok) { await loadLedger(); await loadBalance(); }
-  } catch (e) { setResult('dispenseResult', `Error: ${e.message}`, false); }
-});
-
-document.getElementById('setPlanBtn').addEventListener('click', async () => {
-  try {
-    const machineId = document.getElementById('planMachineId').value.trim();
-    const plan = document.getElementById('planValue').value;
-    const r = await jpost(`/hub/machines/${encodeURIComponent(machineId)}/plan`, { plan });
-    setResult('setPlanResult', r.ok ? 'Plan updated.' : `Error: ${apiMsg(r)}`, r.ok);
-    if (r.ok) await loadMachines();
-  } catch (e) { setResult('setPlanResult', `Error: ${e.message}`, false); }
-});
-
-document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
-  try {
-    const account_id = document.getElementById('deleteAccountSelect').value;
-    if (!account_id) return;
-    const label = ALL_ACCOUNTS.find(a => a.account_id === account_id);
-    if (!confirm(`Delete account ${accountLabel(label || { account_id })}? This cannot be undone.`)) return;
-    const r = await jpost('/hub/admin/accounts/delete', { account_id });
-    if (r.ok) {
-      setResult('deleteAccountResult', `Deleted.`, true);
-      ALL_ACCOUNTS = ALL_ACCOUNTS.filter(a => a.account_id !== account_id);
-      const sel = document.getElementById('accountSelect');
-      sel.innerHTML = ALL_ACCOUNTS.map(a => `<option value="${a.account_id}">${accountLabel(a)}</option>`).join('');
-      populateAccountSelects();
-    } else {
-      setResult('deleteAccountResult', `Error: ${apiMsg(r)}`, false);
-    }
-  } catch (e) { setResult('deleteAccountResult', `Error: ${e.message}`, false); }
-});
-
-document.getElementById('setControlBtn').addEventListener('click', async () => {
-  try {
-    const account_id = document.getElementById('controlAccountSelect').value;
-    const control_mode = document.getElementById('controlMode').value;
-    const reason = document.getElementById('controlReason').value.trim() || null;
-    const r = await jpost('/hub/admin/account-controls/set', { account_id, control_mode, reason });
-    setResult('setControlResult',
-      r.ok ? `Set to: ${control_mode}` : `Error: ${apiMsg(r)}`,
-      r.ok);
-  } catch (e) { setResult('setControlResult', `Error: ${e.message}`, false); }
-});
-
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-
-document.querySelectorAll('#tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById(btn.dataset.tab).classList.add('active');
-    // Auto-fill cycle ID inputs with current open cycle when switching to Cycle or Vote tabs
-    if (CURRENT_OPEN_CYCLE_ID) {
-      if (btn.dataset.tab === 'cycle') {
-        const inp = document.getElementById('cycleIdInput');
-        if (inp && !inp.value) inp.value = CURRENT_OPEN_CYCLE_ID;
-        const closeInp = document.getElementById('closeCycleIdInput');
-        if (closeInp && !closeInp.value) closeInp.value = CURRENT_OPEN_CYCLE_ID;
-      }
-      if (btn.dataset.tab === 'vote') {
-        const inp = document.getElementById('voteCycleIdInput');
-        if (inp && !inp.value) inp.value = CURRENT_OPEN_CYCLE_ID;
-        const totInp = document.getElementById('voteViewCycleId');
-        if (totInp && !totInp.value) totInp.value = CURRENT_OPEN_CYCLE_ID;
-      }
-    }
-  });
+    if (!r.ok) throw new Error(r.error || 'Could not create account.');
+    await tryLogin(r.account_id);
+    saveSession();
+    await bootApp();
+  } catch (e) {
+    document.getElementById('createError').textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-bootstrapAccount()
-  .then(load)
-  .catch(err => {
-    document.getElementById('cycleCard').textContent = `Connection error: ${err.message}`;
-  });
+(async () => {
+  const saved = localStorage.getItem('hub_account_id');
+  if (saved) {
+    try {
+      await tryLogin(saved);
+      await bootApp();
+      return;
+    } catch (_) {
+      clearSession();
+    }
+  }
+  // Show login screen
+  document.getElementById('loginScreen').style.display = 'flex';
+})();

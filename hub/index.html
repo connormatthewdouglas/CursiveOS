@@ -7,325 +7,304 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>CursiveOS Hub</h1>
-      <p class="subtitle">v3.1 · BTC + Babylon yield · 60/40 split</p>
+
+<!-- ── Login ─────────────────────────────────────────────────────────────────── -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">CursiveOS Hub</div>
+    <div class="login-tagline">Bitcoin incentive layer for local compute · v3.1</div>
+
+    <div id="loginPath">
+      <label>Account ID</label>
+      <input id="loginAccountId" placeholder="Paste your account ID" autocomplete="off" spellcheck="false" />
+      <button class="btn-primary full" id="loginBtn">Sign In</button>
+      <p class="form-error" id="loginError"></p>
+      <div class="login-divider">or</div>
+      <button class="btn-ghost" id="showCreatePath">Create a new account →</button>
     </div>
-    <div class="inline-form">
-      <select id="accountSelect"></select>
-      <div class="cycle-card" id="cycleCard">Pool: loading…</div>
-      <div class="cycle-card" id="identityCard">Identity: --</div>
+
+    <div id="createPath" style="display:none">
+      <label>Your name or handle</label>
+      <input id="signupName" placeholder="e.g. alice, frosty, yourhandle" />
+      <label style="margin-top:14px">What do you want to do?</label>
+      <select id="signupRole">
+        <option value="contributor">Contribute work and earn Bitcoin</option>
+        <option value="validator">Review contributions and vote</option>
+        <option value="consumer">Get early access to updates (Fast User)</option>
+      </select>
+      <button class="btn-primary full" id="createBtn">Create Account</button>
+      <p class="form-error" id="createError"></p>
+      <div class="login-divider">or</div>
+      <button class="btn-ghost" id="showLoginPath">← I already have an account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── App ───────────────────────────────────────────────────────────────────── -->
+<div id="app" style="display:none">
+
+  <header class="app-header">
+    <div class="app-logo">CursiveOS Hub</div>
+    <nav class="app-nav" id="appNav"></nav>
+    <div class="app-header-right">
+      <div class="user-chip">
+        <div class="avatar" id="userAvatar">?</div>
+        <span id="userName">–</span>
+        <span class="role-badge" id="userRoleBadge"></span>
+      </div>
+      <button class="btn-ghost-sm" id="signOutBtn">Sign out</button>
     </div>
   </header>
 
-  <nav class="tabs" id="tabs">
-    <button data-tab="guide">Guide</button>
-    <button data-tab="pool" class="active">Pool</button>
-    <button data-tab="cycle">Cycle</button>
-    <button data-tab="vote">Vote</button>
-    <button data-tab="contributors">Contributors</button>
-    <button data-tab="submissions">Submissions</button>
-    <button data-tab="identity">Identity</button>
-    <button data-tab="admin">Admin</button>
-  </nav>
+  <div class="balance-strip" id="balanceStrip" style="display:none"></div>
 
-  <div class="balance-bar" id="balanceBar">
-    <span class="bal-label">Balance loading…</span>
-  </div>
+  <div class="app-main">
 
-  <main>
+    <!-- Overview -->
+    <section id="panel-overview" class="panel active">
+      <h2 id="overviewHeading">Overview</h2>
+      <p class="page-sub" id="overviewSub"></p>
+      <div id="overviewContent"></div>
+    </section>
 
-    <!-- GUIDE -->
-    <section id="guide" class="panel">
-      <div class="guide-wrap">
+    <!-- Submit Work -->
+    <section id="panel-submit" class="panel">
+      <h2>Submit Work</h2>
+      <p class="page-sub">Share an improvement with the network. Validators will review it and vote on whether it's worth paying for.</p>
 
-        <h2>Welcome to CursiveOS Hub</h2>
-        <p class="guide-lead">CursiveOS is an open-source Linux optimizer. The Hub is where the incentive layer lives — contributors earn Bitcoin for improving the system, validators vote on what's worth paying for, and the pool grows automatically over time.</p>
+      <div class="form-section">
+        <h3>New Submission</h3>
 
-        <div class="guide-section">
-          <h3>Getting Started</h3>
-          <ol class="guide-steps">
-            <li><b>Pick your role</b> — use the account selector in the top bar to switch between accounts. Your role is shown next to it (admin, validator, contributor, consumer).</li>
-            <li><b>Bind your wallet</b> — go to the <b>Identity</b> tab, paste your Ethereum wallet address, bind it, then sign a challenge to verify you own it. This is required to receive payouts.</li>
-            <li><b>Contributors:</b> go to <b>Submissions</b> and submit your work (a git hash or content hash + short title). Validators review and vote on it each cycle.</li>
-            <li><b>Validators:</b> go to <b>Vote</b>, load the open cycle, and distribute your 100 points across accepted submissions. Your votes determine who gets paid.</li>
-            <li><b>Everyone:</b> check the <b>Pool</b> tab to see how the money is moving — what came in, what's locked, and what got paid out.</li>
-          </ol>
+        <div class="field">
+          <label>What did you improve? *</label>
+          <input id="submitTitle" placeholder="e.g. Faster cold-start on AMD Ryzen via C-state tuning" />
         </div>
 
-        <div class="guide-section">
-          <h3>How It Works</h3>
-          <div class="guide-cards">
-            <div class="guide-card">
-              <div class="guide-card-icon">💸</div>
-              <b>Fast users pay $2/month per machine.</b>
-              <p>60% goes into the payout pot this cycle. 40% is locked in the pool forever and earns yield.</p>
-            </div>
-            <div class="guide-card">
-              <div class="guide-card-icon">🗳️</div>
-              <b>Validators vote on contributions.</b>
-              <p>Each validator gets 100 points to spread across accepted submissions. More votes = bigger payout share.</p>
-            </div>
-            <div class="guide-card">
-              <div class="guide-card-icon">📈</div>
-              <b>Contributors earn two ways.</b>
-              <p><b>Payout share</b> — your cut of this cycle's pot, based on votes. Resets every cycle.<br><b>Yield royalty</b> — your permanent share of the pool's Bitcoin yield. Grows with the pool, never removed.</p>
-            </div>
-            <div class="guide-card">
-              <div class="guide-card-icon">🔒</div>
-              <b>The pool grows forever.</b>
-              <p>The locked 40% is never withdrawn. It earns yield through Babylon Protocol (~3.25% annually). Early contributors keep their royalty share permanently.</p>
-            </div>
-          </div>
+        <div class="field">
+          <label>Describe your work *</label>
+          <textarea id="submitDescription" rows="4"
+            placeholder="Explain what you changed, why it helps, and what results you saw. Validators read this to decide how to vote."></textarea>
         </div>
 
-        <div class="guide-section">
-          <h3>The Cycle</h3>
-          <p>Everything runs in monthly cycles:</p>
-          <div class="guide-timeline">
-            <div class="guide-step"><span class="step-num">1</span><span>Admin opens the cycle — revenue splits 60/40</span></div>
-            <div class="guide-step"><span class="step-num">2</span><span>Contributors submit work</span></div>
-            <div class="guide-step"><span class="step-num">3</span><span>Validators review submissions and vote (100 pts each)</span></div>
-            <div class="guide-step"><span class="step-num">4</span><span>Admin closes the cycle — payouts calculated and recorded</span></div>
-            <div class="guide-step"><span class="step-num">5</span><span>Repeat — pool grows, yield royalties accumulate</span></div>
-          </div>
-        </div>
-
-        <div class="guide-section">
-          <h3>Roles at a Glance</h3>
-          <table class="guide-table">
-            <thead><tr><th>Role</th><th>What you do</th><th>What you earn</th><th>Cost</th></tr></thead>
-            <tbody>
-              <tr><td><b>Fast User</b></td><td>Run CursiveOS on your machines</td><td>Faster updates, hardware recommendations</td><td>$2/month per machine</td></tr>
-              <tr><td><b>Validator</b></td><td>Test submissions, vote each cycle</td><td>Nothing directly — you're the quality gate</td><td>$2/month (fully refunded)</td></tr>
-              <tr><td><b>Contributor</b></td><td>Submit improvements to the system</td><td>Payout pot share + permanent yield royalty</td><td>Free</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="guide-section">
-          <h3>FAQ</h3>
-          <div class="faq">
-            <details><summary>Is this real money right now?</summary><p>Not yet. We're in a supervised pilot using test funds. When we're confident the system works, we'll fund the pool with real Bitcoin and open it publicly.</p></details>
-            <details><summary>What is the yield royalty and why does it matter?</summary><p>Every cycle, the locked pool earns Bitcoin yield (~3.25% annually). That yield is split among contributors in proportion to their lifetime votes. Your lifetime votes never go away — so even if you stop contributing, you still earn yield on past work forever. The longer you contribute early, the larger your permanent share.</p></details>
-            <details><summary>What counts as a contribution?</summary><p>Anything that improves CursiveOS: new performance presets, benchmark improvements, hardware profiles, tooling, documentation. Submit a git commit hash or content hash with a short title. Validators decide if it's worth paying for.</p></details>
-            <details><summary>What happens if my submission gets no votes?</summary><p>No payout that cycle, and no lifetime vote accrual. Three cycles in a row with less than 1% of votes triggers a 5-cycle cooldown before you can submit again. This keeps low-quality submissions from clogging the pipeline.</p></details>
-            <details><summary>Can I be a contributor and a validator?</summary><p>Yes — an admin account has all roles. For the pilot, Connor is playing all roles to test the system before opening it up.</p></details>
-            <details><summary>How do I get paid?</summary><p>Bind and verify your wallet in the Identity tab. When real Bitcoin is enabled, payouts will be sent to that address at cycle close. During the pilot, earnings are tracked internally.</p></details>
-            <details><summary>What is Babylon Protocol?</summary><p>A Bitcoin staking network that lets you earn yield on locked BTC without giving custody to anyone. The pool's locked principal earns ~6.5% gross annually (we stake 50%, giving ~3.25% effective). No trust required.</p></details>
-            <details><summary>Who controls the pool?</summary><p>Right now, the founder. Before going public we'll move to a multisig wallet (no single person can move funds) and eventually validator governance. The goal is for no single person to hold the keys.</p></details>
-          </div>
-        </div>
-
-        <div class="guide-section">
-          <h3>New Here? Create an Account</h3>
-          <p class="muted">During the pilot, accounts are created manually. Ask the admin to add you, or use the form below if you have an invite.</p>
-          <div class="inline-form">
-            <select id="newAccountRole">
-              <option value="contributor">Contributor — submit work, earn rewards</option>
-              <option value="validator">Validator — review and vote on submissions</option>
-              <option value="consumer">Fast User — get early updates for your machines</option>
+        <div class="field-row">
+          <div class="field">
+            <label>Type of contribution</label>
+            <select id="submitType">
+              <option value="preset">Performance preset (new or improved tweak)</option>
+              <option value="benchmark">Benchmark methodology</option>
+              <option value="hardware_profile">Hardware profile or compatibility fix</option>
+              <option value="tooling">Tooling or pipeline improvement</option>
             </select>
-            <input id="newAccountLabel" placeholder="your name or handle (for display only)" style="width:220px" />
-            <button id="createAccountBtn">Create Account</button>
           </div>
-          <p id="createAccountResult" class="muted"></p>
+          <div class="field">
+            <label>Git commit or link <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label>
+            <input id="submitHash" placeholder="abc1234 or github.com/…" />
+            <div class="help">Helps validators review the actual change. If you don't have one yet, leave this blank.</div>
+          </div>
         </div>
 
+        <button class="btn-primary green" id="submitBtn">Submit for Review</button>
+        <div class="form-msg" id="submitMsg"></div>
+      </div>
+
+      <p class="section-label">Your Submissions</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Type</th><th>Status</th><th style="text-align:right">Verdict</th></tr></thead>
+          <tbody id="submitHistory"></tbody>
+        </table>
       </div>
     </section>
 
-    <!-- POOL -->
-    <section id="pool" class="panel active">
-      <h2>Pool State</h2>
-      <div id="poolCards" class="grid">
-        <div class="card"><b>Pool Principal (locked)</b><div id="poolPrincipal">--</div></div>
-        <div class="card"><b>Payout Pot (this cycle)</b><div id="payoutPot">--</div></div>
-        <div class="card"><b>Babylon Yield (this cycle)</b><div id="cycleYield">--</div></div>
-        <div class="card"><b>Fast Revenue (this cycle)</b><div id="fastRevenue">--</div></div>
-        <div class="card"><b>Effective Yield/Cycle</b><div id="effectiveYield">--</div></div>
-        <div class="card"><b>Current Cycle Status</b><div id="cycleStatus">--</div></div>
-      </div>
-      <h3>Cycle History</h3>
-      <table>
-        <thead><tr><th>Cycle</th><th>Fast Users</th><th>Revenue (USD)</th><th>Payout Pot (BTC)</th><th>Pool Principal (BTC)</th><th>Yield (BTC)</th><th>Status</th></tr></thead>
-        <tbody id="allCyclesBody"><tr><td colspan="7">No cycles run yet</td></tr></tbody>
-      </table>
+    <!-- Vote -->
+    <section id="panel-vote" class="panel">
+      <h2>Vote on Submissions</h2>
+      <p class="page-sub">Distribute your 100 points across accepted submissions. Your votes determine payouts and permanently grow each contributor's yield share. You don't need to use all 100 points.</p>
+
+      <div id="voteContent"></div>
     </section>
 
-    <!-- CYCLE RUNNER -->
-    <section id="cycle" class="panel">
-      <h2>Cycle Runner</h2>
-      <p class="muted">Admin only. Running a cycle opens it, calculates the 60/40 split, and records pool inflow and payout pot. After running, go to the Vote tab for validators to allocate their 100 points, then close the cycle to settle payouts.</p>
-      <div class="inline-form">
-        <input id="cycleIdInput" type="number" placeholder="cycle id" style="width:110px" />
-        <input id="fastUserCountInput" type="number" placeholder="fast users" value="5" style="width:100px" />
-        <input id="btcPriceInput" type="number" placeholder="BTC/USD (default 85000)" style="width:180px" />
-        <button id="runCycleV31Btn">Open Cycle</button>
+    <!-- Pool -->
+    <section id="panel-pool" class="panel">
+      <h2>Pool</h2>
+      <p class="page-sub">40% of every Fast user payment is locked in the pool forever. The yield it generates flows back to contributors as permanent royalties.</p>
+      <div class="stats-row" id="poolStats"></div>
+      <p class="section-label">Cycle History</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cycle</th><th>Fast Users</th><th>Revenue</th><th>Payout Pot</th><th>Pool Principal</th><th>Yield</th><th>Status</th></tr></thead>
+          <tbody id="poolHistory"></tbody>
+        </table>
       </div>
-      <pre id="runCycleResult" class="muted"></pre>
-
-      <hr />
-      <h3>Close &amp; Settle Cycle</h3>
-      <p class="muted">Distributes payout pot and yield royalties based on vote results. Updates lifetime vote ledger. Cannot be undone.</p>
-      <div class="inline-form">
-        <input id="closeCycleIdInput" type="number" placeholder="cycle id to close" style="width:140px" />
-        <button id="closeCycleBtn">Close &amp; Settle</button>
-      </div>
-      <pre id="closeCycleResult" class="muted"></pre>
     </section>
 
-    <!-- VOTE -->
-    <section id="vote" class="panel">
-      <h2>Validator Vote</h2>
-      <p class="muted">Each eligible validator distributes 100 points across accepted submissions. Votes determine payout pot share AND permanently accrue to contributor lifetime vote ledger. Minimum 1% threshold applies.</p>
-
-      <div class="inline-form">
-        <input id="voteCycleIdInput" type="number" placeholder="cycle id" style="width:110px" />
-        <button id="loadSubmissionsForVoteBtn">Load Submissions</button>
+    <!-- Earnings -->
+    <section id="panel-earnings" class="panel">
+      <h2>Earnings</h2>
+      <p class="page-sub">Your balance, payout history, and permanent yield share.</p>
+      <div class="stats-row" id="earningsStats"></div>
+      <p class="section-label">Lifetime Contributor Ledger</p>
+      <p class="muted" style="margin-bottom:12px">Lifetime votes never go away. Your royalty share grows the more you contribute — and stays forever, even if you stop.</p>
+      <div class="table-wrap" style="margin-bottom:24px">
+        <table>
+          <thead><tr><th>Contributor</th><th>Lifetime Votes</th><th>Share</th><th>Total Payout</th><th>Total Royalty</th></tr></thead>
+          <tbody id="earningsLedger"></tbody>
+        </table>
       </div>
-
-      <div id="voteAllocator" style="margin-top:14px;display:none">
-        <p>Distribute your <b>100 points</b> across the submissions below:</p>
-        <div id="voteAllocatorRows"></div>
-        <p id="votePointsRemaining" class="muted">Points used: 0 / 100</p>
-        <button id="submitVotesBtn">Submit Vote Allocation</button>
-        <p id="voteSubmitResult" class="muted"></p>
+      <p class="section-label">Recent Activity</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Event</th><th>Amount</th><th>Cycle</th></tr></thead>
+          <tbody id="earningsHistory"></tbody>
+        </table>
       </div>
-
-      <h3>Aggregated Vote Totals</h3>
-      <div class="inline-form">
-        <input id="voteViewCycleId" type="number" placeholder="cycle id" style="width:110px" />
-        <button id="loadVoteTotalsBtn">Load Totals</button>
-      </div>
-      <table style="margin-top:8px">
-        <thead><tr><th>Submission ID</th><th>Total Points</th><th>Vote Share %</th><th>Voters</th></tr></thead>
-        <tbody id="voteTotalsBody"><tr><td colspan="4">No data</td></tr></tbody>
-      </table>
     </section>
 
-    <!-- CONTRIBUTORS -->
-    <section id="contributors" class="panel">
-      <h2>Lifetime Vote Ledger</h2>
-      <p class="muted">Lifetime votes are append-only and permanent. Yield royalties are paid every cycle proportional to each contributor's lifetime share. Early contributors retain their royalty share forever.</p>
-      <button id="refreshLifetimeBtn">Refresh</button>
-      <p id="allLifetimeVotesDisplay" class="muted">Global lifetime votes: --</p>
-      <table>
-        <thead><tr><th>Account</th><th>Lifetime Votes</th><th>Share %</th><th>Total Payout (BTC)</th><th>Total Royalty (BTC)</th><th>Cooldown Remaining</th></tr></thead>
-        <tbody id="lifetimeVotesBody"><tr><td colspan="6">No data</td></tr></tbody>
-      </table>
+    <!-- Settings -->
+    <section id="panel-settings" class="panel">
+      <h2>Settings</h2>
+      <p class="page-sub">Your profile, wallet, and account details.</p>
+
+      <div class="form-section">
+        <h3>Display Name</h3>
+        <div class="field">
+          <label>Name or handle</label>
+          <input id="settingsUsername" placeholder="how you appear to others" />
+        </div>
+        <button class="btn-primary" id="settingsUsernameBtn">Save</button>
+        <div class="form-msg" id="settingsUsernameMsg"></div>
+      </div>
+
+      <div class="form-section">
+        <h3>Wallet Verification</h3>
+        <p style="color:var(--text2);font-size:13px;margin-bottom:16px">
+          Verify your Ethereum wallet to receive BTC payouts. Uses EIP-191 signature verification.
+        </p>
+        <div class="field">
+          <label>Wallet Address</label>
+          <input id="settingsWalletAddress" placeholder="0x…" />
+        </div>
+        <div class="field" style="max-width:160px">
+          <label>Chain</label>
+          <input id="settingsWalletChain" value="evm:1" />
+        </div>
+        <button class="btn-primary" id="settingsBindWalletBtn">Bind Wallet</button>
+        <div class="form-msg" id="settingsBindMsg"></div>
+        <hr />
+        <div class="field">
+          <label>Verify Ownership</label>
+          <div class="help" style="margin-bottom:10px">Click Generate Challenge, sign the message with your wallet app, then paste the signature and verify.</div>
+          <button class="btn-ghost" id="settingsChallengeBtn" style="width:auto;margin-bottom:10px">Generate Challenge</button>
+          <pre id="settingsChallengeText" style="font-size:12px;color:var(--text2);margin-bottom:10px;display:none;background:var(--surface2);padding:10px;border-radius:8px;border:1px solid var(--border)"></pre>
+          <input id="settingsSignature" placeholder="Paste signed hex here" />
+        </div>
+        <button class="btn-primary" id="settingsVerifyBtn">Verify Wallet</button>
+        <div class="form-msg" id="settingsVerifyMsg"></div>
+      </div>
+
+      <div class="form-section">
+        <h3>Your Account ID</h3>
+        <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Share this with the admin if they need to set up your account or dispense funds.</p>
+        <code id="settingsAccountId"></code>
+      </div>
+
+      <div class="form-section">
+        <h3>Install CursiveOS</h3>
+        <pre id="settingsInstallCmd" style="font-size:12px;color:var(--text2)"></pre>
+      </div>
     </section>
 
-    <!-- SUBMISSIONS -->
-    <section id="submissions" class="panel">
-      <h2>Submissions</h2>
-      <div class="inline-form">
-        <input id="contribHash" placeholder="submission hash (git SHA or content hash)" style="width:280px" />
-        <input id="contribTitle" placeholder="title" style="width:200px" />
-        <select id="contribClass">
-          <option value="preset">preset</option>
-          <option value="benchmark">benchmark</option>
-          <option value="hardware_profile">hardware_profile</option>
-          <option value="tooling">tooling</option>
-        </select>
-        <button id="createContribBtn">Submit</button>
-      </div>
-      <p id="createContribResult" class="muted"></p>
-      <table>
-        <thead><tr><th>ID</th><th>Title</th><th>Class</th><th>State</th><th>Verdict</th></tr></thead>
-        <tbody id="contribBody"><tr><td colspan="5">No submissions</td></tr></tbody>
-      </table>
-    </section>
-
-    <!-- IDENTITY -->
-    <section id="identity" class="panel">
-      <h2>Identity &amp; Wallet</h2>
-
-      <h3>Your Name</h3>
-      <p class="muted">Set a display name so you appear by name in the account switcher and leaderboards instead of a random ID.</p>
-      <div class="inline-form">
-        <input id="usernameInput" placeholder="your name or handle" style="width:220px" />
-        <button id="setUsernameBtn">Save Name</button>
-      </div>
-      <p id="setUsernameResult" class="muted"></p>
-
-      <hr />
-      <p class="muted">Bind and verify your wallet address. EIP-191 signature verification for EVM wallets. Verified wallet required to receive BTC payouts.</p>
-      <div class="inline-form">
-        <input id="walletAddressInput" placeholder="wallet address" style="width:340px" />
-        <input id="walletChainInput" placeholder="chain id" value="evm:1" style="width:110px" />
-        <button id="bindWalletBtn">Bind (Unverified)</button>
-      </div>
-      <p id="bindWalletResult" class="muted"></p>
-      <div class="inline-form">
-        <button id="walletChallengeBtn">Generate Challenge</button>
-        <input id="walletSignatureInput" placeholder="paste signed hex" style="width:380px" />
-        <button id="walletVerifyBtn">Verify</button>
-      </div>
-      <pre id="walletChallengeMessage" class="muted"></pre>
-      <p id="walletVerifyResult" class="muted"></p>
-      <p id="actionTrailSummary" class="muted">Recent actions: --</p>
-
-      <h3>Install</h3>
-      <pre id="installCmd"></pre>
-    </section>
-
-    <!-- ADMIN -->
-    <section id="admin" class="panel">
+    <!-- Admin -->
+    <section id="panel-admin" class="panel">
       <h2>Admin</h2>
+      <p class="page-sub">Cycle management, test funds, and account controls.</p>
 
-      <h3>Dispense Test Funds</h3>
-      <p class="muted">Credit any account with simulated BTC for pilot testing. Funds are real internal credits, not real BTC.</p>
-      <div class="inline-form">
-        <select id="dispenseAccountSelect"></select>
-        <input id="dispenseAmountUsd" type="number" placeholder="USD amount" value="10" style="width:120px" />
-        <button id="dispenseBtn">Dispense</button>
+      <p class="section-label">Open a Cycle</p>
+      <div class="form-section">
+        <div class="field-row-3">
+          <div class="field">
+            <label>Cycle Number</label>
+            <input id="adminCycleId" type="number" placeholder="e.g. 1" />
+          </div>
+          <div class="field">
+            <label>Fast User Count</label>
+            <input id="adminFastUsers" type="number" value="5" />
+          </div>
+          <div class="field">
+            <label>BTC/USD <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label>
+            <input id="adminBtcPrice" type="number" placeholder="default 85000" />
+          </div>
+        </div>
+        <button class="btn-primary" id="adminOpenCycleBtn">Open Cycle</button>
+        <div class="form-msg" id="adminOpenMsg"></div>
       </div>
-      <p id="dispenseResult" class="muted"></p>
 
-      <h3>Machine Plans</h3>
-      <div class="inline-form">
-        <input id="planMachineId" placeholder="machine_id" style="width:280px" />
-        <select id="planValue"><option value="fast">fast</option><option value="stable">stable</option></select>
-        <button id="setPlanBtn">Set Plan</button>
+      <p class="section-label">Close &amp; Settle</p>
+      <div class="form-section">
+        <p style="color:var(--text2);font-size:13px;margin-bottom:14px">Distributes payouts and yield royalties based on votes. Cannot be undone.</p>
+        <div class="field" style="max-width:200px">
+          <label>Cycle Number</label>
+          <input id="adminCloseCycleId" type="number" />
+        </div>
+        <button class="btn-primary" id="adminCloseCycleBtn">Close &amp; Settle</button>
+        <div class="form-msg" id="adminCloseMsg"></div>
+        <pre class="pre-result" id="adminCloseResult" style="display:none"></pre>
       </div>
-      <p id="setPlanResult" class="muted"></p>
-      <table>
-        <thead><tr><th>Machine ID</th><th>Plan</th><th>Fee/Cycle</th><th>Last Burn Cycle</th></tr></thead>
-        <tbody id="machinesBody"><tr><td colspan="4">No machines</td></tr></tbody>
-      </table>
 
-      <h3>Account Controls</h3>
-      <div class="inline-form">
-        <select id="controlAccountSelect"></select>
-        <select id="controlMode">
-          <option value="normal">normal</option>
-          <option value="slow">slow</option>
-          <option value="blocked">blocked</option>
-        </select>
-        <input id="controlReason" placeholder="reason" style="width:180px" />
-        <button id="setControlBtn">Set Control</button>
+      <p class="section-label">Dispense Test Funds</p>
+      <div class="form-section">
+        <div class="field-row">
+          <div class="field">
+            <label>Account</label>
+            <select id="adminDispenseAccount"></select>
+          </div>
+          <div class="field">
+            <label>Amount (USD)</label>
+            <input id="adminDispenseAmount" type="number" value="10" />
+          </div>
+        </div>
+        <button class="btn-primary" id="adminDispenseBtn">Dispense</button>
+        <div class="form-msg" id="adminDispenseMsg"></div>
       </div>
-      <p id="setControlResult" class="muted"></p>
 
-      <h3>Delete Account</h3>
-      <p class="muted">Remove a test account from the pilot. Cannot delete yourself or accounts with earned balances.</p>
-      <div class="inline-form">
-        <select id="deleteAccountSelect"></select>
-        <button id="deleteAccountBtn" style="background:var(--err,#c0392b);color:#fff">Delete Account</button>
+      <p class="section-label">Account Controls</p>
+      <div class="form-section">
+        <div class="field-row-3">
+          <div class="field">
+            <label>Account</label>
+            <select id="adminControlAccount"></select>
+          </div>
+          <div class="field">
+            <label>Mode</label>
+            <select id="adminControlMode">
+              <option value="normal">Normal</option>
+              <option value="slow">Slow mode</option>
+              <option value="blocked">Blocked</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Reason <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label>
+            <input id="adminControlReason" placeholder="reason" />
+          </div>
+        </div>
+        <button class="btn-primary" id="adminSetControlBtn">Update</button>
+        <div class="form-msg" id="adminControlMsg"></div>
       </div>
-      <p id="deleteAccountResult" class="muted"></p>
 
-      <h3>Ledger (recent)</h3>
-      <table>
-        <thead><tr><th>Event Type</th><th>Bucket</th><th>Amount</th><th>Cycle</th></tr></thead>
-        <tbody id="ledgerBody"><tr><td colspan="4">No ledger entries</td></tr></tbody>
-      </table>
+      <p class="section-label">Remove Test Account</p>
+      <div class="form-section">
+        <div class="field" style="max-width:320px">
+          <label>Account</label>
+          <select id="adminDeleteAccount"></select>
+        </div>
+        <button class="btn-primary danger" id="adminDeleteAccountBtn">Delete Account</button>
+        <div class="form-msg" id="adminDeleteMsg"></div>
+      </div>
     </section>
 
-  </main>
+  </div><!-- /.app-main -->
+</div><!-- /#app -->
 
-  <script src="./app.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>
