@@ -1118,8 +1118,16 @@ app.post('/hub/cycle/run-v31', async (req, res) => {
     await ensureContributionVotesTable();
     await ensureLifetimeVotesTable();
 
-    const { cycle_id, fast_user_count = 5, btc_price_usd } = req.body || {};
+    const { cycle_id, fast_user_count = 5, btc_price_usd, force = false } = req.body || {};
     if (!Number.isFinite(Number(cycle_id))) return res.status(400).json({ ok: false, error: 'invalid_cycle_id' });
+
+    // Prevent reopening a closed cycle without explicit force flag
+    if (!force) {
+      const existing = await sql(`select status from l5_pool_state_v31 where cycle_id=${Number(cycle_id)} limit 1;`);
+      if (existing[0]?.status === 'closed') {
+        return res.status(409).json({ ok: false, error: 'cycle_already_closed', hint: 'Pass force:true to overwrite (pilot only)' });
+      }
+    }
 
     const F_FAST_USD = Number(process.env.F_FAST_USD || 2.00);
     const BTC_PRICE = Number(btc_price_usd || process.env.BTC_PRICE_USD || 85000);
