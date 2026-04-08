@@ -77,28 +77,38 @@ function isValidator() { return ACCOUNT_ROLE === 'validator' || isAdmin(); }
 function isContributor(){ return ACCOUNT_ROLE === 'contributor' || isAdmin(); }
 
 // ── Login Flow ───────────────────────────────────────────────────────────────
-async function tryLogin(accountId) {
-  const r = await post('/hub/session/create', { account_id: accountId });
-  if (!r.ok) throw new Error(r.error === 'account_not_found' ? 'Account not found. Check your ID and try again.' : r.error);
+async function tryLoginWithPassword(username, password) {
+  const r = await post('/hub/auth/login', { username, password });
+  if (!r.ok) {
+    const m = { missing_credentials: 'Enter your username and password.', invalid_credentials: 'Incorrect username or password.', account_inactive: 'Your account is inactive.' };
+    throw new Error(m[r.error] || r.error || 'Login failed.');
+  }
   SESSION_TOKEN = r.session_token;
-  ACCOUNT_ID    = accountId;
+  ACCOUNT_ID    = r.account_id;
+  ACCOUNT_ROLE  = r.role;
+  USERNAME      = r.username;
 }
 
 async function loadAccountInfo() {
-  const boot = await fetch(`${API}/hub/session/bootstrap`).then(r => r.json());
+  const boot = await get('/hub/session/bootstrap');
   ALL_ACCOUNTS = boot.accounts || [];
+  // Re-derive role/username from bootstrap in case they changed server-side
   const mine = ALL_ACCOUNTS.find(a => a.account_id === ACCOUNT_ID);
-  ACCOUNT_ROLE = mine?.role || null;
-  USERNAME     = mine?.username || null;
+  if (mine) {
+    ACCOUNT_ROLE = mine.role;
+    USERNAME = mine.username || USERNAME;
+  }
 }
 
 function saveSession() {
-  localStorage.setItem('hub_account_id', ACCOUNT_ID);
+  localStorage.setItem('hub_session', JSON.stringify({
+    token: SESSION_TOKEN, account_id: ACCOUNT_ID, role: ACCOUNT_ROLE, username: USERNAME,
+  }));
 }
 
 function clearSession() {
   SESSION_TOKEN = null; ACCOUNT_ID = null; ACCOUNT_ROLE = null; USERNAME = null;
-  localStorage.removeItem('hub_account_id');
+  localStorage.removeItem('hub_session');
 }
 
 async function bootApp() {
@@ -709,33 +719,85 @@ document.getElementById('adminDeleteAccountBtn').addEventListener('click', async
   }
 });
 
+// ── Change Password ───────────────────────────────────────────────────────────
+document.getElementById('settingsChangePwBtn').addEventListener('click', async () => {
+  const current_password = document.getElementById('settingsCurrentPw').value;
+  const new_password     = document.getElementById('settingsNewPw').value;
+  if (!current_password || !new_password) { msg('settingsChangePwMsg', 'Fill in both fields.', 'err'); return; }
+  if (new_password.length < 6) { msg('settingsChangePwMsg', 'New password must be at least 6 characters.', 'err'); return; }
+  const r = await post('/hub/auth/change-password', { current_password, new_password });
+  if (r.ok) {
+    msg('settingsChangePwMsg', 'Password changed.', 'ok');
+    document.getElementById('settingsCurrentPw').value = '';
+    document.getElementById('settingsNewPw').value = '';
+  } else {
+    msg('settingsChangePwMsg', r.error || 'Error changing password.', 'err');
+  }
+});
+
 // ── Sign Out ──────────────────────────────────────────────────────────────────
 document.getElementById('signOutBtn').addEventListener('click', () => {
   clearSession();
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('loginAccountId').value = '';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
   clearMsg('loginError');
+  // Reset to sign-in path
+  document.getElementById('loginPath').style.display = 'block';
+  document.getElementById('createPath').style.display = 'none';
+  document.getElementById('adminSetupPath').style.display = 'none';
 });
 
-// ── Login Screen Events ───────────────────────────────────────────────────────
+// ── Login Screen Path Switching ───────────────────────────────────────────────
 document.getElementById('showCreatePath').addEventListener('click', () => {
   document.getElementById('loginPath').style.display = 'none';
   document.getElementById('createPath').style.display = 'block';
+  document.getElementById('adminSetupPath').style.display = 'none';
 });
 
 document.getElementById('showLoginPath').addEventListener('click', () => {
   document.getElementById('createPath').style.display = 'none';
   document.getElementById('loginPath').style.display = 'block';
+  document.getElementById('adminSetupPath').style.display = 'none';
 });
 
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const id = document.getElementById('loginAccountId').value.trim();
-  if (!id) { document.getElementById('loginError').textContent = 'Paste your account ID first.'; return; }
+document.getElementById('showAdminSetupPath').addEventListener('click', () => {
+  document.getElementById('loginPath').style.display = 'none';
+  document.getElementById('createPath').style.display = 'none';
+  document.getElementById('adminSetupPath').style.display = 'block';
+});
+
+document.getElementById('showLoginPathFromSetup').addEventListener('click', () => {
+  document.getElementById('adminSetupPath').style.display = 'none';
+  document.getElementById('loginPath').style.display = 'block';
+  document.getElementById('createPath').style.display = 'none';
+  document.getElementById('resetAdminPath').style.display = 'none';
+});
+
+document.getElementById('showResetAdminPath').addEventListener('click', () => {
+  document.getElementById('adminSetupPath').style.display = 'none';
+  document.getElementById('loginPath').style.display = 'none';
+  document.getElementById('createPath').style.display = 'none';
+  document.getElementById('resetAdminPath').style.display = 'block';
+});
+
+document.getElementById('showLoginPathFromReset').addEventListener('click', () => {
+  document.getElementById('resetAdminPath').style.display = 'none';
+  document.getElementById('loginPath').style.display = 'block';
+  document.getElementById('createPath').style.display = 'none';
+  document.getElementById('adminSetupPath').style.display = 'none';
+});
+
+// ── Sign In ───────────────────────────────────────────────────────────────────
+async function doSignIn() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!username || !password) { document.getElementById('loginError').textContent = 'Enter your username and password.'; return; }
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = 'Signing in…';
   try {
-    await tryLogin(id);
+    await tryLoginWithPassword(username, password);
     saveSession();
     await bootApp();
   } catch (e) {
@@ -743,26 +805,33 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   } finally {
     btn.disabled = false; btn.textContent = 'Sign In';
   }
-});
+}
 
-document.getElementById('loginAccountId').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('loginBtn').click();
-});
+document.getElementById('loginBtn').addEventListener('click', doSignIn);
+document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doSignIn(); });
 
+// ── Create Account ────────────────────────────────────────────────────────────
 document.getElementById('createBtn').addEventListener('click', async () => {
-  const name = document.getElementById('signupName').value.trim();
-  const role = document.getElementById('signupRole').value;
-  if (!name) { document.getElementById('createError').textContent = 'Enter a name or handle.'; return; }
+  const username = document.getElementById('signupName').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const confirm  = document.getElementById('signupPasswordConfirm').value;
+  const role     = document.getElementById('signupRole').value;
+  if (!username) { document.getElementById('createError').textContent = 'Choose a username.'; return; }
+  if (password.length < 6) { document.getElementById('createError').textContent = 'Password must be at least 6 characters.'; return; }
+  if (password !== confirm) { document.getElementById('createError').textContent = 'Passwords don\'t match.'; return; }
   const btn = document.getElementById('createBtn');
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    const r = await fetch(`${API}/hub/accounts/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role, label: name }),
-    }).then(res => res.json());
-    if (!r.ok) throw new Error(r.error || 'Could not create account.');
-    await tryLogin(r.account_id);
+    const r = await post('/hub/auth/register', { username, password, role });
+    if (!r.ok) {
+      const errMap = { username_taken: 'That username is already taken.', password_too_short_min_6: 'Password must be at least 6 characters.', username_must_be_2_to_40_chars: 'Username must be 2–40 characters.' };
+      throw new Error(errMap[r.error] || r.error || 'Could not create account.');
+    }
+    SESSION_TOKEN = r.session_token;
+    ACCOUNT_ID    = r.account_id;
+    ACCOUNT_ROLE  = r.role;
+    USERNAME      = r.username;
     saveSession();
     await bootApp();
   } catch (e) {
@@ -772,14 +841,73 @@ document.getElementById('createBtn').addEventListener('click', async () => {
   }
 });
 
+// ── Admin First-Time Setup ────────────────────────────────────────────────────
+document.getElementById('adminSetupBtn').addEventListener('click', async () => {
+  const account_id = document.getElementById('setupAdminId').value.trim();
+  const username   = document.getElementById('setupAdminUsername').value.trim();
+  const password   = document.getElementById('setupAdminPassword').value;
+  if (!account_id) { document.getElementById('adminSetupError').textContent = 'Paste your admin account UUID.'; return; }
+  if (!username)   { document.getElementById('adminSetupError').textContent = 'Choose a username.'; return; }
+  if (password.length < 6) { document.getElementById('adminSetupError').textContent = 'Password must be at least 6 characters.'; return; }
+  const btn = document.getElementById('adminSetupBtn');
+  btn.disabled = true; btn.textContent = 'Setting up…';
+  try {
+    const r = await post('/hub/auth/setup-admin', { account_id, username, password });
+    if (!r.ok) throw new Error(r.error || 'Setup failed.');
+    SESSION_TOKEN = r.session_token;
+    ACCOUNT_ID    = r.account_id;
+    ACCOUNT_ROLE  = r.role;
+    USERNAME      = r.username;
+    saveSession();
+    await bootApp();
+  } catch (e) {
+    document.getElementById('adminSetupError').textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Set Up Admin Login';
+  }
+});
+
+// ── Admin Password Reset ──────────────────────────────────────────────────────
+document.getElementById('resetAdminBtn').addEventListener('click', async () => {
+  const account_id = document.getElementById('resetAdminId').value.trim();
+  const new_password = document.getElementById('resetAdminPassword').value;
+  const confirm    = document.getElementById('resetAdminPasswordConfirm').value;
+  const err = (t) => { document.getElementById('resetAdminError').textContent = t; };
+  if (!account_id)          { err('Paste your admin account UUID.'); return; }
+  if (new_password.length < 6) { err('Password must be at least 6 characters.'); return; }
+  if (new_password !== confirm)  { err('Passwords do not match.'); return; }
+  const btn = document.getElementById('resetAdminBtn');
+  btn.disabled = true; btn.textContent = 'Resetting…';
+  try {
+    const r = await post('/hub/auth/reset-admin', { account_id, new_password });
+    if (!r.ok) throw new Error(r.error || 'Reset failed.');
+    SESSION_TOKEN = r.session_token;
+    ACCOUNT_ID    = r.account_id;
+    ACCOUNT_ROLE  = r.role;
+    USERNAME      = r.username;
+    saveSession();
+    await bootApp();
+  } catch (e) {
+    err(e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Reset Password';
+  }
+});
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async () => {
-  const saved = localStorage.getItem('hub_account_id');
+  const saved = localStorage.getItem('hub_session');
   if (saved) {
     try {
-      await tryLogin(saved);
-      await bootApp();
-      return;
+      const { token, account_id, role, username } = JSON.parse(saved);
+      if (token && account_id) {
+        SESSION_TOKEN = token;
+        ACCOUNT_ID    = account_id;
+        ACCOUNT_ROLE  = role;
+        USERNAME      = username;
+        await bootApp();
+        return;
+      }
     } catch (_) {
       clearSession();
     }

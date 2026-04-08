@@ -281,9 +281,35 @@ async function resolveAccountFromSession(req) {
   return accountId;
 }
 
+// ── Password hashing (crypto.scrypt, no extra deps) ───────────────────────────
+async function hashPassword(pw) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return new Promise((res, rej) => {
+    crypto.scrypt(pw, salt, 64, (err, h) => err ? rej(err) : res(`${salt}:${h.toString('hex')}`));
+  });
+}
+async function verifyPassword(pw, stored) {
+  const [salt, hash] = stored.split(':');
+  return new Promise((res, rej) => {
+    crypto.scrypt(pw, salt, 64, (err, h) => err ? rej(err) : res(h.toString('hex') === hash));
+  });
+}
+
+async function createSessionForAccount(accountId) {
+  const token = crypto.randomBytes(24).toString('hex');
+  await sql(`insert into l5_auth_sessions (session_token, account_id, status, expires_at, last_seen_at)
+    values ('${esc(token)}', '${esc(accountId)}', 'active', now() + interval '${Number(SESSION_TTL_HOURS)} hours', now());`);
+  return token;
+}
+
 function isSessionOptionalPath(path) {
-  // req.path is relative inside app.use('/hub', ...), so it is '/session/...'
-  return path === '/session/bootstrap' || path === '/session/create' || path === '/accounts/create';
+  return path === '/session/bootstrap'
+    || path === '/session/create'
+    || path === '/accounts/create'
+    || path === '/auth/login'
+    || path === '/auth/register'
+    || path === '/auth/setup-admin'
+    || path === '/auth/reset-admin';
 }
 
 async function requireHubSession(req, res, next) {
@@ -807,6 +833,103 @@ app.post('/hub/identity/wallet/verify', async (req, res) => {
   }
 });
 
+// ── Username/password auth ────────────────────────────────────────────────────
+
+// POST /hub/auth/login — { username, password } → session_token
+app.post('/hub/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.status(400).json({ ok: false, error: 'missing_credentials' });
+    const rows = await sql(`select account_id, role, username, password_hash, status
+      from l5_accounts where lower(username)=lower('${esc(username)}') limit 1;`);
+    const acct = rows[0];
+    if (!acct || !acct.password_hash) return res.status(401).json({ ok: false, error: 'invalid_credentials' });
+    if (acct.status !== 'active') return res.status(403).json({ ok: false, error: 'account_inactive' });
+    const ok = await verifyPassword(password, acct.password_hash);
+    if (!ok) return res.status(401).json({ ok: false, error: 'invalid_credentials' });
+    const token = await createSessionForAccount(acct.account_id);
+    await logAction({ action: 'auth_login', actorAccountId: acct.account_id, req, details: {} });
+    res.json({ ok: true, session_token: token, account_id: acct.account_id, role: acct.role, username: acct.username });
+  } catch (e) { res.status(500).json({ ok: false, error: String(e.message || e) }); }
+});
+
+// POST /hub/auth/register — { username, password, role }
+app.post('/hub/auth/register', async (req, res) => {
+  try {
+    const { username, password, role = 'contributor' } = req.body || {};
+    if (!username || !password) return res.status(400).json({ ok: false, error: 'missing_fields' });
+    if (username.trim().length < 2 || username.trim().length > 40) return res.status(400).json({ ok: false, error: 'username_must_be_2_to_40_chars' });
+    if (password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    const validRoles = ['contributor', 'validator', 'consumer'];
+    if (!validRoles.includes(role)) return res.status(400).json({ ok: false, error: 'invalid_role' });
+    const existing = await sql(`select account_id from l5_accounts where lower(username)=lower('${esc(username.trim())}') limit 1;`);
+    if (existing[0]) return res.status(409).json({ ok: false, error: 'username_taken' });
+    const newId = crypto.randomUUID();
+    const hash = await hashPassword(password);
+    const clean = username.trim();
+    await sql(`insert into l5_accounts (account_id, role, status, username, password_hash)
+      values ('${esc(newId)}', '${esc(role)}', 'active', '${esc(clean)}', '${esc(hash)}');`);
+    const token = await createSessionForAccount(newId);
+    await logAction({ action: 'auth_register', actorAccountId: newId, req, details: { role, username: clean } });
+    res.json({ ok: true, session_token: token, account_id: newId, role, username: clean });
+  } catch (e) { res.status(500).json({ ok: false, error: String(e.message || e) }); }
+});
+
+// POST /hub/auth/setup-admin — one-time only: attach credentials to an existing admin account that has no password yet
+app.post('/hub/auth/setup-admin', async (req, res) => {
+  try {
+    const { account_id, username, password } = req.body || {};
+    if (!account_id || !username || !password) return res.status(400).json({ ok: false, error: 'missing_fields' });
+    if (password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    const rows = await sql(`select account_id, role, password_hash from l5_accounts where account_id='${esc(account_id)}' limit 1;`);
+    const acct = rows[0];
+    if (!acct) return res.status(404).json({ ok: false, error: 'account_not_found' });
+    if (acct.role !== 'mixed') return res.status(403).json({ ok: false, error: 'not_an_admin_account' });
+    if (acct.password_hash) return res.status(409).json({ ok: false, error: 'already_set_up — use change-password instead' });
+    const taken = await sql(`select account_id from l5_accounts where lower(username)=lower('${esc(username.trim())}') limit 1;`);
+    if (taken[0] && taken[0].account_id !== account_id) return res.status(409).json({ ok: false, error: 'username_taken' });
+    const hash = await hashPassword(password);
+    const clean = username.trim();
+    await sql(`update l5_accounts set username='${esc(clean)}', password_hash='${esc(hash)}' where account_id='${esc(account_id)}';`);
+    const token = await createSessionForAccount(account_id);
+    res.json({ ok: true, session_token: token, account_id, username: clean, role: 'mixed' });
+  } catch (e) { res.status(500).json({ ok: false, error: String(e.message || e) }); }
+});
+
+// POST /hub/auth/reset-admin — reset password for admin account using UUID (no current password required)
+app.post('/hub/auth/reset-admin', async (req, res) => {
+  try {
+    const { account_id, new_password } = req.body || {};
+    if (!account_id || !new_password) return res.status(400).json({ ok: false, error: 'missing_fields' });
+    if (new_password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    const rows = await sql(`select account_id, role, username from l5_accounts where account_id='${esc(account_id)}' limit 1;`);
+    const acct = rows[0];
+    if (!acct) return res.status(404).json({ ok: false, error: 'account_not_found' });
+    if (acct.role !== 'mixed') return res.status(403).json({ ok: false, error: 'not_an_admin_account' });
+    const hash = await hashPassword(new_password);
+    await sql(`update l5_accounts set password_hash='${esc(hash)}' where account_id='${esc(account_id)}';`);
+    const token = await createSessionForAccount(account_id);
+    await logAction({ action: 'auth_reset_admin', actorAccountId: account_id, req, details: {} });
+    res.json({ ok: true, session_token: token, account_id, username: acct.username, role: 'mixed' });
+  } catch (e) { res.status(500).json({ ok: false, error: String(e.message || e) }); }
+});
+
+// POST /hub/auth/change-password — { current_password, new_password }
+app.post('/hub/auth/change-password', async (req, res) => {
+  try {
+    const actorId = req.authAccountId;
+    const { current_password, new_password } = req.body || {};
+    if (!current_password || !new_password) return res.status(400).json({ ok: false, error: 'missing_fields' });
+    if (new_password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    const rows = await sql(`select password_hash from l5_accounts where account_id='${esc(actorId)}' limit 1;`);
+    if (!rows[0]?.password_hash) return res.status(400).json({ ok: false, error: 'no_password_set' });
+    if (!await verifyPassword(current_password, rows[0].password_hash)) return res.status(401).json({ ok: false, error: 'wrong_current_password' });
+    const hash = await hashPassword(new_password);
+    await sql(`update l5_accounts set password_hash='${esc(hash)}' where account_id='${esc(actorId)}';`);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: String(e.message || e) }); }
+});
+
 app.post('/hub/session/create', async (req, res) => {
   try {
     const accountId = (req.body?.account_id || '').toString().trim();
@@ -1023,7 +1146,7 @@ app.get('/hub/admin/runbooks/network-abuse', async (req, res) => {
 
 app.get('/hub/session/bootstrap', async (_req, res) => {
   try {
-    const accounts = await sql(`select account_id, role, status, username, created_at from l5_accounts order by created_at asc limit 20;`);
+    const accounts = await sql(`select account_id, role, status, username, created_at from l5_accounts order by created_at asc limit 200;`);
     const suggestedAdmin = accounts.find(a => a.role === 'mixed') || null;
     const suggestedOperator = accounts.find(a => ['contributor','validator','consumer'].includes(a.role)) || accounts[0] || null;
     res.json({
@@ -1642,8 +1765,11 @@ async function initDb() {
   await ensurePoolStateTable();
   await ensureContributionVotesTable();
   await ensureLifetimeVotesTable();
-  // Add username column if schema predates it
+  // Add username / password columns if schema predates them
   await sql(`alter table if exists l5_accounts add column if not exists username text;`);
+  await sql(`alter table if exists l5_accounts add column if not exists password_hash text;`);
+  // unique index on lower(username) for case-insensitive login
+  await sql(`create unique index if not exists l5_accounts_username_lower_idx on l5_accounts (lower(username)) where username is not null;`);
   // Add description column to submissions if schema predates it
   await sql(`alter table if exists l5_contributor_submissions add column if not exists description text;`);
 }
