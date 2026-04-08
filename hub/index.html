@@ -14,18 +14,27 @@
     <div class="login-logo">CursiveOS Hub</div>
     <div class="login-tagline">Bitcoin incentive layer for local compute · v3.1</div>
 
+    <!-- Sign in -->
     <div id="loginPath">
-      <label>Account ID</label>
-      <input id="loginAccountId" placeholder="Paste your account ID" autocomplete="off" spellcheck="false" />
+      <label>Username</label>
+      <input id="loginUsername" placeholder="your username" autocomplete="username" />
+      <label style="margin-top:14px">Password</label>
+      <input id="loginPassword" type="password" placeholder="your password" autocomplete="current-password" />
       <button class="btn-primary full" id="loginBtn">Sign In</button>
       <p class="form-error" id="loginError"></p>
       <div class="login-divider">or</div>
       <button class="btn-ghost" id="showCreatePath">Create a new account →</button>
+      <button class="btn-ghost" id="showAdminSetupPath" style="margin-top:8px;opacity:.5;font-size:12px">Admin first-time setup</button>
     </div>
 
+    <!-- Create account -->
     <div id="createPath" style="display:none">
-      <label>Your name or handle</label>
-      <input id="signupName" placeholder="e.g. alice, frosty, yourhandle" />
+      <label>Choose a username</label>
+      <input id="signupName" placeholder="e.g. alice, frosty, yourhandle" autocomplete="username" />
+      <label style="margin-top:14px">Password</label>
+      <input id="signupPassword" type="password" placeholder="at least 6 characters" autocomplete="new-password" />
+      <label style="margin-top:14px">Confirm password</label>
+      <input id="signupPasswordConfirm" type="password" placeholder="repeat password" autocomplete="new-password" />
       <label style="margin-top:14px">What do you want to do?</label>
       <select id="signupRole">
         <option value="contributor">Contribute work and earn Bitcoin</option>
@@ -36,6 +45,37 @@
       <p class="form-error" id="createError"></p>
       <div class="login-divider">or</div>
       <button class="btn-ghost" id="showLoginPath">← I already have an account</button>
+    </div>
+
+    <!-- Admin first-time setup -->
+    <div id="adminSetupPath" style="display:none">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Set up your admin login. This only works once — the admin account must not have a password yet.</p>
+      <label>Admin Account ID</label>
+      <input id="setupAdminId" placeholder="paste the UUID" autocomplete="off" spellcheck="false" />
+      <label style="margin-top:14px">Choose a username</label>
+      <input id="setupAdminUsername" placeholder="e.g. connor" autocomplete="username" />
+      <label style="margin-top:14px">Password</label>
+      <input id="setupAdminPassword" type="password" placeholder="at least 6 characters" autocomplete="new-password" />
+      <button class="btn-primary full" id="adminSetupBtn">Set Up Admin Login</button>
+      <p class="form-error" id="adminSetupError"></p>
+      <div class="login-divider">or</div>
+      <button class="btn-ghost" id="showResetAdminPath">Reset existing admin password</button>
+      <button class="btn-ghost" id="showLoginPathFromSetup">← Back to sign in</button>
+    </div>
+
+    <!-- Admin password reset -->
+    <div id="resetAdminPath" style="display:none">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Reset your admin password. Requires your account UUID.</p>
+      <label>Admin Account ID</label>
+      <input id="resetAdminId" placeholder="paste the UUID" autocomplete="off" spellcheck="false" />
+      <label style="margin-top:14px">New Password</label>
+      <input id="resetAdminPassword" type="password" placeholder="at least 6 characters" autocomplete="new-password" />
+      <label style="margin-top:14px">Confirm Password</label>
+      <input id="resetAdminPasswordConfirm" type="password" placeholder="repeat password" autocomplete="new-password" />
+      <button class="btn-primary full" id="resetAdminBtn">Reset Password</button>
+      <p class="form-error" id="resetAdminError"></p>
+      <div class="login-divider">or</div>
+      <button class="btn-ghost" id="showLoginPathFromReset">← Back to sign in</button>
     </div>
   </div>
 </div>
@@ -203,8 +243,22 @@
       </div>
 
       <div class="form-section">
+        <h3>Change Password</h3>
+        <div class="field">
+          <label>Current password</label>
+          <input id="settingsCurrentPw" type="password" placeholder="current password" />
+        </div>
+        <div class="field">
+          <label>New password</label>
+          <input id="settingsNewPw" type="password" placeholder="at least 6 characters" />
+        </div>
+        <button class="btn-primary" id="settingsChangePwBtn">Change Password</button>
+        <div class="form-msg" id="settingsChangePwMsg"></div>
+      </div>
+
+      <div class="form-section">
         <h3>Your Account ID</h3>
-        <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Share this with the admin if they need to set up your account or dispense funds.</p>
+        <p style="color:var(--text2);font-size:13px;margin-bottom:8px">Share this with the admin if they need to dispense funds to your account.</p>
         <code id="settingsAccountId"></code>
       </div>
 
