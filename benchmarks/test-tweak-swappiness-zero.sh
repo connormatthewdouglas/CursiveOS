@@ -2,7 +2,7 @@
 # Isolated tweak test: vm.swappiness=0
 # Tests swappiness=0 (full disable) on top of the full v0.7 stack
 # Note: v0.7 sets swappiness=10; this overrides it to 0 for comparison.
-# Usage: ./tao-os-full-test-v1.4.sh benchmarks/test-tweak-swappiness-zero.sh
+# Usage: ./cursiveos-full-test-v1.4.sh benchmarks/test-tweak-swappiness-zero.sh
 
 set -euo pipefail
 

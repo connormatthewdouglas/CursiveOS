@@ -280,7 +280,7 @@ Additional fields:
 
 ### Current v0.7 Tweak Stack Summary
 *(2026-03-20)*
-25 tweaks across 6 categories. Full detail in `tao-os-presets-v0.7.sh` and white-paper.md.
+25 tweaks across 6 categories. Full detail in `presets/cursiveos-presets-v0.7.sh` and white-paper.md.
 Key breakthroughs:
 - `tcp_rmem`/`tcp_wmem` explicit set (v0.7 fix) — this was the unlock to ~1 Gbit/s. Setting `rmem_max` alone leaves TCP auto-tuner silently capped.
 - GPU min freq lock (2000 MHz) — eliminates idle-to-active ramp on Arc A750 (~22ms saved)

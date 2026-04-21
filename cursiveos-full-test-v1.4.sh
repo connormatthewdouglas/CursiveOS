@@ -16,7 +16,7 @@
 #   - wrapper_version → v1.4
 #
 # Requirements: ollama installed, tinyllama pulled (ollama pull tinyllama)
-# Usage: ./tao-os-full-test-v1.4.sh
+# Usage: ./cursiveos-full-test-v1.4.sh
 #
 # All changes are TEMPORARY. Presets revert after each test.
 # Logs saved to ~/CursiveOS/logs/

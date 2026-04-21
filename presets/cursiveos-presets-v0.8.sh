@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CursiveOS tao-os-presets-v0.8.sh
+# CursiveOS cursiveos-presets-v0.8.sh
 # v0.8 – 3 new tweaks on top of v0.7 (wq-013/014/015, all individually + integration tested):
 #   + kernel.sched_util_clamp_min=128 (faster freq ramp under bursty inference load)
 #   + net.ipv4.tcp_tw_reuse=1 (reuse TIME_WAIT sockets — reduces port exhaustion under validator traffic)
@@ -11,9 +11,9 @@
 #   Power:       +0.68W net     (+0.26 + 0.52 + -0.10)
 #
 # Usage:
-#   ./tao-os-presets-v0.8.sh --apply-temp   apply all tweaks (temporary)
-#   ./tao-os-presets-v0.8.sh --undo         revert to saved state
-#   ./tao-os-presets-v0.8.sh --dry-run      show what would change, touch nothing
+#   ./cursiveos-presets-v0.8.sh --apply-temp   apply all tweaks (temporary)
+#   ./cursiveos-presets-v0.8.sh --undo         revert to saved state
+#   ./cursiveos-presets-v0.8.sh --dry-run      show what would change, touch nothing
 
 set -euo pipefail
 

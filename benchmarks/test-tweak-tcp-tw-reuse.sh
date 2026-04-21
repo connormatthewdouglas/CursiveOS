@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Isolated tweak test: net.ipv4.tcp_tw_reuse=1
 # Tests this single tweak on top of the full v0.7 stack
-# Usage: ./tao-os-full-test-v1.4.sh benchmarks/test-tweak-tcp-tw-reuse.sh
+# Usage: ./cursiveos-full-test-v1.4.sh benchmarks/test-tweak-tcp-tw-reuse.sh
 
 set -euo pipefail
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Isolated tweak test: vm.min_free_kbytes=262144
 # Tests this single tweak on top of the full v0.7 stack
-# Usage: ./tao-os-full-test-v1.4.sh benchmarks/test-tweak-min-free-kbytes.sh
+# Usage: ./cursiveos-full-test-v1.4.sh benchmarks/test-tweak-min-free-kbytes.sh
 
 set -euo pipefail
 

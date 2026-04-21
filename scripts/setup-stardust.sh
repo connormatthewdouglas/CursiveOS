@@ -57,4 +57,4 @@ else
 fi
 
 echo ""
-echo "Setup complete. Run: ./tao-os-full-test-v1.4.sh"
+echo "Setup complete. Run: ./cursiveos-full-test-v1.4.sh"
