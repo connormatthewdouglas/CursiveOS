@@ -19,9 +19,6 @@ CLAUDE_SESSION.md
 .openclaw/
 .local/
 
-# Nested repo copy — should not exist here
-TAO-OS/
-
 # IPEX-LLM / Arc GPU runtime symlinks (local machine only)
 lib*.so
 libollama*

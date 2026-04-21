@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-PRESET_SCRIPT="${1:-../tao-os-presets-v0.6.sh}"
+PRESET_SCRIPT="${1:-../presets/cursiveos-presets-v0.7.sh}"
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
@@ -36,7 +36,7 @@ IPERF_PORT=15201
 
 LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/tao-os-network-$(date +%Y%m%d-%H%M%S).log"
+LOG_FILE="$LOG_DIR/cursiveos-network-$(date +%Y%m%d-%H%M%S).log"
 PASS_RESULT=""
 
 log() { echo "$1" | tee -a "$LOG_FILE"; }

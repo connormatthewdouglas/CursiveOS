@@ -18,12 +18,12 @@
 #   NEW: Also captures hardware fingerprint and stability metrics.
 #
 # Usage: ./benchmark-inference-v0.4.sh [preset-script] [model]
-#   preset-script : default ./tao-os-presets-v0.7.sh
+#   preset-script : default ./cursiveos-presets-v0.7.sh
 #   model         : default tinyllama (must already be pulled)
 
 set -euo pipefail
 
-PRESET_SCRIPT="${1:-../tao-os-presets-v0.7.sh}"
+PRESET_SCRIPT="${1:-../presets/cursiveos-presets-v0.7.sh}"
 MODEL="${2:-tinyllama}"
 PASSES=5          # cold-start calls per pass
 IDLE_SLEEP=15     # seconds to wait for GPU to drop to idle freq between calls
@@ -36,7 +36,7 @@ s() { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 
 LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/tao-os-coldstart-$(date +%Y%m%d-%H%M%S).log"
+LOG_FILE="$LOG_DIR/cursiveos-coldstart-$(date +%Y%m%d-%H%M%S).log"
 STABILITY_BASELINE_FILE="$LOG_DIR/.stability-baseline-$$.txt"
 PASS_RESULT=""
 

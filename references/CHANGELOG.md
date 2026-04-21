@@ -42,7 +42,7 @@
 | v1.0 | First release — runs all 3 benchmarks, clean summary table, sudo prompt (no hardcoded PIN), turbostat idle power measurement |
 | v1.1 | Points to presets v0.6, fixes hardcoded preset path in power section, auto-appends run results to hardware-profiles.json |
 | v1.2 | Auto-submits to CursiveRoot (Supabase) after every run. Zero setup — works from any internet-connected machine. Local JSON backup retained. |
-| v1.3 | Current. Points to tao-os-presets-v0.7.sh (25 tweaks). |
+| v1.3 | Current. Points to cursiveos-presets-v0.7.sh (25 tweaks). |
 
 ## Setup
 

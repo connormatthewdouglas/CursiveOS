@@ -63,7 +63,7 @@ ollama pull tinyllama
 
 ```bash
 # From the CursiveOS directory
-./tao-os-full-test-v1.4.sh
+./cursiveos-full-test-v1.4.sh
 ```
 
 The script will:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CursiveOS tao-os-presets-v0.7.sh
+# CursiveOS cursiveos-presets-v0.7.sh
 # v0.7 – 7 new tweaks on top of v0.6 (research-backed additions):
 #   + tcp_rmem/tcp_wmem: close the 16MB gap (rmem_max was set, auto-tuner wasn't)
 #   + C6 idle state: disable by name (robust cross-BIOS, not fragile index)
@@ -10,9 +10,9 @@
 #   + net.core.somaxconn=4096 (larger connection queue for validator traffic)
 #
 # Usage:
-#   ./tao-os-presets-v0.7.sh --apply-temp   apply all tweaks (temporary)
-#   ./tao-os-presets-v0.7.sh --undo         revert to saved state
-#   ./tao-os-presets-v0.7.sh --dry-run      show what would change, touch nothing
+#   ./cursiveos-presets-v0.7.sh --apply-temp   apply all tweaks (temporary)
+#   ./cursiveos-presets-v0.7.sh --undo         revert to saved state
+#   ./cursiveos-presets-v0.7.sh --dry-run      show what would change, touch nothing
 
 set -euo pipefail
 

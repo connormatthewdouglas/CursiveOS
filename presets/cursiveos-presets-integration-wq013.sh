@@ -6,7 +6,7 @@
 set -euo pipefail
 
 ACTION=${1:-"--help"}
-BASE_PRESET="$(dirname "${BASH_SOURCE[0]}")/tao-os-presets-v0.7.sh"
+BASE_PRESET="$(dirname "${BASH_SOURCE[0]}")/cursiveos-presets-v0.7.sh"
 
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
