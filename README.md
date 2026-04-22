@@ -11,6 +11,8 @@ CursiveOS is built for two core audiences:
 
 The OS-layer bottlenecks are the same for both: network transport ceilings, scheduler and governor latency, memory pressure, and GPU/CPU power-state behavior. CursiveOS benchmarks your machine, applies reversible presets, benchmarks again, and shows you the measured delta.
 
+CursiveOS is building toward a v1.0 release that ships with a **natural-language shell as the default terminal**. The interface humans have used to operate Linux for fifty years becomes a conversation with a local agent. You describe outcomes; the agent finds the mechanism. Full roadmap: [ROADMAP.md](ROADMAP.md).
+
 ## Try it now
 
 ```
@@ -149,14 +151,17 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Done** → Cold-start latency: -2.3% to -29% validated across 3 rigs
 - **Done** → Full-test wrapper v1.4 (CursiveRoot auto-submit, zero setup)
 - **Done** → CursiveRoot: live hardware/performance database
-- **Done** → v3.3 architecture specified (white paper v2.1)
-- **Next** → Hub respec to v3.3 (schema migration, API rewrite, frontend restructure, observer dashboard, tester auth scoping)
-- **Next** → Genesis sensor suite (performance + regression, wired to cycle close math)
-- **Next** → Phase 0 seed organism loop on founder's rig with fake BTC for 3 cycles
+- **Done** → v3.3 economic architecture specified (white paper v2.2)
+- **Done** → Agent architecture specified (measurement daemon + natural-language shell)
+- **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)
+- **In progress** → Phase 0 seed organism (measurement-to-ledger loop on founder's rig)
 - **Next** → First external tester running full sensor array; validate population confirmation
-- **Later** → Public launch with real BTC settlement
-- **Later** → AI optimization loop: train on CursiveRoot to generate hardware-specific presets
-- **Later** → Turnkey distribution (installer, ISO, optional custom kernel path)
+- **Next** → v0.9 ISO alpha: first installable CursiveOS with measurement daemon
+- **v1.0** → Flagship release with natural-language shell as default terminal
+- **v2.0** → Self-updating fleet: measurement-native installs improve automatically as the organism learns
+- **v3.0** → Workload-adaptive tuning across inference, mining, build, and other workload classes
+
+Full roadmap with transition milestones: [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -168,12 +173,15 @@ Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is 
 
 ## Documentation
 
-- [`white-paper.md`](white-paper.md) — full technical white paper (v2.1)
+- [`ROADMAP.md`](ROADMAP.md) — four-transition roadmap with milestones and flagship features by release
+- [`white-paper.md`](white-paper.md) — full technical white paper (v2.2)
 - [`docs/specs/layer5-economics-v3.3.md`](docs/specs/layer5-economics-v3.3.md) — authoritative economics specification
 - [`docs/architecture/biological-architecture.md`](docs/architecture/biological-architecture.md) — the organism frame and biological mapping
+- [`docs/architecture/agent-architecture.md`](docs/architecture/agent-architecture.md) — measurement daemon specification and natural-language shell architectural sketch
 - [`docs/architecture/sensor-array.md`](docs/architecture/sensor-array.md) — sensor families, curation, genesis suite, and the metabolic sensor
 - [`docs/architecture/testers.md`](docs/architecture/testers.md) — the tester tier, the free-Fast-access exchange, and the spoofing trap
 - [`docs/architecture/hardening.md`](docs/architecture/hardening.md) — substrate dependencies, bootstrap risk, and attack-surface analysis
+- [`docs/CHANGELOG-v2.2.md`](docs/CHANGELOG-v2.2.md) — what changed in the v2.1 → v2.2 update
 - [`docs/CHANGELOG-v2.1.md`](docs/CHANGELOG-v2.1.md) — what changed in the v1.0/v3.1 → v2.1/v3.3 transition
 
 ---

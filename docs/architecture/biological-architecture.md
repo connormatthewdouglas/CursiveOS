@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE
 **Date:** 2026-04-17
-**Paired documents:** [`white-paper.md`](../../white-paper.md) v2.1, [`layer5-economics-v3.3.md`](../specs/layer5-economics-v3.3.md)
+**Paired documents:** [`white-paper.md`](../../white-paper.md) v2.2, [`layer5-economics-v3.3.md`](../specs/layer5-economics-v3.3.md)
 
 ---
 
@@ -57,6 +57,8 @@ CursiveOS is not metaphorically like an organism. It is structurally isomorphic 
 | Fork | Speciation | New lineage inherits genome, evolves independently |
 | Bitcoin anchor | DNA substrate | Immutable record substrate |
 | Linux founding genome | Ancestral species | Inherited structure; ongoing independence |
+| Measurement daemon | Autonomic nervous system | Continuous, unconscious monitoring of internal state; feeds higher-level regulation |
+| Natural-language shell | Communication / voice | Interface through which the organism and its human operators exchange intent and observation |
 
 ### 2.3 Why This Mapping Matters
 
@@ -67,6 +69,10 @@ Each mapping generated an architectural decision that the non-biological frame d
 **Hormones regulate metabolism based on measured signal.** This is how we arrived at the metabolic sensor. Real organisms don't vote on resource allocation and don't fix it statically. Hormones read environmental signal (season, nutrient availability, stress) and allocation follows. The biological frame revealed that a fixed split was a governance artifact — someone picking a number — and the correct structure is a sensor measuring recruitment/retention balance with the split following. See [`sensor-array.md`](sensor-array.md) section 4.
 
 **Evolution layers new traits; it does not erase old ones.** This is how we arrived at sensor deprecation without retroactive invalidation. Evolution in real biology does not delete traits; it lets unused ones fade in expression while preserving them in the genome, and layers new traits on top. The biological frame revealed that sensors could be deprecated (stop measuring going forward) without invalidating historical fitness scores. See section 6 of the layer5-economics-v3.3 spec.
+
+**The autonomic nervous system operates below conscious attention.** This is how we arrived at the measurement daemon's architecture. The autonomic nervous system performs continuous, scheduled monitoring of internal state — heart rate, temperature, blood glucose — without requiring conscious direction. The daemon runs sensors on cadence, caches results, and submits data to the hub without operator attention. It is not an agent that interprets; it is infrastructure that measures. The biological frame makes clear why the daemon must stay deterministic and separate from the probabilistic shell: the autonomic system does not guess. See [`docs/architecture/agent-architecture.md`](agent-architecture.md).
+
+**Communication systems evolve for exchanging intent.** Organisms above a certain complexity develop communication interfaces between their internal state and their operators or social environment. The natural-language shell is this interface — it translates between the user's intent (in natural language) and the system's mechanisms (in shell commands), and it surfaces the organism's state in a form humans can reason about. The frame clarifies that the shell is an exchange interface, not a control system: the organism does not become governed by the shell any more than a dog is governed by its ability to communicate. See [`docs/architecture/agent-architecture.md`](agent-architecture.md).
 
 ---
 

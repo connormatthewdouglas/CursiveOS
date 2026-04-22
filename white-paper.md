@@ -1,5 +1,5 @@
 # CursiveOS: A Self-Improving Linux Distribution
-### Technical White Paper — v2.1 (April 2026)
+### Technical White Paper — v2.2 (April 2026)
 
 ---
 
@@ -10,6 +10,8 @@ CursiveOS is a self-improving Linux distribution for local compute operators —
 In validated testing across three hardware configurations, CursiveOS delivered +454–616% network throughput improvement and -2.3 to -29.1% cold-start latency reduction, all with reversible system changes.
 
 CursiveOS is not a distribution that happens to improve over time. It is a distribution whose structure is isomorphic to a living organism: a phenotype that runs on real hardware, a sensory nervous system that measures fitness, an evolutionary loop that accepts or rejects variants based on measurement, an inheritance layer that stores what works, and a metabolism that sustains the whole system. The framing is not metaphorical. Each layer serves the biological function it claims to serve, and the design principle — when stuck, check biology first — has shaped every major architectural decision.
+
+CursiveOS is also the operating system on which the relationship between user and machine changes. The default terminal, the interface humans have used to operate Linux for fifty years, becomes a conversation with a local agent that knows the system and can act within a defined permission model. The user describes outcomes; the agent finds the mechanism. This is the flagship feature of the v1.0 release and the single clearest expression of what makes CursiveOS a different kind of distribution rather than a better version of an existing one.
 
 **CursiveOS is a new species that inherited its founding genome from Linux and now evolves independently under its own selection pressure.**
 
@@ -44,6 +46,10 @@ The codebase, the sensor array, the historical record of every measurement ever 
 ### Layer 5 — Metabolism (economics)
 
 The Bitcoin-native economic system that sustains everything above. Fast tier users pay $2/month for priority access and faster updates. All cycle revenue is distributed directly to contributors each cycle, split between current-cycle work and lifetime contributions via a metabolic sensor that adjusts the split based on the organism's measured need for recruitment versus retention. No pool, no yield, no native token, no stored capital. Compounding happens in the substrate (codebase, sensor array, genome), not in money. Layer 5 is described in depth in section 3.
+
+### Runtime Agent Layer
+
+Two runtime components operate at the install boundary, distinct from but interfacing with the five layers above. The **measurement daemon** executes sensors on schedule, caches results locally, and submits them to the hub — a mechanical, deterministic process with no LLM involvement, whose integrity is equivalent to the integrity of the sensor array itself. The **natural-language shell** is the primary operator interface: a local language model that translates user intent into shell commands and explains system state in natural language, running with a defined permission model that prevents shell faults from reaching the measurement pipeline. Full specification: [`docs/architecture/agent-architecture.md`](docs/architecture/agent-architecture.md).
 
 ---
 
@@ -389,18 +395,11 @@ The design process produced several explicit exclusions that are worth naming be
 
 ## 9. Roadmap
 
-- **Done:** Preset stack v0.8 (28 tweaks, reversible), validated on three hardware configurations
-- **Done:** Benchmark suite (network, cold-start, sustained inference, paired before/after)
-- **Done:** Intel Arc inference stack (one-script setup)
-- **Done:** CursiveRoot — live hardware/performance database, auto-submit from any machine
-- **Done:** Full-test wrapper v1.4
-- **Next:** Hub respec for v3.3 (schema migration, API rewrite, frontend restructure, observer dashboard, tester auth scoping)
-- **Next:** Genesis sensor implementation (performance sensor and regression sensor wired to cycle close math)
-- **Next:** Phase 0 seed organism — end-to-end loop on founder's rig with fake BTC for three cycles
-- **Next:** Open to first external tester running full sensor array; validate population confirmation
-- **Later:** Public launch with real BTC settlement
-- **Later:** AI optimization loop — train on CursiveRoot to generate hardware-specific presets that feed back into the contribution loop
-- **Later:** Turnkey distribution — installer, ISO, optional custom kernel path
+The CursiveOS roadmap is organized around four transitions: from tweak stack to tuned distribution (v0.9–v1.0), from tuned distribution to measurement-native (v1.x–v2.0), from measurement-native to workload-native (v2.x), and from workload-native to substrate (v3.x and beyond). Each transition changes what the project fundamentally is, not just what features it has.
+
+The natural-language shell is sequenced as the flagship feature of v1.0 rather than deferred to a later release. v1.0 is the first impression the project makes, and the natural-language shell is the feature that makes the first impression memorable. Its architecture is specified in `docs/architecture/agent-architecture.md`; its development happens in parallel with the ISO build pipeline during the v0.9 → v1.0 window.
+
+Full roadmap with transition milestones and flagship features by release: [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -420,4 +419,4 @@ Repository: https://github.com/connormatthewdouglas/CursiveOS
 
 ---
 
-**Document status:** v2.1 — supersedes v1.0. See `docs/CHANGELOG-v2.1.md` for the transition from v1.0/economics-v3.1 to v2.1/economics-v3.3.
+**Document status:** v2.2 — supersedes v2.1. See `docs/CHANGELOG-v2.2.md` for what changed in the v2.1 → v2.2 update. See `docs/CHANGELOG-v2.1.md` for the transition from v1.0/economics-v3.1 to v2.1/economics-v3.3.
