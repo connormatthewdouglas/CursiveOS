@@ -1,6 +1,6 @@
 # CursiveOS
 
-### Technical White Paper — v2.3 (April 2026)
+### Technical White Paper — v2.4 (May 2026)
 
 **A measurement-driven Linux optimization layer for local compute workloads, with a Bitcoin-native economic architecture and a planned natural-language operator interface.**
 
@@ -10,7 +10,7 @@
 
 CursiveOS is a Linux optimization layer for local compute operators — AI inference nodes, crypto miners, and other workload-specialized Linux hosts. It applies a curated stack of reversible system tweaks, measures their effect via paired before-and-after benchmarks on the host's actual hardware, and records structured results to a shared performance database (CursiveRoot). Its design separates deterministic measurement from the operator interface, enables a fully specified Bitcoin-native economic layer for contributor compensation, and is structured to grow from its current state as a tuning layer into a full distribution as the architecture matures.
 
-On the hardware configurations validated so far, the current preset stack has produced measurable performance gains in specific benchmark scenarios — notably network throughput and cold-start inference latency. These results are directional and have been reproduced across a small number of hardware configurations. The current work is scoped honestly: the preset stack is validated on a limited hardware sample, the benchmark surface is deliberately narrow during this phase, and broader claims require broader data.
+On the hardware configurations measured so far, the current preset stack has produced a large throughput change in a controlled WAN simulation and mixed results on inference and idle power. On May 25, 2026, the first real Phase 0 seed baseline recorded on an AMD Ryzen 7 5700 / Intel Arc host measured +515.20% simulated-WAN throughput, -3.11% cold-start latency, -0.36% sustained inference, and +3.2W idle power under v0.8. These results are directional, limited to a small hardware sample and narrow benchmark surface, and do not justify broader claims without more data.
 
 This document describes the current implementation, the validated results and their limits, the architectural design (including the fully specified economic layer), the planned agent layer (measurement daemon and natural-language shell), and the roadmap from here to a full operating system release. The conceptual framework within which this architecture was designed — the software organism frame — is described in a companion document, [Software Organisms](software-organisms-manifesto.md).
 
@@ -190,17 +190,21 @@ The following results are reproducible on the hardware configurations they were 
 
 ### 7.1 Network Throughput
 
-On the three hardware configurations used in initial validation, the current preset stack produced measured TCP throughput gains ranging from **+454% to +616%** relative to the baseline configuration on the same machine. The test scenario uses controlled or simulated network conditions designed to expose buffer-related bottlenecks. Results depend on the specific network test conditions; real-world gains on production network paths may differ.
+On the three hardware configurations used in initial measurements, the current preset stack produced measured TCP throughput gains ranging from **+454% to +616%** relative to the canonical untuned reference on the same machine. The May 25 Vega seed baseline produced **+515.20%** in the same class of test. The scenario uses `tc netem` on loopback with 50ms RTT and 0.5% loss to expose TCP buffer/congestion-control effects; it is not a measurement of a production internet path, a user's pre-existing custom configuration, or end-user revenue.
 
 ### 7.2 Cold-Start Inference Latency
 
-On the same three configurations, the preset stack produced cold-start inference latency reductions ranging from **-2.3% to -29.1%** relative to baseline. Cold-start latency measures the interval between model-serving request arrival and first token production. Sustained throughput measurements are separate and less dramatic but generally positive.
+On the original three configurations, the preset stack produced cold-start inference latency reductions ranging from **-2.3% to -29.1%** relative to baseline. The May 25 Vega seed baseline measured **-3.11%** cold-start latency improvement while sustained inference declined **0.36%**. Cold-start latency measures the interval between model-serving request arrival and first token production; it should not be treated as proof of improved warm throughput.
 
-### 7.3 What These Results Mean
+### 7.3 Idle Power Tradeoff
+
+The Vega seed baseline measured idle power increasing from **14.88W to 18.11W** under v0.8 (**+3.2W**). v0.8 contains settings expected to affect that dimension, including disabled CPU idle states and Intel Arc frequency behavior. This cost is not a footnote: it is now a first-class selection input. The first candidate mutation removes those always-on power-state choices while retaining network tuning, specifically to determine whether the strongest measured benefit can be retained at lower idle cost.
+
+### 7.4 What These Results Mean
 
 These results are evidence that specific workloads on specific hardware configurations benefit measurably from the preset stack. They are not evidence that all Linux systems benefit, that all workloads benefit, or that any specific arbitrary system will see these exact numbers. The architectural response to this generality gap is built into the project: CursiveOS measures the user's specific machine before and after, and the user sees their specific delta before deciding whether to persist the changes. No trust in generalization is required.
 
-### 7.4 Reproducibility
+### 7.5 Reproducibility
 
 All measurements are produced by scripts in the public repository. The preset stack and benchmark harness are reproducible, and the reported hardware configurations are documented. Any operator running the same harness on the same hardware should produce measurements in the same neighborhood; deviations are themselves useful data because the sensor array wants to know when generalization breaks.
 
@@ -214,13 +218,14 @@ A recurring source of confusion in early-stage systems is the mixing of current 
 - Preset stack v0.8 (28 tweaks, reversible)
 - Benchmark harness (`cursiveos-full-test-v1.4.sh`) with paired before/after measurement
 - CursiveRoot performance database with auto-submit
+- Phase 0 seed artifact storage and one real genesis baseline bundle
 - Public repository, documented APIs for benchmark submission
 - Five-layer architectural separation
 
 **Fully specified, implementation in progress or pending:**
 - Layer 5 economic architecture (v3.3 spec complete; mechanical implementation pending contributor/user population)
 - Hub rebuild to v3.3 specification (in active development)
-- Phase 0 seed organism loop (in active development)
+- Phase 0 candidate selection loop (baseline recorded; candidate screening in active development)
 - Measurement daemon (specified; Phase 1 scope)
 - Natural-language shell (architecturally sketched; v1.0 flagship implementation scope)
 
@@ -257,9 +262,11 @@ The architecture in this paper is sized for Transition 4. The current implementa
 
 The work described in this paper has real limitations that matter for how the reader should evaluate it.
 
-**Validation population.** The current validated results are from three hardware configurations — the developer's rigs. Generalization beyond this population is untested. A reader should treat the specific numbers as evidence of what is achievable under measured conditions, not as claims about what every system will see.
+**Validation population.** Initial results came from three hardware configurations. The Phase 0 ledger currently contains one real genesis baseline bundle from the Vega host, reconstructed from its terminal summary after CursiveRoot was unavailable at submit time. It is evidence of a measured baseline, not an accepted mutation or population confirmation. Generalization beyond these hosts is untested.
 
-**Benchmark coverage.** The current benchmark suite covers network throughput and cold-start inference latency. Other workload dimensions — sustained multi-tenant throughput, memory pressure behavior under load, long-duration reliability — are not yet directly measured. Expanding the benchmark suite is an explicit goal of Transition 2 and beyond.
+**Benchmark coverage.** The current suite measures simulated-WAN network throughput, cold-start latency, sustained inference, idle power, and a basic stability flag. The network test is a loopback netem experiment rather than real-path traffic. Until this revision, idle power used a single reading; the harness now stores the median and raw samples from up to five readings per condition. Other workload dimensions — sustained multi-tenant throughput, memory pressure behavior under load, and long-duration reliability — are not yet directly measured.
+
+**Selection methodology.** A canonical-baseline-versus-preset run characterizes a preset; it does not establish that a new mutation is fitter than the current parent. The scripts now restore the captured pre-test network/CPU/GPU control values even when a benchmark exits early. Candidate selection compares tuned parent and tuned candidate outcomes from consecutive full-test sessions, and a single screen remains inconclusive until repeat and counterbalanced measurements reduce run-order and thermal-drift risk.
 
 **Bootstrap-phase dependency on founder commitment.** The architecture's defenses against capture and drift are population-dependent. During the bootstrap phase, with one primary contributor, many of those defenses are inactive. The project is therefore load-bearing on the founder's ongoing commitment during the population-less phase. This is disclosed explicitly rather than hidden. The mitigations — sensor transparency, fork right, progressive devolution of roles — are real but partial and do not eliminate the dependency.
 

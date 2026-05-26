@@ -1,6 +1,7 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-03-25
-**Current preset:** v0.8 (28 tweaks) — validated on Arc A750 + RX 580
+**Last updated:** 2026-05-25
+**Current parent preset:** v0.8 (28 tweaks)
+**Current candidate:** v0.9-network-efficient (network-only power tradeoff screen)
 **Current wrapper:** v1.4
 **Board reviewed:** 2026-03-23 05:30 EDT
 
@@ -8,12 +9,13 @@
 
 ## Current State
 
-Self-fleet validation is in progress. v0.8 preset stack confirmed (wq-013/014/015 all passed individual + integration tests). Power bug fixed (RAPL reads, b7664f3). v1.4 schema live — hardware fingerprint, stability flag, split power fields. CursiveRoot auto-submitting from both fleet machines.
+Phase 0 has begun in operation. One real Vega genesis baseline is recorded in CursiveRoot with decision `measured_baseline`, not accepted fitness: network +515.20% under loopback WAN simulation, cold-start -3.11%, sustained -0.36%, idle power +3.2W. The next action is to screen a network-only candidate against v0.8, with multi-sample power capture and no payout from one observation.
 
-**3 machines in CursiveRoot (49 runs total as of 2026-03-25):**
-- Vega — AMD Ryzen 7 5700 + Arc A750 — 31 runs, primary test rig
-- Stardust — AMD FX-8350 + RX 580 — 17 runs
-- bda4bd63 — AMD Ryzen 7 5700 + Arc A750 — 1 run (early partial entry)
+**CursiveRoot status at May 25, 2026:**
+- 73 regular benchmark run records existed after recovering the Vega baseline.
+- 1 seed bundle exists (`genesis-baseline-v0.8`, machine `bda4bd63b3564822`).
+- 0 accepted seed mutations and 0 seed payout reports exist.
+- Public insert/read policy is acceptable only for controlled Phase 0 and must be hardened before external rollout.
 
 **v0.8 confirmed stack (3 tweaks on top of v0.7 base):**
 - `kernel.sched_util_clamp_min=128` (wq-013)

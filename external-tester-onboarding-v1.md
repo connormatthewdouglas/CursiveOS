@@ -16,7 +16,7 @@ command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt
 
 **Success criteria:** You’re done when you see `→ Results submitted to CursiveRoot.` and we can confirm your run in the dashboard.
 
-**Status proof:** Already validated on 3 rigs with positive uplift: Ryzen+Arc, FX+Radeon, and IdeaPad i5+GTX laptop.
+**Current evidence:** Initial tests showed large network changes under a controlled WAN simulation on three hardware configurations. The first Phase 0 seed baseline (Vega, May 25, 2026) also measured a +3.2W idle-power cost, so current testing is explicitly checking that tradeoff rather than promising universal uplift.
 
 More diverse hardware data improves presets for everyone — that’s the moat.
 

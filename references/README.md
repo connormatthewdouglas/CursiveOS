@@ -2,6 +2,8 @@
 
 **AI-optimized Linux for Bittensor miners. One command. Measurable results.**
 
+> Historical reference snapshot: this page describes the older v0.7-era repository state. For current commands, evidence, and the Phase 0 seed organism, use the root [`README.md`](../README.md) and [`docs/audits/2026-05-25-phase0-reality-check.md`](../docs/audits/2026-05-25-phase0-reality-check.md).
+
 ---
 
 ## 🤖 AI Collaborators

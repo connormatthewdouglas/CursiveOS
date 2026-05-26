@@ -58,7 +58,7 @@ When testers are compensated only with free Fast tier access ($2/month), the att
 
 Compared to even a trivial spoofing defense (IP tracking, hardware fingerprint diversity requirements, measurement anomaly detection), this ROI is negative. Nobody builds a farm of fake machines to save $24/year per fake.
 
-Better still, a tester who also wants to look credible might pay for real Fast tier subscriptions on some machines. At that point the attacker is paying $24/year per fake machine into the contributor pool — actively funding the contributors they would ostensibly be exploiting. Spoofing under v3.3 is, in the worst case, a revenue source for the organism, not a threat.
+Better still, a tester who also wants to look credible might pay for real Fast tier subscriptions on some machines. At that point the attacker is paying $24/year per fake machine into cycle revenue distributed to contributors — actively funding the contributors they would ostensibly be exploiting. Spoofing under v3.3 is, in the worst case, a revenue source for the organism, not a threat.
 
 ### 2.4 The Compensation-Shape Principle
 
@@ -88,8 +88,8 @@ A tester is not a Fast tier user. A Fast tier user pays for Fast tier. A tester 
 
 From the revenue-flow perspective:
 
-- **Fast tier user** → pays $2/month → revenue into cycle pool → distributed to contributors.
-- **Tester** → performs measurement labor → receives $2/month rebate → no net revenue to cycle pool from this wallet.
+- **Fast tier user** → pays $2/month → cycle revenue distributed to contributors.
+- **Tester** → performs measurement labor → receives $2/month rebate → no net cycle revenue from this wallet.
 
 The tester's wallet appears in both the subscription ledger (as a Fast tier user) and in the rebate ledger (as a tester being compensated). The net effect is zero — tester is net-neutral to the economic layer. The tester's contribution is the measurement data, not the subscription fee.
 

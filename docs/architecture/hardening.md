@@ -63,7 +63,7 @@ This section enumerates the attack patterns considered during design and the def
 
 **Defense:** This attack is structurally eliminated in v3.3. Testers do not earn lifetime fitness. The most the attacker can extract per fake machine is the Fast tier rebate ($2/month = $24/year per fake). At that ROI, no spoofing farm is worth building. See [`testers.md`](testers.md) section 2 for the full analysis.
 
-**Bonus property:** A spoofer who also pays for Fast tier on their fakes (to appear more credible) is paying subscription fees into the contributor pool. They are actively funding the contributors they are trying to exploit. The attack, in its worst realistic form, is net-positive for the organism.
+**Bonus property:** A spoofer who also pays for Fast tier on their fakes (to appear more credible) is paying subscription fees into contributor-distributed cycle revenue. They are actively funding the contributors they are trying to exploit. The attack, in its worst realistic form, is net-positive for the organism.
 
 ### 2.2 Spoofing: Fake Contributors to Game the Metabolic Sensor
 
@@ -221,7 +221,7 @@ This is the correct substantive behavior — early work is dominantly substrate-
 
 ### 4.3 What Can't Be Fixed
 
-The math of lifetime fitness is what it is. A contributor who arrives at cycle 10 is by definition 10 cycles late relative to contributors who arrived at cycle 1, and their lifetime-fitness accumulation starts from zero. Over time, their fitness share grows as the total fitness pool grows and as the original contributors' relative share dilutes. But there is no way to give a newcomer a retroactive stake in the first 10 cycles of work; doing so would require taking fitness away from people who earned it, which would be unjust and would also erase the lifetime stream's core promise (permanent, append-only, never revoked).
+The math of lifetime fitness is what it is. A contributor who arrives at cycle 10 is by definition 10 cycles late relative to contributors who arrived at cycle 1, and their lifetime-fitness accumulation starts from zero. Over time, their fitness share grows as total recorded fitness grows and as the original contributors' relative share dilutes. But there is no way to give a newcomer a retroactive stake in the first 10 cycles of work; doing so would require taking fitness away from people who earned it, which would be unjust and would also erase the lifetime stream's core promise (permanent, append-only, never revoked).
 
 The honest answer to the newcomer is: "You are joining at cycle 10. You will earn from cycle 10 forward, proportional to the fitness you contribute. Over the organism's full horizon, your cumulative earnings depend on how long the organism lives and how much fitness you contribute. The math is fair going forward. It cannot be fair backward because backward would require revoking earned fitness, which is something the architecture specifically protects against."
 

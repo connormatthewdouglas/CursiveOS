@@ -38,15 +38,40 @@ LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/cursiveos-network-$(date +%Y%m%d-%H%M%S).log"
 PASS_RESULT=""
+ORIGINAL_NET_STATE="$(mktemp)"
 
 log() { echo "$1" | tee -a "$LOG_FILE"; }
 
 # ── Cleanup trap ──────────────────────────────────────────────────────────────
+save_original_network() {
+    local key
+    for key in \
+        net.ipv4.tcp_congestion_control net.core.default_qdisc \
+        net.ipv4.tcp_slow_start_after_idle net.ipv4.tcp_tw_reuse \
+        net.core.rmem_max net.core.wmem_max net.ipv4.tcp_rmem \
+        net.ipv4.tcp_wmem net.core.netdev_max_backlog net.core.somaxconn; do
+        printf '%s|%s\n' "$key" "$(sysctl -n "$key" 2>/dev/null || echo N/A)" >> "$ORIGINAL_NET_STATE"
+    done
+}
+
+restore_original_network() {
+    local key value
+    [[ -f "$ORIGINAL_NET_STATE" ]] || return
+    while IFS='|' read -r key value; do
+        [[ -z "$key" || "$value" == "N/A" ]] && continue
+        echo "$SP" | sudo -S sysctl -w "$key=$value" >/dev/null 2>&1 || true
+    done < "$ORIGINAL_NET_STATE"
+    rm -f "$ORIGINAL_NET_STATE"
+}
+
 cleanup() {
+    # Revert a partially applied preset if the benchmark aborts mid-pass.
+    bash "$PRESET_SCRIPT" --undo >/dev/null 2>&1 || true
     # Remove netem rules if they exist
     sc "tc qdisc del dev lo root 2>/dev/null || true"
     # Kill any leftover iperf3 server
     pkill -f "iperf3 -s" 2>/dev/null || true
+    restore_original_network
 }
 trap cleanup EXIT
 
@@ -54,11 +79,12 @@ trap cleanup EXIT
 log "Ensuring clean state for baseline..."
 # First try the preset undo (in case a partial apply left a backup)
 bash "$PRESET_SCRIPT" --undo 2>/dev/null | grep -E "Revert|reverted|No backup" | sed 's/^/  /' || true
-# Hard-reset network sysctls to kernel defaults regardless of backup state.
+save_original_network
+# Hard-reset network sysctls to the canonical untuned reference regardless of backup state.
 # This is necessary because --undo relies on a state file that may not exist,
 # or may have been written when the system was already in a tuned state
 # (causing a ratchet where BBR is saved as the "original" and never cleared).
-log "  Hard-resetting network sysctls to kernel defaults..."
+log "  Applying canonical untuned network reference for the baseline..."
 echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_congestion_control=cubic    2>/dev/null && log "    tcp_congestion_control → cubic"     || true
 echo "$SP" | sudo -S sysctl -w net.core.default_qdisc=pfifo_fast         2>/dev/null && log "    default_qdisc → pfifo_fast"         || true
 echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_slow_start_after_idle=1      2>/dev/null && log "    tcp_slow_start_after_idle → 1"       || true
@@ -175,7 +201,7 @@ log "  Server ready."
 
 # ── PASS 1: Baseline ──────────────────────────────────────────────────────────
 log ""
-log "PASS 1 — BASELINE (CUBIC, default buffers)"
+log "PASS 1 — BASELINE (canonical CUBIC/reference buffers)"
 run_pass "BASELINE"
 BASELINE="$PASS_RESULT"
 

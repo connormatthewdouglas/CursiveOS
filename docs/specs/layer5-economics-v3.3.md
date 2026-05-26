@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE — supersedes v3.1, v1.1, and v1.0
 **Date:** 2026-04-17
-**Paired document:** [`white-paper.md`](../../white-paper.md) v2.3
+**Paired document:** [`white-paper.md`](../../white-paper.md) v2.4
 
 ---
 

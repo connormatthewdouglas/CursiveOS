@@ -44,6 +44,16 @@ python3 tools/seed_organism.py run-variant \
 
 The `--execute` mode is Linux-only. It runs `cursiveos-full-test-v1.4.sh` with the canonical genesis preset path and turns the result into the same seed organism sensor bundle used by fixture mode. A first real v0.8 run is baseline characterization (`genesis-baseline-v0.8`), not a contributed mutation and not payout-eligible.
 
+### First candidate screen
+
+After a host has a genesis baseline, the next real test compares the current parent (`v0.8`) to a narrow candidate (`v0.9-network-efficient`). The candidate keeps only network tuning and avoids v0.8's always-on CPU/GPU power-state tuning. This screen runs two full tests back-to-back on one machine:
+
+```bash
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | bash
+```
+
+One screen can reveal whether the hypothesis is worth repeating. It cannot accept a mutation or produce a payout: acceptance requires repeated, counterbalanced parent/candidate sessions so that thermal drift and run order do not masquerade as fitness.
+
 If Ollama is installed but not running, the harness now tries to start it automatically before pulling or validating a model. If Ollama still cannot become ready, the run continues with inference metrics marked `N/A`; the seed organism should then emit an invalid or inconclusive bundle rather than losing the whole audit trail.
 
 If a completed benchmark wrote a JSON result but CursiveRoot was temporarily unavailable during upload, do not rerun the benchmark. On that Linux machine, update the repo and recover the saved JSON:
@@ -74,6 +84,8 @@ Genesis performance scoring treats:
 - higher idle power as a reported cost and optional penalty
 
 The regression gate is separate from scoring. A variant with good performance is still rejected if the full-test, reversibility, or host-safety gate fails.
+
+The full-test JSON now records the actual selected preset version and stores idle-power medians with the underlying sample list (up to five readings per condition). The detailed network and inference logs already contain per-pass retransmits, RTT, latency components, ranges, and processor classification; the seed bundle retains pointers to those logs while additional structured ingestion is developed.
 
 ## CursiveRoot Boundary
 

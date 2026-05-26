@@ -1,5 +1,7 @@
 # Layer 5 Economics Spec v1 (Day 1 Freeze)
 
+> **DEPRECATED.** This pool/credit/validator design is preserved as historical input only. The authoritative economic specification is [`layer5-economics-v3.3.md`](layer5-economics-v3.3.md), and active Phase 0 implementation is documented in [`seed-organism-runbook-v0.1.md`](seed-organism-runbook-v0.1.md).
+
 Status: FROZEN v1
 Date: 2026-04-02
 Owner: Copper Sage

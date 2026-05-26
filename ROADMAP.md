@@ -4,17 +4,19 @@
 
 This roadmap describes what CursiveOS is becoming. It's organized around four transitions — each one changes what the project fundamentally is, not just what features it has. Every architectural decision in the current specifications is sized for the end state, which is why some choices look overbuilt for where the project is now. They're sized for where it's going.
 
-## Where We Are: Pre-Transition-One
+## Where We Are: Pre-Transition-One (May 25, 2026)
 
 The current state of the project:
 
-- Tweak stack v0.8 (28 kernel/network/scheduler tweaks, reversible) validated on three hardware configurations
+- Tweak stack v0.8 (28 kernel/network/scheduler tweaks, reversible) with initial measurements on three hardware configurations and a recorded Vega seed baseline
 - Benchmark suite measuring network throughput, cold-start latency, sustained inference throughput
 - CursiveRoot: live hardware/performance database with auto-submit from any machine
-- White paper v2.2 specifying the full architecture
+- White paper v2.3 separating technical claims from the software-organism manifesto
 - Layer 5 economics v3.3 (Bitcoin-native, no pool, no governance, sensor-driven)
-- Phase 0 seed organism build in progress
+- Phase 0 seed organism running: one real genesis baseline bundle recorded, first narrow candidate screen prepared, no accepted mutation or payout yet
 - Hub rebuild in progress
+
+The Vega seed baseline confirmed the large network signal under the loopback WAN simulation, but also recorded a +3.2W idle-power cost and a slight sustained-inference regression. The immediate engineering step is therefore an A/B screen of v0.8 against a network-only candidate, followed by repeat/counterbalanced measurements before any selection decision.
 
 What exists today is a set of shell scripts and a measurement apparatus. It is not yet an operating system. Making it one is Transition 1.
 

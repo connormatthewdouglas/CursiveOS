@@ -1,0 +1,14 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.9-network-efficient",
+  "parent_variant_id": "genesis-baseline-v0.8",
+  "contributor_id": "local-founder",
+  "commit_ref": "candidate-v0.9-network-efficient",
+  "preset_version": "v0.9-network-efficient",
+  "preset_path": "presets/cursiveos-presets-v0.9-network-efficient.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "declared_scope": "Retain the v0.8 network tuning while removing always-on CPU and GPU power-state tuning.",
+  "hypothesis": "WAN-simulation throughput remains materially improved while idle watts return toward host default.",
+  "rollback_method": "The full-test harness applies temporary presets and runs preset --undo before completion."
+}

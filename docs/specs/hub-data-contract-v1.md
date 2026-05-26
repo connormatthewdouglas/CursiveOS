@@ -3,6 +3,8 @@
 Date: 2026-04-03
 Owner: Copper Sage
 
+**Superseded for active development (2026-05-25):** This document describes the older v3.1 pool/governance MVP. The current authoritative economics document is [`layer5-economics-v3.3.md`](layer5-economics-v3.3.md), and the executable Phase 0 path is [`seed-organism-runbook-v0.1.md`](seed-organism-runbook-v0.1.md). This file remains as historical implementation context only.
+
 Goal: define exactly what each MVP Hub panel reads/writes so users can complete the loop without SQL.
 
 ## 1) Install tab
