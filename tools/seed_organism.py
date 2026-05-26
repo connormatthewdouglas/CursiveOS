@@ -540,6 +540,8 @@ def load_full_test_metrics_json(path: Path) -> dict[str, Any]:
         "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
         "source_result_json": str(path),
         "source_log": data.get("summary_log"),
+        "source_provenance": data.get("source_provenance", "native_full_test_json"),
+        "source_provenance_notes": data.get("source_provenance_notes"),
         "machine_id": data.get("machine_id") or data.get("hardware_fingerprint_hash"),
         "hardware_fingerprint_hash": data.get("hardware_fingerprint_hash"),
         "preset_version": data.get("preset_version", "v0.8"),
