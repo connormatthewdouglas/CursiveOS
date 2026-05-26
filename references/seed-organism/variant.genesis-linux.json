@@ -1,0 +1,12 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "genesis-baseline-v0.8",
+  "contributor_id": "founder-baseline",
+  "commit_ref": "canonical-v0.8",
+  "preset_version": "v0.8",
+  "preset_path": "presets/cursiveos-presets-v0.8.sh",
+  "evaluation_role": "genesis_baseline",
+  "fitness_eligible": false,
+  "declared_scope": "Characterize the canonical v0.8 seed phenotype on a real Linux host.",
+  "rollback_method": "The full-test harness applies temporary presets and runs preset --undo before completion."
+}

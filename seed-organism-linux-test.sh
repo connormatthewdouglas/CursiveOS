@@ -6,9 +6,8 @@ set -euo pipefail
 REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveOS.git}"
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
 BRANCH="${CURSIVEOS_BRANCH:-main}"
-VARIANT_PATH="${CURSIVEOS_VARIANT_PATH:-references/seed-organism/variant.example.json}"
+VARIANT_PATH="${CURSIVEOS_VARIANT_PATH:-references/seed-organism/variant.genesis-linux.json}"
 CYCLE_ID="${CURSIVEOS_CYCLE_ID:-1}"
-SIM_REVENUE_SATS="${CURSIVEOS_SIM_REVENUE_SATS:-100000}"
 
 say() {
   printf '\n[CursiveOS seed] %s\n' "$*"
@@ -72,11 +71,6 @@ run_seed() {
     --variant "$VARIANT_PATH" \
     --execute \
     --cycle-id "$CYCLE_ID"
-
-  say "Closing fake revenue cycle"
-  python3 tools/seed_organism.py close-cycle \
-    --cycle-id "$CYCLE_ID" \
-    --revenue-sats "$SIM_REVENUE_SATS"
 
   say "Local organism status"
   python3 tools/seed_organism.py status

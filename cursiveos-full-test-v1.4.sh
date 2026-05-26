@@ -238,13 +238,15 @@ KERNEL=$(uname -r)
 RAM_GB=$(awk '/MemTotal/ {printf "%.0f", $2/1024/1024}' /proc/meminfo)
 OS_NAME=$(lsb_release -ds 2>/dev/null || echo "unknown")
 CPU_CORES=$(nproc)
-MACHINE_ID=$(echo "${CPU_MODEL}-$(hostname)" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd '[:alnum:]-' | cut -c1-48)
 SUBMISSION_TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 # ── v1.4: Hardware fingerprint hash ──────────────────────────────────────────
 CPU_MICROCODE=$(grep -m1 'microcode' /proc/cpuinfo | awk '{print $3}' 2>/dev/null || echo "unknown")
 GPU_VBIOS=$(cat /sys/class/drm/card*/device/vbios_version 2>/dev/null | head -1 || echo "unknown")
 HW_FINGERPRINT=$(echo "${CPU_MICROCODE}-${GPU_VBIOS}-${KERNEL}" | sha256sum | cut -c1-16)
+# Use the fingerprint as the canonical CursiveRoot machine key so run rows
+# align with seed-organism bundles across host renames and repeated cycles.
+MACHINE_ID="$HW_FINGERPRINT"
 
 # ── v1.5: Extended hardware fingerprint ───────────────────────────────────────
 # CPU cache sizes (L1/L2/L3)
@@ -713,7 +715,7 @@ SUPABASE_HEADERS=(
 MACHINE_EXISTS=$(curl -s \
     -H "apikey: $SUPABASE_KEY" \
     -H "Authorization: Bearer $SUPABASE_KEY" \
-    "$SUPABASE_URL/rest/v1/machines?machine_id=eq.$MACHINE_ID&select=machine_id" 2>/dev/null)
+    "$SUPABASE_URL/rest/v1/machines?machine_id=eq.$MACHINE_ID&select=machine_id" 2>/dev/null || true)
 
 GPU_VENDOR_JSON="null"
 if [[ "$GPU_VENDOR" != "unknown" ]]; then

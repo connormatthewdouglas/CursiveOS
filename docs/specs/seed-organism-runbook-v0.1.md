@@ -42,9 +42,15 @@ python3 tools/seed_organism.py run-variant \
   --cycle-id 1
 ```
 
-The `--execute` mode is Linux-only. It runs `cursiveos-full-test-v1.4.sh` with the variant preset path, parses the produced summary log, and turns the result into the same seed organism sensor bundle used by fixture mode.
+The `--execute` mode is Linux-only. It runs `cursiveos-full-test-v1.4.sh` with the canonical genesis preset path and turns the result into the same seed organism sensor bundle used by fixture mode. A first real v0.8 run is baseline characterization (`genesis-baseline-v0.8`), not a contributed mutation and not payout-eligible.
 
 If Ollama is installed but not running, the harness now tries to start it automatically before pulling or validating a model. If Ollama still cannot become ready, the run continues with inference metrics marked `N/A`; the seed organism should then emit an invalid or inconclusive bundle rather than losing the whole audit trail.
+
+If a completed benchmark wrote a JSON result but CursiveRoot was temporarily unavailable during upload, do not rerun the benchmark. On that Linux machine, update the repo and recover the saved JSON:
+
+```bash
+cd ~/CursiveOS && git pull --ff-only origin main && python3 tools/seed_organism.py recover-result --result-json logs/cursiveos-full-test-YYYYMMDD-HHMMSS.json
+```
 
 ## Artifact Contract
 
