@@ -1,0 +1,48 @@
+{
+  "schema_version": "cursiveos.full-test-result.v1.4",
+  "source": "cursiveos-full-test-v1.4.sh",
+  "summary_log": "/tmp/fixture-full-test.log",
+  "created_at": "2026-05-25T21:09:44+00:00",
+  "machine_id": "fixture-genesis-linux-host",
+  "hardware_fingerprint_hash": "fixture-genesis-linux-host",
+  "preset_version": "v0.8",
+  "wrapper_version": "v1.4",
+  "hardware": {
+    "cpu": "Fixture Ryzen",
+    "gpu": "Fixture Arc",
+    "gpu_vendor": "intel_arc",
+    "ram_gb": 32,
+    "kernel": "fixture-linux",
+    "distro": "fixture"
+  },
+  "baseline": {
+    "network_mbps": 205.8,
+    "coldstart_ms": 793.7,
+    "sustained_tokps": 154.17,
+    "idle_watts": 14.88
+  },
+  "variant": {
+    "network_mbps": 1266.1,
+    "coldstart_ms": 769.0,
+    "sustained_tokps": 153.61,
+    "idle_watts": 18.11
+  },
+  "delta": {
+    "network_pct": 515.2,
+    "coldstart_pct": -3.11,
+    "sustained_pct": -0.36,
+    "idle_power_w": 3.2
+  },
+  "sample_counts": {
+    "network": 1,
+    "coldstart": 1,
+    "sustained": 1,
+    "idle_power": 1
+  },
+  "regression": {
+    "full_test_passed": true,
+    "reverted_cleanly": true,
+    "host_safety_passed": true,
+    "failures": []
+  }
+}

@@ -345,11 +345,18 @@ def evaluate_regression(variant: dict[str, Any], metrics: dict[str, Any]) -> dic
     return result
 
 
-def verdict(sensor: dict[str, Any], regression: dict[str, Any], config: dict[str, Any]) -> tuple[str, str]:
+def verdict(
+    variant: dict[str, Any],
+    sensor: dict[str, Any],
+    regression: dict[str, Any],
+    config: dict[str, Any],
+) -> tuple[str, str]:
     if sensor["missing_core_metrics"]:
         return "invalid", "missing core metrics: " + ", ".join(sensor["missing_core_metrics"])
     if not regression["passed"]:
         return "rejected_regression", "; ".join(regression["failures"])
+    if not variant.get("fitness_eligible", True):
+        return "measured_baseline", "genesis baseline characterization; not eligible for contributor fitness"
     if sensor["severe_regressions"]:
         return "rejected_negative_fitness", "; ".join(sensor["severe_regressions"])
     if sensor["confidence"] < float(config["minimum_confidence"]):
@@ -440,13 +447,22 @@ def cmd_run_variant(args: argparse.Namespace) -> None:
     config = load_config(state)
     variant = validate_variant(read_json(Path(args.variant)))
     metrics = collect_metrics(args, variant)
+    record_evaluation(state, config, variant, metrics, args.cycle_id)
 
+
+def record_evaluation(
+    state: Path,
+    config: dict[str, Any],
+    variant: dict[str, Any],
+    metrics: dict[str, Any],
+    cycle_id: int,
+) -> tuple[str, str]:
     sensor = score_performance(variant=variant, metrics=metrics, config=config)
     regression = evaluate_regression(variant, metrics)
-    decision, reason = verdict(sensor, regression, config)
+    decision, reason = verdict(variant, sensor, regression, config)
     run_dir, bundle_hash = write_bundle(
         state=state,
-        cycle_id=args.cycle_id,
+        cycle_id=cycle_id,
         variant=variant,
         metrics=metrics,
         sensor=sensor,
@@ -456,13 +472,13 @@ def cmd_run_variant(args: argparse.Namespace) -> None:
     )
 
     variant_record = dict(variant)
-    variant_record.update({"cycle_id": str(args.cycle_id), "recorded_at": now_iso()})
+    variant_record.update({"cycle_id": str(cycle_id), "recorded_at": now_iso()})
     append_jsonl(state / "ledger" / "variants.jsonl", variant_record)
     append_jsonl(state / "ledger" / "sensor-results.jsonl", sensor | {"bundle_hash": bundle_hash, "decision": decision})
     append_jsonl(state / "ledger" / "regression-results.jsonl", regression | {"bundle_hash": bundle_hash, "decision": decision})
 
     if decision == "accepted":
-        entry = ledger_entry(cycle_id=args.cycle_id, variant=variant, sensor=sensor, bundle_hash=bundle_hash)
+        entry = ledger_entry(cycle_id=cycle_id, variant=variant, sensor=sensor, bundle_hash=bundle_hash)
         append_jsonl(state / "ledger" / "ledger.jsonl", entry)
 
     print(f"variant: {variant['variant_id']}")
@@ -472,6 +488,7 @@ def cmd_run_variant(args: argparse.Namespace) -> None:
     print(f"confidence: {sensor['confidence']:.2f}")
     print(f"bundle_hash: {bundle_hash}")
     print(f"bundle: {rel(run_dir)}")
+    return decision, bundle_hash
 
 
 def collect_metrics(args: argparse.Namespace, variant: dict[str, Any]) -> dict[str, Any]:
@@ -728,6 +745,32 @@ def postgrest_upsert(table: str, conflict_key: str, payload: dict[str, Any]) -> 
         raise SeedError(f"Supabase upload failed for {table}: {exc.reason}") from exc
 
 
+def postgrest_insert(table: str, payload: dict[str, Any]) -> None:
+    url = f"{public_supabase_url().rstrip('/')}/rest/v1/{table}"
+    body = json.dumps(payload, sort_keys=True).encode("utf-8")
+    key = public_supabase_key()
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers={
+            "apikey": key,
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as res:
+            if res.status not in (200, 201, 204):
+                raise SeedError(f"Supabase insert returned HTTP {res.status}")
+    except urllib.error.HTTPError as exc:
+        details = exc.read().decode("utf-8", errors="replace")
+        raise SeedError(f"Supabase insert failed for {table}: HTTP {exc.code} {details}") from exc
+    except urllib.error.URLError as exc:
+        raise SeedError(f"Supabase insert failed for {table}: {exc.reason}") from exc
+
+
 def load_bundle_dir(run_dir: Path) -> dict[str, Any]:
     manifest = read_json(run_dir / "bundle-manifest.json")
     variant = read_json(run_dir / "variant.json")
@@ -822,6 +865,63 @@ def postgrest_get(endpoint: str) -> list[dict[str, Any]]:
     return [row for row in data if isinstance(row, dict)]
 
 
+def upload_full_test_result(result: dict[str, Any]) -> str:
+    machine_id = str(result.get("machine_id") or result.get("hardware_fingerprint_hash") or "").strip()
+    if not machine_id:
+        raise SeedError("full-test result is missing machine_id")
+    hardware = result.get("hardware", {})
+    if not isinstance(hardware, dict):
+        hardware = {}
+    machine_filter = urllib.parse.quote(machine_id, safe="")
+    if not postgrest_get(f"machines?machine_id=eq.{machine_filter}&select=machine_id&limit=1"):
+        postgrest_insert("machines", {
+            "machine_id": machine_id,
+            "label": "Auto-detected seed host",
+            "cpu": hardware.get("cpu") or "unknown",
+            "gpu": hardware.get("gpu") or "unknown",
+            "os": hardware.get("distro"),
+            "kernel": hardware.get("kernel"),
+        })
+
+    baseline = result.get("baseline", {})
+    candidate = result.get("variant", {})
+    delta = result.get("delta", {})
+    regression = result.get("regression", {})
+    if not all(isinstance(x, dict) for x in [baseline, candidate, delta, regression]):
+        raise SeedError("full-test result has invalid metrics structure")
+    run_date = str(result.get("created_at", ""))[:10] or dt.date.today().isoformat()
+    net_baseline = num(baseline, "network_mbps")
+    net_variant = num(candidate, "network_mbps")
+    duplicate_query = (
+        f"runs?machine_id=eq.{machine_filter}&run_date=eq.{urllib.parse.quote(run_date)}"
+        f"&network_baseline_mbit=eq.{net_baseline}&network_tuned_mbit=eq.{net_variant}"
+        "&select=id&limit=1"
+    )
+    if postgrest_get(duplicate_query):
+        return "already_present"
+    source_hash = sha256_json(result)
+    postgrest_insert("runs", {
+        "machine_id": machine_id,
+        "run_date": run_date,
+        "preset_version": result.get("preset_version", "v0.8"),
+        "wrapper_version": result.get("wrapper_version", "v1.4"),
+        "network_baseline_mbit": net_baseline,
+        "network_tuned_mbit": net_variant,
+        "network_delta_pct": num(delta, "network_pct"),
+        "coldstart_baseline_ms": num(baseline, "coldstart_ms"),
+        "coldstart_tuned_ms": num(candidate, "coldstart_ms"),
+        "coldstart_delta_pct": num(delta, "coldstart_pct"),
+        "sustained_baseline_toks": num(baseline, "sustained_tokps"),
+        "sustained_tuned_toks": num(candidate, "sustained_tokps"),
+        "sustained_delta_pct": num(delta, "sustained_pct"),
+        "power_idle_baseline_w": num(baseline, "idle_watts"),
+        "power_idle_tuned_w": num(candidate, "idle_watts"),
+        "power_delta_w": num(delta, "idle_power_w"),
+        "notes": f"seed-source:{source_hash} stability:{str(regression.get('full_test_passed', True)).lower()}",
+    })
+    return "uploaded"
+
+
 def cmd_remote_status(args: argparse.Namespace) -> None:
     limit = max(1, min(int(args.limit), 50))
     bundle_cols = "bundle_hash,variant_id,decision,machine_id,fitness_score,confidence,created_at"
@@ -848,6 +948,19 @@ def cmd_remote_status(args: argparse.Namespace) -> None:
         )
 
 
+def cmd_recover_result(args: argparse.Namespace) -> None:
+    state = state_path(args)
+    config = load_config(state)
+    result_path = Path(args.result_json)
+    full_result = read_json(result_path)
+    normal_status = upload_full_test_result(full_result)
+    variant = validate_variant(read_json(Path(args.variant)))
+    metrics = load_full_test_metrics_json(result_path)
+    record_evaluation(state, config, variant, metrics, args.cycle_id)
+    cmd_upload(args)
+    print(f"cursiveroot_benchmark_result: {normal_status}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Run the CursiveOS Phase 0 seed organism loop")
     p.add_argument("--state-dir", default=None, help="local seed state directory (default: .cursiveos/seed)")
@@ -870,6 +983,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("upload", help="upload local seed bundles and payout reports to CursiveRoot")
     remote = sub.add_parser("remote-status", help="show latest seed uploads from CursiveRoot")
     remote.add_argument("--limit", type=int, default=10)
+    recover = sub.add_parser("recover-result", help="ingest an existing full-test JSON after an interrupted upload")
+    recover.add_argument("--result-json", required=True, help="saved full-test JSON from the Linux host")
+    recover.add_argument("--variant", default="references/seed-organism/variant.genesis-linux.json")
+    recover.add_argument("--cycle-id", type=int, default=1)
     return p
 
 
@@ -885,6 +1002,7 @@ def main(argv: list[str] | None = None) -> int:
             "export": cmd_export,
             "upload": cmd_upload,
             "remote-status": cmd_remote_status,
+            "recover-result": cmd_recover_result,
         }[args.cmd](args)
     except SeedError as exc:
         print(f"seed-organism error: {exc}", file=sys.stderr)
