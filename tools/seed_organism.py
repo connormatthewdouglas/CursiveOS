@@ -542,6 +542,8 @@ def load_full_test_metrics_json(path: Path) -> dict[str, Any]:
         "source_log": data.get("summary_log"),
         "source_provenance": data.get("source_provenance", "native_full_test_json"),
         "source_provenance_notes": data.get("source_provenance_notes"),
+        "benchmark_context": data.get("benchmark_context", {}),
+        "telemetry": data.get("telemetry", {}),
         "machine_id": data.get("machine_id") or data.get("hardware_fingerprint_hash"),
         "hardware_fingerprint_hash": data.get("hardware_fingerprint_hash"),
         "preset_version": data.get("preset_version", "v0.8"),
@@ -615,6 +617,102 @@ def parse_full_test_log(path: Path) -> dict[str, Any]:
             "failures": stability_failures,
         },
     }
+
+
+def comparison_metrics(
+    *,
+    parent_variant: dict[str, Any],
+    candidate_variant: dict[str, Any],
+    parent_metrics: dict[str, Any],
+    candidate_metrics: dict[str, Any],
+) -> dict[str, Any]:
+    parent_machine = machine_id_from_metrics(parent_metrics)
+    candidate_machine = machine_id_from_metrics(candidate_metrics)
+    if parent_machine != candidate_machine:
+        raise SeedError(
+            "parent and candidate results are from different machines: "
+            f"{parent_machine} != {candidate_machine}"
+        )
+    parent_tuned = parent_metrics.get("variant", {})
+    candidate_tuned = candidate_metrics.get("variant", {})
+    if not isinstance(parent_tuned, dict) or not isinstance(candidate_tuned, dict):
+        raise SeedError("comparison inputs must include tuned variant results")
+
+    parent_regression = parent_metrics.get("regression", {})
+    candidate_regression = candidate_metrics.get("regression", {})
+    failures = list(parent_regression.get("failures", []) or []) + list(candidate_regression.get("failures", []) or [])
+    if not parent_regression.get("full_test_passed", True):
+        failures.append("parent full-test gate failed")
+    if not candidate_regression.get("full_test_passed", True):
+        failures.append("candidate full-test gate failed")
+
+    return {
+        "schema_version": "seed-organism.metrics.parent-candidate-screen.v0.1",
+        "source_provenance": "paired_full_test_screen",
+        "comparison_role": "screening_only_single_session",
+        "comparison": {
+            "parent_variant_id": parent_variant["variant_id"],
+            "candidate_variant_id": candidate_variant["variant_id"],
+            "parent_preset_version": parent_variant.get("preset_version"),
+            "candidate_preset_version": candidate_variant.get("preset_version"),
+            "method": "compare tuned absolute outcomes from consecutive full-test runs on one host",
+            "acceptance_limit": "one screening session is not sufficient to accept a candidate",
+        },
+        "machine_id": candidate_machine,
+        "hardware_fingerprint_hash": candidate_metrics.get("hardware_fingerprint_hash"),
+        "preset_version": candidate_variant.get("preset_version"),
+        "baseline": {
+            "network_mbps": num(parent_tuned, "network_mbps"),
+            "coldstart_ms": num(parent_tuned, "coldstart_ms"),
+            "sustained_tokps": num(parent_tuned, "sustained_tokps"),
+            "idle_watts": num(parent_tuned, "idle_watts"),
+        },
+        "variant": {
+            "network_mbps": num(candidate_tuned, "network_mbps"),
+            "coldstart_ms": num(candidate_tuned, "coldstart_ms"),
+            "sustained_tokps": num(candidate_tuned, "sustained_tokps"),
+            "idle_watts": num(candidate_tuned, "idle_watts"),
+        },
+        # A full-test internally repeats observations, but this remains one
+        # parent/candidate experiment and cannot establish selection confidence.
+        "confidence": 0.50,
+        "sample_counts": {"network": 1, "coldstart": 1, "sustained": 1, "idle_power": 1},
+        "source_runs": {
+            "parent": parent_metrics,
+            "candidate": candidate_metrics,
+        },
+        "regression": {
+            "full_test_passed": bool(parent_regression.get("full_test_passed", True))
+            and bool(candidate_regression.get("full_test_passed", True)),
+            "reverted_cleanly": bool(parent_regression.get("reverted_cleanly", True))
+            and bool(candidate_regression.get("reverted_cleanly", True)),
+            "host_safety_passed": bool(parent_regression.get("host_safety_passed", True))
+            and bool(candidate_regression.get("host_safety_passed", True)),
+            "failures": failures,
+        },
+    }
+
+
+def cmd_screen_variant(args: argparse.Namespace) -> None:
+    state = state_path(args)
+    config = load_config(state)
+    parent_variant = validate_variant(read_json(Path(args.parent_variant)))
+    candidate_variant = validate_variant(read_json(Path(args.candidate_variant)))
+    if args.execute:
+        parent_metrics = execute_linux_harness(parent_variant)
+        candidate_metrics = execute_linux_harness(candidate_variant)
+    else:
+        if not args.parent_result_json or not args.candidate_result_json:
+            raise SeedError("provide both result JSON files, or use --execute on a Linux test host")
+        parent_metrics = load_full_test_metrics_json(Path(args.parent_result_json))
+        candidate_metrics = load_full_test_metrics_json(Path(args.candidate_result_json))
+    metrics = comparison_metrics(
+        parent_variant=parent_variant,
+        candidate_variant=candidate_variant,
+        parent_metrics=parent_metrics,
+        candidate_metrics=candidate_metrics,
+    )
+    record_evaluation(state, config, candidate_variant, metrics, args.cycle_id)
 
 
 def cmd_close_cycle(args: argparse.Namespace) -> None:
@@ -894,8 +992,10 @@ def upload_full_test_result(result: dict[str, Any]) -> str:
     run_date = str(result.get("created_at", ""))[:10] or dt.date.today().isoformat()
     net_baseline = num(baseline, "network_mbps")
     net_variant = num(candidate, "network_mbps")
+    preset_version = str(result.get("preset_version", "v0.8"))
     duplicate_query = (
         f"runs?machine_id=eq.{machine_filter}&run_date=eq.{urllib.parse.quote(run_date)}"
+        f"&preset_version=eq.{urllib.parse.quote(preset_version)}"
         f"&network_baseline_mbit=eq.{net_baseline}&network_tuned_mbit=eq.{net_variant}"
         "&select=id&limit=1"
     )
@@ -905,7 +1005,7 @@ def upload_full_test_result(result: dict[str, Any]) -> str:
     postgrest_insert("runs", {
         "machine_id": machine_id,
         "run_date": run_date,
-        "preset_version": result.get("preset_version", "v0.8"),
+        "preset_version": preset_version,
         "wrapper_version": result.get("wrapper_version", "v1.4"),
         "network_baseline_mbit": net_baseline,
         "network_tuned_mbit": net_variant,
@@ -976,6 +1076,14 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--execute", action="store_true", help="run the Linux full-test harness for the variant preset")
     run.add_argument("--cycle-id", type=int, default=1)
 
+    screen = sub.add_parser("screen-variant", help="screen a candidate against the current parent preset")
+    screen.add_argument("--parent-variant", default="references/seed-organism/variant.genesis-linux.json")
+    screen.add_argument("--candidate-variant", required=True, help="candidate variant metadata JSON")
+    screen.add_argument("--parent-result-json", help="existing full-test JSON for the parent preset")
+    screen.add_argument("--candidate-result-json", help="existing full-test JSON for the candidate preset")
+    screen.add_argument("--execute", action="store_true", help="run parent then candidate full tests on a Linux host")
+    screen.add_argument("--cycle-id", type=int, default=1)
+
     close = sub.add_parser("close-cycle", help="compute simulated payout report for accepted contributor fitness")
     close.add_argument("--cycle-id", type=int, required=True)
     close.add_argument("--revenue-sats", type=int, required=True)
@@ -999,6 +1107,7 @@ def main(argv: list[str] | None = None) -> int:
         {
             "init": cmd_init,
             "run-variant": cmd_run_variant,
+            "screen-variant": cmd_screen_variant,
             "close-cycle": cmd_close_cycle,
             "status": cmd_status,
             "export": cmd_export,

@@ -310,6 +310,8 @@ The power term should be optional until idle-power measurement is stable across 
 
 A variant should not be accepted merely because one metric explodes upward while another critical metric collapses. Any severe negative delta beyond a threshold should either trigger regression failure or require hardware/workload-scoped fitness.
 
+**Operational update (2026-05-25):** The first real genesis baseline recorded a `+3.2W` v0.8 idle-power cost on Vega. Idle power therefore remains an active penalty term when readable, and the full-test harness now records medians with up to five raw samples per condition. The first candidate is intentionally network-only to test this tradeoff.
+
 ---
 
 ## 7. Seed Organism Acceptance Criteria
@@ -453,6 +455,8 @@ These should be answered empirically, not by founder intuition alone:
 5. How should hardware-scoped fitness be represented when a variant helps one class of machine but hurts another?
 6. Does a one-week simulated cycle produce enough signal, or should cycle simulation mirror monthly production immediately?
 7. What exact result bundle is stable enough to become the Hub ingestion contract?
+
+Current experimental rule: a single parent/candidate screen is diagnostic only and is assigned insufficient confidence for acceptance. A promising screen must be repeated with counterbalanced order before the confidence rule can be revised from observed variance.
 
 ---
 

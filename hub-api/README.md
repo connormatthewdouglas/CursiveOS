@@ -2,6 +2,8 @@
 
 Minimal backend for Hub tabs using Supabase SQL API.
 
+**Status note (2026-05-25):** This API is legacy v3.1-era MVP scaffolding and is not an implementation of the authoritative v3.3 economics specification or the Phase 0 seed bundle path. It still exposes pool/governance-shaped endpoints. Do not treat it as the active payout or fitness interface until it is replaced or migrated.
+
 ## Setup
 1) cd hub-api
 2) cp .env.example .env

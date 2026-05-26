@@ -1,5 +1,7 @@
 # Layer 5 v1 Freeze Packet (Day 7)
 
+> **HISTORICAL ONLY.** This packet freezes a superseded pool-based v1 design. It must not be used for current implementation; see [`layer5-economics-v3.3.md`](layer5-economics-v3.3.md) and [`seed-organism-runbook-v0.1.md`](seed-organism-runbook-v0.1.md).
+
 Status: FROZEN
 Date: 2026-04-02
 Owner: Copper Sage

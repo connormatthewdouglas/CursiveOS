@@ -41,11 +41,21 @@ command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt
 
 ---
 
-## Results (v0.8-locked presets — validated across 3 machines)
+## Next mutation screen
+
+The first true seed mutation is deliberately narrow: `v0.9-network-efficient` keeps only the network tunings from v0.8 and removes the CPU/GPU always-on power-state changes. It asks whether the network result can be retained without the Vega idle-power cost.
+
+This command runs v0.8 and the candidate consecutively on the same Linux host, submits the screen to CursiveRoot, and never creates a payout from a single observation:
+
+```bash
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | bash
+```
+
+## Results (v0.8 preset, initial measurements)
 
 ### AMD Ryzen 7 5700 + Intel Arc A750
 
-| Benchmark | Default | CursiveOS Presets | Delta |
+| Benchmark | Canonical baseline | CursiveOS Presets | Delta |
 | --- | --- | --- | --- |
 | **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 140–181 Mbit/s | **~1000 Mbit/s** | **+454–616%** |
 | **Cold-start latency** (GPU idle → first inference token) | 1021–1024ms | 996–997ms | **-22–27ms (-2.3 to -2.6%)** |
@@ -54,7 +64,7 @@ command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt
 
 ### AMD FX-8350 + RX 580
 
-| Benchmark | Default | CursiveOS Presets | Delta |
+| Benchmark | Canonical baseline | CursiveOS Presets | Delta |
 | --- | --- | --- | --- |
 | **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 171 Mbit/s | **1182 Mbit/s** | **+591%** |
 | **Cold-start latency** | 2462–2493ms | 2095–2098ms | **-366–395ms (-14.9 to -15.8%)** |
@@ -62,16 +72,27 @@ command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt
 
 ### Lenovo IdeaPad Gaming 3 (11th Gen i5 + GTX laptop)
 
-| Benchmark | Default | CursiveOS Presets | Delta |
+| Benchmark | Canonical baseline | CursiveOS Presets | Delta |
 | --- | --- | --- | --- |
 | **Network throughput** (WAN sim: 50ms RTT, 0.5% loss) | 237.8 Mbit/s | **1429.8 Mbit/s** | **+501%** |
 | **Cold-start latency** | 889.1ms | 630.8ms | **-29%** |
 | Sustained inference (warm model, steady-state) | 32.86 tok/s | 33.25 tok/s | +1.2%|
 | **Idle power draw** | 3.48W | 4.36W | +0.9W |
 
-**Network is the headline.** Two bugs in default Linux cap your throughput regardless of link speed: a 212KB socket buffer (smaller than the bandwidth-delay product on any real WAN link) and CUBIC congestion control (degrades under packet loss). CursiveOS fixes both — 16MB buffers, BBR, and the v0.7 tcp_rmem/wmem fix that closes the auto-tuner ceiling gap. Result: all validated rigs show strong WAN uplift.
+### Seed baseline recorded in CursiveRoot (May 25, 2026)
 
-**Power tradeoff is real.** Disabled C-states keep the CPU in C0 continuously. Measured cost varies by system — expect +8–14W at idle. For 24/7 mining at $0.12/kWh that's ~$8–15/year. The network and latency gains justify it in active workloads, but it's worth knowing.
+| Hardware | Benchmark | Canonical baseline | v0.8 | Delta |
+| --- | --- | ---: | ---: | ---: |
+| AMD Ryzen 7 5700 + Intel Arc device `e223` (`bda4bd63b3564822`) | Network throughput (loopback WAN sim) | 205.8 Mbit/s | 1266.1 Mbit/s | +515.20% |
+| Same host | Cold-start latency | 793.7ms | 769.0ms | -3.11% |
+| Same host | Sustained inference | 154.17 tok/s | 153.61 tok/s | -0.36% |
+| Same host | Idle power draw | 14.88W | 18.11W | +3.2W |
+
+This is a genesis baseline characterization, reconstructed into CursiveRoot from the terminal summary after the database was unavailable during upload. It is not a candidate acceptance and produces no payout.
+
+**Network is the strongest measured signal.** Under the repository's controlled loopback WAN simulation (50ms RTT, 0.5% loss), the 16MB buffers, BBR/fq, and TCP tuning produce large throughput changes relative to the canonical untuned reference on the measured hosts. This test isolates transport behavior; it does not by itself predict a production internet path, a user's existing custom configuration, or application revenue.
+
+**Power tradeoff is real.** v0.8 disables CPU idle states and may pin GPU frequency. The recorded Vega seed baseline incurred +3.2W at idle, and older measurements also showed increases. Whether the latency benefit justifies the cost is workload-specific; the next candidate isolates this tradeoff instead of assuming it.
 
 **Cold-start latency matters for mining and inference.** Testers query miners unpredictably. Between queries, your GPU idles to 300–600 MHz. CursiveOS pins the Arc A750 to 2000 MHz minimum — 22–27ms faster on every cold request. On older CPU-only hardware, C-state and governor changes alone cut 366–395ms per cold request. At scale this shifts active set membership.
 
@@ -149,7 +170,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Two-year claim window.** Accruals must be claimed within two years or redistribute to active claimants. Lifetime fitness itself is permanent.
 - **Forks inherit obligations.** The lifetime ledger is Bitcoin-anchored; forks that use the genome owe the same payments to the same contributors.
 
-**Current status:** v3.3 economics specified. Hub respec in progress. Phase 0 seed organism loop (single machine, fake BTC, three cycles) scheduled next.
+**Current status (May 25, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 now has one real genesis baseline bundle in CursiveRoot and no accepted mutation or payout report. The Hub API remains older MVP scaffolding pending a v3.3 implementation. Public insert/read access used by the controlled seed upload must be hardened before broader testing.
 
 ---
 
@@ -157,14 +178,16 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 
 - **Done** → Intel Arc inference stack (one-script setup)
 - **Done** → Preset stack v0.8-locked (28 tweaks, fully reversible)
-- **Done** → Network: ~1 Gbit/s validated across 3 rigs (+454–616%)
-- **Done** → Cold-start latency: -2.3% to -29% validated across 3 rigs
+- **Done** → Initial v0.8 measurements: strong network change across 3 initial hardware configurations plus one recorded Vega seed baseline
+- **Done** → Genesis seed bundle: real May 25 Vega baseline uploaded to CursiveRoot with no payout
 - **Done** → Full-test wrapper v1.4 (CursiveRoot auto-submit, zero setup)
 - **Done** → CursiveRoot: live hardware/performance database
-- **Done** → v3.3 economic architecture specified (white paper v2.3)
+- **Done** → v3.3 economic architecture specified (white paper v2.4)
 - **Done** → Agent architecture specified (measurement daemon + natural-language shell)
 - **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)
-- **In progress** → Phase 0 seed organism (measurement-to-ledger loop on founder's rig)
+- **In progress** → Phase 0 seed organism (first parent-versus-candidate power/throughput screen)
+- **Next** → Repeat and counterbalance any promising candidate before fitness acceptance
+- **Next** → Harden CursiveRoot identity and write policies before external tester rollout
 - **Next** → First external tester running full sensor array; validate population confirmation
 - **Next** → v0.9 ISO alpha: first installable CursiveOS with measurement daemon
 - **v1.0** → Flagship release with natural-language shell as default terminal
@@ -177,16 +200,17 @@ Full roadmap with transition milestones: [ROADMAP.md](ROADMAP.md).
 
 ## Why this hardware
 
-Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is built and validated on **AMD CPU + Intel Arc GPU**, plus Intel laptop hardware — the configurations most optimization guides ignore. If you're a non-NVIDIA miner or inference operator, this project is built with you in mind. The sensor array measures empirical hardware variance, so unusual or underserved configurations are more valuable to the organism than popular ones.
+Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is being measured on **AMD CPU + Intel Arc GPU**, plus Intel laptop hardware — configurations many optimization guides ignore. If you're a non-NVIDIA miner or inference operator, this project is built with you in mind. The sensor array measures empirical hardware variance, so unusual or underserved configurations are more valuable to the organism than popular ones.
 
 ---
 
 ## Documentation
 
 - [`ROADMAP.md`](ROADMAP.md) — four-transition roadmap with milestones and flagship features by release
-- [`white-paper.md`](white-paper.md) — technical white paper (v2.3)
+- [`white-paper.md`](white-paper.md) — technical white paper (v2.4)
 - [`software-organisms-manifesto.md`](software-organisms-manifesto.md) — the software organism framework and theory
 - [`docs/specs/seed-organism-v0.1.md`](docs/specs/seed-organism-v0.1.md) — Phase 0 minimum viable organism specification
+- [`docs/audits/2026-05-25-phase0-reality-check.md`](docs/audits/2026-05-25-phase0-reality-check.md) — current implementation and benchmark reality check
 - [`docs/specs/layer5-economics-v3.3.md`](docs/specs/layer5-economics-v3.3.md) — authoritative economics specification
 - [`docs/architecture/biological-architecture.md`](docs/architecture/biological-architecture.md) — the organism frame and biological mapping
 - [`docs/architecture/agent-architecture.md`](docs/architecture/agent-architecture.md) — measurement daemon specification and natural-language shell architectural sketch
@@ -194,6 +218,7 @@ Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is 
 - [`docs/architecture/testers.md`](docs/architecture/testers.md) — the tester tier, the free-Fast-access exchange, and the spoofing trap
 - [`docs/architecture/hardening.md`](docs/architecture/hardening.md) — substrate dependencies, bootstrap risk, and attack-surface analysis
 - [`docs/CHANGELOG-v2.3.md`](docs/CHANGELOG-v2.3.md) — what changed in the v2.2 → v2.3 technical/theory split
+- [`docs/CHANGELOG-v2.4.md`](docs/CHANGELOG-v2.4.md) — first seed baseline and benchmark-method reality check
 - [`docs/CHANGELOG-v2.2.md`](docs/CHANGELOG-v2.2.md) — what changed in the v2.1 → v2.2 update
 - [`docs/CHANGELOG-v2.1.md`](docs/CHANGELOG-v2.1.md) — what changed in the v1.0/v3.1 → v2.1/v3.3 transition
 

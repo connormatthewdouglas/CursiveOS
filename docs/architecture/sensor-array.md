@@ -1,7 +1,7 @@
 # Sensor Array
 
-**Status:** ACTIVE
-**Date:** 2026-04-17
+**Status:** ACTIVE SPECIFICATION; Phase 0 implementation in progress
+**Date:** 2026-05-25
 **Paired documents:** [`layer5-economics-v3.3.md`](../specs/layer5-economics-v3.3.md), [`biological-architecture.md`](biological-architecture.md)
 
 ---
@@ -24,7 +24,7 @@ Measure objective hardware and software performance delta between a baseline con
 
 Genesis set includes:
 
-- **Network throughput sensor.** Measures TCP throughput over a simulated WAN link (50ms RTT, 0.5% loss). Detects the default Linux BDP gap and BBR/CUBIC tradeoffs.
+- **Network throughput sensor.** Measures TCP throughput over a simulated WAN link (50ms RTT, 0.5% loss) against a canonical untuned CUBIC/reference-buffer baseline. Detects BDP and BBR/CUBIC tradeoffs without claiming the baseline is every user's existing configuration.
 - **Cold-start latency sensor.** Measures GPU idle → first inference token time. Detects C-state, governor, and GPU power-state impact.
 - **Sustained inference sensor.** Measures steady-state tok/s on a warm model. Detects scheduler, memory, and cache effects once the system is warm.
 - **Idle power sensor.** Measures wattage at idle. Captures the power cost of disabling C-states and pinning GPU frequency.
@@ -69,7 +69,7 @@ Control allocation parameters within the organism. The split between current-cyc
 
 ## 3. The Genesis Sensor Suite
 
-The minimum viable selection pressure is two sensors, both already mostly built:
+The minimum viable selection pressure is two sensors. A genesis baseline bundle has now been recorded from one Linux host; candidate selection has not yet occurred.
 
 ### 3.1 Performance Sensor (Primary Fitness Signal)
 
@@ -78,17 +78,17 @@ Wraps the existing benchmark scripts:
 ```
 ./benchmarks/benchmark-network-v0.1.sh
 ./benchmarks/benchmark-inference-v0.1.sh  (sustained tok/s)
-./benchmarks/benchmark-inference-v0.2.sh  (cold-start latency)
+./benchmarks/benchmark-inference-v0.3.sh  (cold-start latency)
 ```
 
 For each submission:
 
-1. Run baseline (pre-change) benchmarks 3× on the target hardware.
-2. Apply the change.
-3. Run tuned (post-change) benchmarks 3×.
-4. Revert the change.
-5. Compute signed deltas for each benchmark dimension, with variance estimates.
-6. Aggregate into a single fitness score using a confidence-weighted sum.
+1. Establish the current parent preset on the target hardware.
+2. Run the parent and proposed candidate as separate full-test sessions on the same host.
+3. Compare their tuned absolute outcomes rather than treating the canonical baseline as the parent phenotype.
+4. Repeat with counterbalanced order before an acceptance decision.
+5. Compute signed deltas for each benchmark dimension, retaining variance and power samples.
+6. Aggregate into a single fitness score only when the required confidence threshold is met.
 
 Output:
 

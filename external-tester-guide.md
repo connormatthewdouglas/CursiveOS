@@ -23,11 +23,11 @@ Why: this lets us learn which optimizations work on which hardware and improve r
 
 CursiveOS adjusts settings in three areas. All of these are standard Linux tuning knobs — nothing obscure, nothing dangerous.
 
-### Network (the big one)
-Your Linux machine ships with a 212KB network buffer. That's a 2003-era default. CursiveOS bumps it to 16MB and switches your TCP congestion control from CUBIC to BBR. On most hardware this produces a 400–600% improvement in sustained network throughput under real-world conditions (packet loss, latency). This is why miners and AI users both benefit — both workloads are bottlenecked by the same default.
+### Network (the strongest measured signal)
+CursiveOS tests 16MB buffers and BBR against a canonical untuned reference in a controlled loopback WAN simulation (50ms RTT, 0.5% loss). Initial measured hosts showed large changes in that specific transport test. Real internet paths, existing custom tuning, and real workloads can behave differently, which is why each machine is benchmarked rather than promised a result.
 
 ### CPU
-CursiveOS sets your CPU governor to "performance" mode and disables some aggressive idle states (C2, C3, C6). This keeps your CPU ready to respond instead of sleeping between requests. The tradeoff: your idle power draw goes up by roughly 8–14W depending on your hardware. For a machine that's running 24/7 at $0.12/kWh, that's about $8–15/year extra. The benchmark measures this and reports it honestly.
+CursiveOS v0.8 sets your CPU governor to "performance" mode and disables some aggressive idle states (C2, C3, C6). This can reduce response latency, but it can increase idle power. The May 25 Vega seed baseline recorded +3.2W; earlier machines also showed increases. The benchmark now stores repeated power readings so this tradeoff is measured rather than assumed.
 
 ### Memory
 CursiveOS sets swappiness to 0 (never swap) and enables Transparent Huge Pages. This keeps model weights pinned in RAM and reduces memory allocation overhead during inference. On machines with plenty of RAM this is free performance. On machines with tight RAM it could cause issues — the benchmark will catch this.

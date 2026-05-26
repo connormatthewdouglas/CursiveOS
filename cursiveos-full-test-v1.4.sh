@@ -26,6 +26,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Allow preset override via first arg (for isolated tweak testing)
 PRESET="${1:-$SCRIPT_DIR/presets/cursiveos-presets-v0.8.sh}"
+PRESET_FILENAME="$(basename "$PRESET")"
+PRESET_VERSION="${CURSIVEOS_PRESET_VERSION:-${PRESET_FILENAME#cursiveos-presets-}}"
+PRESET_VERSION="${PRESET_VERSION%.sh}"
 # Auto-select best available model — same preference order as benchmark-inference-v0.1.sh
 MODEL=""
 for _m in llama3 mistral llama3.2 phi3 qwen2 tinyllama; do
@@ -353,6 +356,10 @@ NET_BASELINE="" NET_TUNED="" NET_DELTA=""
 COLD_BASELINE="" COLD_TUNED="" COLD_DELTA=""
 WARM_BASELINE="" WARM_TUNED="" WARM_DELTA=""
 PWR_IDLE="" PWR_TUNED_IDLE="" PWR_DELTA=""
+PWR_IDLE_SAMPLES_JSON="[]" PWR_TUNED_SAMPLES_JSON="[]"
+PWR_IDLE_MIN="" PWR_IDLE_MAX="" PWR_TUNED_MIN="" PWR_TUNED_MAX=""
+PWR_IDLE_COUNT=0 PWR_TUNED_COUNT=0
+NET_LOG="" COLD_LOG="" WARM_LOG=""
 STABILITY_FLAG="true"
 
 # ── Power draw snapshot (v1.4: robust multi-fallback) ────────────────────────
@@ -441,6 +448,29 @@ read_watts() {
     echo "N/A"
 }
 
+sample_idle_power() {
+    local requested="${1:-5}"
+    local readings=()
+    local i watts
+    for ((i=1; i<=requested; i++)); do
+        watts=$(read_watts)
+        if [[ "$watts" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+            readings+=("$watts")
+        fi
+    done
+    python3 - "${readings[@]}" <<'PY'
+import json
+import statistics
+import sys
+
+samples = [float(v) for v in sys.argv[1:]]
+if not samples:
+    print("N/A|[]|||0")
+else:
+    print(f"{statistics.median(samples):.2f}|{json.dumps(samples)}|{min(samples):.2f}|{max(samples):.2f}|{len(samples)}")
+PY
+}
+
 extract_network() {
     local log="$1"
     NET_BASELINE=$(grep "Baseline (CUBIC):" "$log" | grep -oP '[0-9]+\.[0-9]+' | head -1 || echo "?")
@@ -483,9 +513,9 @@ extract_sustained() {
 
 # ── Idle power — baseline ─────────────────────────────────────────────────────
 echo ""
-echo "Reading idle power (no presets)..."
-PWR_IDLE=$(read_watts)
-echo "  → Idle power (baseline): ${PWR_IDLE}W"
+echo "Reading idle power (no presets; median of up to 5 samples)..."
+IFS='|' read -r PWR_IDLE PWR_IDLE_SAMPLES_JSON PWR_IDLE_MIN PWR_IDLE_MAX PWR_IDLE_COUNT <<< "$(sample_idle_power 5)"
+echo "  → Idle power (baseline median): ${PWR_IDLE}W (${PWR_IDLE_COUNT} samples, range ${PWR_IDLE_MIN:-N/A}-${PWR_IDLE_MAX:-N/A}W)"
 
 # ── Benchmark 1: Network ──────────────────────────────────────────────────────
 echo ""
@@ -533,11 +563,11 @@ fi
 
 # ── Idle power — tuned + stability check ─────────────────────────────────────
 echo ""
-echo "Reading idle power with presets active..."
+echo "Reading idle power with presets active (median of up to 5 samples)..."
 bash "$PRESET" --apply-temp 2>&1 | grep "✓" | sed 's/^/  /' || true
 sleep 3
-PWR_TUNED_IDLE=$(read_watts)
-echo "  → Idle power (tuned): ${PWR_TUNED_IDLE}W"
+IFS='|' read -r PWR_TUNED_IDLE PWR_TUNED_SAMPLES_JSON PWR_TUNED_MIN PWR_TUNED_MAX PWR_TUNED_COUNT <<< "$(sample_idle_power 5)"
+echo "  → Idle power (tuned median): ${PWR_TUNED_IDLE}W (${PWR_TUNED_COUNT} samples, range ${PWR_TUNED_MIN:-N/A}-${PWR_TUNED_MAX:-N/A}W)"
 
 # v1.4: Stability check — dmesg errors since presets were applied
 STABILITY_ERRORS=$(dmesg --since "1 minute ago" 2>/dev/null | grep -ci "error\|panic\|oops\|BUG" 2>/dev/null || true)
@@ -575,10 +605,11 @@ Benchmark              Baseline          Tuned             Delta
 Network throughput     ${NET_BASELINE} Mbit/s      ${NET_TUNED} Mbit/s      ${NET_DELTA}%
 Cold-start latency     ${COLD_BASELINE}ms           ${COLD_TUNED}ms            ${COLD_DELTA}%
 Sustained inference    ${WARM_BASELINE:-N/A}     ${WARM_TUNED:-N/A}   ${WARM_DELTA:-N/A}
-Idle power draw        ${PWR_IDLE}W               ${PWR_TUNED_IDLE}W             ${PWR_DELTA}W
+Idle power draw*       ${PWR_IDLE}W               ${PWR_TUNED_IDLE}W             ${PWR_DELTA}W
 Stability              ${STABILITY_FLAG} (dmesg errors: ${STABILITY_ERRORS})
 
-Note: Presets reverted — system is back to defaults.
+* Idle power values are medians of ${PWR_IDLE_COUNT}/${PWR_TUNED_COUNT} readable baseline/tuned samples.
+Note: Presets reverted — captured pre-test controls have been restored.
 Logs: $LOG_DIR/
 ======================================================
 EOF
@@ -657,7 +688,7 @@ data = {
     "created_at": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat(),
     "machine_id": "$HW_FINGERPRINT",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
-    "preset_version": "v0.8",
+    "preset_version": "$PRESET_VERSION",
     "wrapper_version": "v1.4",
     "hardware": {
         "cpu": "$CPU_MODEL",
@@ -690,7 +721,27 @@ data = {
         "network": 1,
         "coldstart": 1,
         "sustained": 1,
-        "idle_power": 1 if n("$PWR_B") is not None and n("$PWR_T") is not None else 0
+        "idle_power": min(ni("$PWR_IDLE_COUNT") or 0, ni("$PWR_TUNED_COUNT") or 0)
+    },
+    "benchmark_context": {
+        "model": "$MODEL",
+        "network_condition": "loopback netem: 50ms RTT, 0.5% loss",
+        "comparison": "canonical untuned reference versus selected preset",
+        "idle_power_statistic": "median",
+        "idle_power_samples_requested_per_condition": 5
+    },
+    "telemetry": {
+        "idle_power": {
+            "baseline_samples_w": json.loads('$PWR_IDLE_SAMPLES_JSON'),
+            "tuned_samples_w": json.loads('$PWR_TUNED_SAMPLES_JSON'),
+            "baseline_range_w": [n("$PWR_IDLE_MIN"), n("$PWR_IDLE_MAX")],
+            "tuned_range_w": [n("$PWR_TUNED_MIN"), n("$PWR_TUNED_MAX")]
+        },
+        "detail_logs": {
+            "network": "$NET_LOG",
+            "coldstart": "$COLD_LOG",
+            "sustained": "$WARM_LOG"
+        }
     },
     "regression": {
         "full_test_passed": b("$STAB"),
@@ -801,7 +852,7 @@ def ni(v):
 data = {
     "machine_id": "$MACHINE_ID",
     "run_date": "$( date +%Y-%m-%d )",
-    "preset_version": "v0.8",
+    "preset_version": "$PRESET_VERSION",
     "wrapper_version": "v1.4",
     "network_baseline_mbit": n("$NET_B"),
     "network_tuned_mbit": n("$NET_T"),
@@ -815,7 +866,7 @@ data = {
     "power_idle_baseline_w": n("$PWR_B"),
     "power_idle_tuned_w": n("$PWR_T"),
     "power_delta_w": n("$PWR_D"),
-    "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL$POWER_NOTE",
+    "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL power_median_samples:${PWR_IDLE_COUNT}/${PWR_TUNED_COUNT}$POWER_NOTE",
     "cpu_microcode_version": "$CPU_MICROCODE" if "$CPU_MICROCODE" not in ("unknown","") else None,
     "cpu_l1_cache_kb": ni("$CPU_L1_CACHE_KB") if "$CPU_L1_CACHE_KB" != "null" else None,
     "cpu_l2_cache_kb": ni("$CPU_L2_CACHE_KB") if "$CPU_L2_CACHE_KB" != "null" else None,
@@ -895,7 +946,7 @@ machine["runs"].append({
     "run_id": next_id,
     "date": datetime.date.today().isoformat(),
     "submission_timestamp": "$SUBMISSION_TIMESTAMP",
-    "preset_version": "v0.8",
+    "preset_version": "$PRESET_VERSION",
     "wrapper_version": "v1.4",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
     "stability_flag": to_bool("$STABILITY_FLAG"),
@@ -908,7 +959,9 @@ machine["runs"].append({
     "power": {
         "idle_baseline_w": to_float("$PWR_IDLE"),
         "idle_tuned_w": to_float("$PWR_TUNED_IDLE"),
-        "delta_w": to_float("$PWR_DELTA")
+        "delta_w": to_float("$PWR_DELTA"),
+        "baseline_samples_w": $PWR_IDLE_SAMPLES_JSON,
+        "tuned_samples_w": $PWR_TUNED_SAMPLES_JSON
     },
     "notes": ""
 })

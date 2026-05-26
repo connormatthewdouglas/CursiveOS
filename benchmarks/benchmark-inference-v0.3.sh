@@ -36,8 +36,28 @@ LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/cursiveos-coldstart-$(date +%Y%m%d-%H%M%S).log"
 PASS_RESULT=""
+ORIGINAL_BASELINE_STATE="$(mktemp)"
 
 log() { echo "$1" | tee -a "$LOG_FILE"; }
+
+save_original_baseline_state() {
+    local f
+    for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor /sys/class/drm/card*/gt/gt0/rps_min_freq_mhz; do
+        [[ -f "$f" ]] && printf '%s|%s\n' "$f" "$(cat "$f" 2>/dev/null || echo N/A)" >> "$ORIGINAL_BASELINE_STATE"
+    done
+}
+
+restore_original_baseline_state() {
+    local path value
+    bash "$PRESET_SCRIPT" --undo >/dev/null 2>&1 || true
+    [[ -f "$ORIGINAL_BASELINE_STATE" ]] || return
+    while IFS='|' read -r path value; do
+        [[ -z "$path" || "$value" == "N/A" ]] && continue
+        echo "$SP" | sudo -S bash -c "printf '%s' '$value' > '$path'" >/dev/null 2>&1 || true
+    done < "$ORIGINAL_BASELINE_STATE"
+    rm -f "$ORIGINAL_BASELINE_STATE"
+}
+trap restore_original_baseline_state EXIT
 
 # Short prompt — minimizes generation time, isolates load+TTFT signal
 PROMPT="What is Bittensor? Answer in one sentence."
@@ -57,9 +77,10 @@ fi
 log "Ensuring clean state for baseline..."
 _undo_out=$(bash "$PRESET_SCRIPT" --undo 2>/dev/null || true)
 echo "$_undo_out" | grep -E "Revert|reverted|No backup" | sed 's/^/  /' >> "$LOG_FILE" || true
+save_original_baseline_state
 # Hard-reset CPU governor and GPU freq — don't rely on state file which may
 # have been written when system was already tuned (ratchet bug).
-log "  Hard-resetting CPU governor and GPU freq to defaults..."
+log "  Applying canonical untuned CPU/GPU reference for the baseline..."
 if command -v cpupower &>/dev/null; then
     # Try schedutil first (unavailable on amd-pstate-epp — suppress error, fall through)
     if echo "$SP" | sudo -S cpupower frequency-set -g schedutil >/dev/null 2>&1; then
@@ -183,7 +204,7 @@ log "========================================"
 
 # ── PASS 1: Baseline ──────────────────────────────────────────────────────────
 log ""
-log "PASS 1 — BASELINE (no presets, GPU idles to default freq)"
+log "PASS 1 — BASELINE (canonical untuned CPU/GPU reference)"
 run_pass "BASELINE"
 BASELINE="$PASS_RESULT"
 
