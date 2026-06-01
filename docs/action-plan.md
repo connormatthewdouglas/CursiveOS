@@ -1,5 +1,5 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-05-25
+**Last updated:** 2026-05-31
 **Current parent preset:** v0.8 (28 tweaks)
 **Current candidate:** v0.9-network-efficient (network-only power tradeoff screen)
 **Current wrapper:** v1.4
@@ -9,12 +9,14 @@
 
 ## Current State
 
-Phase 0 has begun in operation. One real Vega genesis baseline is recorded in CursiveRoot with decision `measured_baseline`, not accepted fitness: network +515.20% under loopback WAN simulation, cold-start -3.11%, sustained -0.36%, idle power +3.2W. The next action is to screen a network-only candidate against v0.8, with multi-sample power capture and no payout from one observation.
+Phase 0 has begun in operation. CursiveRoot now has a live decision-grade analyzer that separates characterization data from mutation-selection evidence. One real Vega genesis baseline is recorded in CursiveRoot with decision `measured_baseline`, not accepted fitness: network +515.20% under loopback WAN simulation, cold-start -3.11%, sustained -0.36%, idle power +3.2W. The latest Intel i5 run on 2026-05-31 shows the same pattern: strong network lift, a promising cold-start result, small sustained-inference movement, and a measurable idle-power cost. The next action is still to screen a network-only candidate against v0.8, with multi-sample power capture and no payout from one observation.
 
-**CursiveRoot status at May 25, 2026:**
-- 73 regular benchmark run records existed after recovering the Vega baseline.
+**CursiveRoot status at May 31, 2026:**
+- 74 regular benchmark run records are visible.
 - 1 seed bundle exists (`genesis-baseline-v0.8`, machine `bda4bd63b3564822`).
 - 0 accepted seed mutations and 0 seed payout reports exist.
+- 0 candidate screen bundles are visible.
+- 0 run detail bundles are visible until the v0.2 migration is applied.
 - Public insert/read policy is acceptable only for controlled Phase 0 and must be hardened before external rollout.
 
 **v0.8 confirmed stack (3 tweaks on top of v0.7 base):**
@@ -26,43 +28,58 @@ Phase 0 has begun in operation. One real Vega genesis baseline is recorded in Cu
 
 ## Active Board Tasks — Priority Order
 
-### 1. Define the Founding Operator program
+### 1. Apply the decision-grade sensor migration
+- Apply `references/SUPABASE-MIGRATION-decision-grade-sensors-v0.2.sql` to CursiveRoot.
+- Confirm `run_detail_bundles` accepts recovered full-test detail uploads.
+- Keep anon insert/select only for founder bootstrap; plan authenticated tester/machine identity before external rollout.
+
+### 2. Run the v0.9 network-efficient parent/candidate screen
+- Run v0.8 -> v0.9 and then v0.9 -> v0.8 on the same host.
+- Repeat on at least one additional machine.
+- Treat each single screen as diagnostic only; do not accept inheritance from one host/order.
+
+### 3. Canonicalize machine identity
+- Use hardware fingerprint ids as the canonical CursiveRoot join key.
+- Preserve old slug machine ids as aliases, not primary organism identity.
+- Backfill missing `os` and `kernel` on old machine rows where possible.
+
+### 4. Define the Founding Operator program
 - Write the simple rules for who qualifies, what they do, what they get, and how future upside will be considered.
 - Keep the framing serious and non-hype: early operators, not disposable testers.
 
-### 2. Create the contributor ledger
+### 5. Create the contributor ledger
 - Track who contributed hardware, runs, bugs found, and overall contribution value.
 - This is the bridge between goodwill now and stronger incentives later.
 
-### 3. Improve the first-run external experience
+### 6. Improve the first-run external experience
 - Tighten onboarding, rollback clarity, error reporting, and expectation-setting.
 - Goal: the first external run feels safe, legible, and worth repeating.
 
-### 4. Recruit 3–5 technically aligned founding operators
+### 7. Recruit 3–5 technically aligned founding operators
 - Prioritize local AI, mining, homelab, and builder communities.
 - Prefer mission-aligned operators over one-off paid testers.
 
-### 5. White-glove the first cohort
+### 8. White-glove the first cohort
 - Treat the first external operators as collaborators.
 - Use their runs and feedback to harden the product and onboarding.
 
-### 6. Use paid testers only for narrow QA later
+### 9. Use paid testers only for narrow QA later
 - Fiverr-style testing is not the main validation engine.
 - Reserve paid testers for controlled onboarding/usability checks after the first-run flow is stable.
 
-### 7. Buy hardware only where it closes meaningful validation gaps
+### 10. Buy hardware only where it closes meaningful validation gaps
 - Spend hardware budget where it reduces uncertainty or covers an important user segment.
 - Prefer coverage/relevance over raw compute prestige.
 
-### 8. Prioritize reliability and repeatability over flashy features
+### 11. Prioritize reliability and repeatability over flashy features
 - Near-term product work should focus on safe rollback, debuggability, and predictable external success.
 - Add new features only when they support trust or leverage.
 
-### 9. Continue improving the preset stack only when gains are measured
+### 12. Continue improving the preset stack only when gains are measured
 - Every new tweak should be benchmarked, meaningful, and worth the added complexity.
 - Avoid complexity creep that makes external testing harder.
 
-### 10. Build early community through measured proof
+### 13. Build early community through measured proof
 - Share evidence, real deltas, and trust-building results where target users already gather.
 - The immediate goal is not broad hype; it is converting a few good operators into repeat contributors.
 

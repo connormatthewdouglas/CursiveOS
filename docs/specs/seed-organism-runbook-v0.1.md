@@ -20,6 +20,7 @@ python3 tools/seed_organism.py close-cycle --cycle-id 1 --revenue-sats 100000
 python3 tools/seed_organism.py status
 python3 tools/seed_organism.py upload
 python3 tools/seed_organism.py remote-status
+./scripts/cursiveroot-status.sh
 ```
 
 Local state is written under `.cursiveos/seed/` and is intentionally ignored by git.
@@ -85,7 +86,33 @@ Genesis performance scoring treats:
 
 The regression gate is separate from scoring. A variant with good performance is still rejected if the full-test, reversibility, or host-safety gate fails.
 
-The full-test JSON now records the actual selected preset version and stores idle-power medians with the underlying sample list (up to five readings per condition). The detailed network and inference logs already contain per-pass retransmits, RTT, latency components, ranges, and processor classification; the seed bundle retains pointers to those logs while additional structured ingestion is developed.
+The full-test JSON records the actual selected preset version and stores idle-power medians with the underlying sample list (up to five readings per condition). The seed organism now also extracts structured telemetry from the detailed network and inference logs when those logs are available:
+
+- network per-pass throughput, retransmits, RTT, average, and range
+- cold-start per-call GPU-before frequency, load duration, TTFT, cold total, and range
+- sustained inference per-pass token rate, TTFT, processor classification, average, and range
+
+These details are audit evidence. They do not automatically become independent selection confirmations. A single parent/candidate session still remains below acceptance confidence even if its internal benchmark had five passes.
+
+## CursiveRoot Analysis
+
+Use the decision-grade analyzer for the live operator view:
+
+```bash
+./scripts/cursiveroot-status.sh --limit 120 --latest 8
+python3 tools/cursiveroot_analyze.py --json
+```
+
+The analyzer reports cohort medians/ranges, organism state, seed-bundle readiness, and data hygiene warnings. Its current purpose is to tell the operator whether data is characterization, screening evidence, or ready for repeated confirmation.
+
+If the optional v0.2 migration is applied, recovered full-test results can also upload structured detail bundles:
+
+```bash
+psql "$CURSIVEROOT_DATABASE_URL" -f references/SUPABASE-MIGRATION-decision-grade-sensors-v0.2.sql
+python3 tools/seed_organism.py recover-result --result-json logs/cursiveos-full-test-YYYYMMDD-HHMMSS.json
+```
+
+`run_detail_bundles` is keyed by the source full-test JSON hash. If that table is not present yet, normal `runs` and `seed_bundles` upload still continues.
 
 ## CursiveRoot Boundary
 
