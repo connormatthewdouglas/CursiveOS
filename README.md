@@ -182,6 +182,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Done** → Genesis seed bundle: real May 25 Vega baseline uploaded to CursiveRoot with no payout
 - **Done** → Full-test wrapper v1.4 (CursiveRoot auto-submit, zero setup)
 - **Done** → CursiveRoot: live hardware/performance database
+- **Done** → Decision-grade CursiveRoot analyzer: cohort signal, organism state, and data hygiene reporting
 - **Done** → v3.3 economic architecture specified (white paper v2.4)
 - **Done** → Agent architecture specified (measurement daemon + natural-language shell)
 - **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)
@@ -217,8 +218,9 @@ Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is 
 - [`docs/architecture/sensor-array.md`](docs/architecture/sensor-array.md) — sensor families, curation, genesis suite, and the metabolic sensor
 - [`docs/architecture/testers.md`](docs/architecture/testers.md) — the tester tier, the free-Fast-access exchange, and the spoofing trap
 - [`docs/architecture/hardening.md`](docs/architecture/hardening.md) — substrate dependencies, bootstrap risk, and attack-surface analysis
-- [`docs/CHANGELOG-v2.3.md`](docs/CHANGELOG-v2.3.md) — what changed in the v2.2 → v2.3 technical/theory split
+- [`docs/CHANGELOG-v2.5.md`](docs/CHANGELOG-v2.5.md) — decision-grade sensor loop and CursiveRoot analyzer pass
 - [`docs/CHANGELOG-v2.4.md`](docs/CHANGELOG-v2.4.md) — first seed baseline and benchmark-method reality check
+- [`docs/CHANGELOG-v2.3.md`](docs/CHANGELOG-v2.3.md) — what changed in the v2.2 → v2.3 technical/theory split
 - [`docs/CHANGELOG-v2.2.md`](docs/CHANGELOG-v2.2.md) — what changed in the v2.1 → v2.2 update
 - [`docs/CHANGELOG-v2.1.md`](docs/CHANGELOG-v2.1.md) — what changed in the v1.0/v3.1 → v2.1/v3.3 transition
 

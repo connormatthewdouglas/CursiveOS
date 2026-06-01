@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -527,6 +528,212 @@ def execute_linux_harness(variant: dict[str, Any]) -> dict[str, Any]:
     return parse_full_test_log(new_logs[-1])
 
 
+def try_float(value: Any) -> float | None:
+    if value in (None, "", "N/A", "?"):
+        return None
+    try:
+        return float(str(value).replace("+", "").replace("%", "").strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def resolve_detail_log(result_path: Path, raw: Any) -> Path | None:
+    if not raw:
+        return None
+    path = Path(str(raw))
+    candidates = [path]
+    if not path.is_absolute():
+        candidates.extend([
+            result_path.parent / path,
+            ROOT / path,
+            ROOT / "logs" / path.name,
+        ])
+    else:
+        candidates.append(ROOT / "logs" / path.name)
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_file():
+            return candidate
+    return None
+
+
+def section_key(line: str) -> str | None:
+    if "--- BASELINE ---" in line or "PASS 1" in line and "BASELINE" in line:
+        return "baseline"
+    if "--- TUNED ---" in line or "PASS 2" in line and "TUNED" in line:
+        return "tuned"
+    return None
+
+
+def parse_network_detail_log(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {"available": False, "reason": "detail log not found"}
+    details: dict[str, Any] = {"available": True, "log": str(path), "baseline": {"runs": []}, "tuned": {"runs": []}}
+    current: str | None = None
+    run_re = re.compile(r"Run\s+(\d+):\s+([0-9.]+)\s+Mbit/s\s+\|\s+retransmits:\s+([0-9.]+)\s+\|\s+RTT:\s+([0-9.]+)ms")
+    avg_re = re.compile(r"Avg:\s+([0-9.]+)\s+Mbit/s\s+\|\s+retransmits:\s+([0-9.]+)\s+\|\s+RTT:\s+([0-9.]+)ms")
+    range_re = re.compile(r"Range:\s+([0-9.]+)\s+[–-]\s+([0-9.]+)\s+Mbit/s")
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as exc:
+        return {"available": False, "log": str(path), "reason": str(exc)}
+    for line in lines:
+        if key := section_key(line):
+            current = key
+            continue
+        if current not in ("baseline", "tuned"):
+            continue
+        target = details[current]
+        stripped = line.strip()
+        if stripped.startswith("TCP CC:"):
+            target["tcp_congestion_control"] = stripped.split(":", 1)[1].strip()
+        elif stripped.startswith("rmem_max:"):
+            match = re.search(r"([0-9]+)", stripped)
+            if match:
+                target["rmem_max_bytes"] = int(match.group(1))
+        elif match := run_re.search(stripped):
+            target["runs"].append({
+                "run": int(match.group(1)),
+                "mbps": try_float(match.group(2)),
+                "retransmits": try_float(match.group(3)),
+                "rtt_ms": try_float(match.group(4)),
+            })
+        elif match := avg_re.search(stripped):
+            target["avg_mbps"] = try_float(match.group(1))
+            target["avg_retransmits"] = try_float(match.group(2))
+            target["avg_rtt_ms"] = try_float(match.group(3))
+        elif match := range_re.search(stripped):
+            target["range_mbps"] = [try_float(match.group(1)), try_float(match.group(2))]
+    return details
+
+
+def parse_coldstart_detail_log(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {"available": False, "reason": "detail log not found"}
+    details: dict[str, Any] = {"available": True, "log": str(path), "baseline": {"calls": []}, "tuned": {"calls": []}}
+    current: str | None = None
+    call_re = re.compile(
+        r"Call\s+(\d+):\s+GPU_before=([^|]+)\|\s+load=([0-9.]+)ms\s+\|\s+TTFT=([0-9.]+)ms\s+\|\s+cold_total=([0-9.]+)ms\s+\|\s+([0-9.]+)\s+tok/s\s+\|\s+tokens:([0-9.]+)"
+    )
+    avg_re = re.compile(r"Avg:\s+load=([0-9.]+)ms\s+\|\s+TTFT=([0-9.]+)ms\s+\|\s+cold_total=([0-9.]+)ms\s+\|\s+([0-9.]+)\s+tok/s")
+    range_re = re.compile(r"Load range:\s+([0-9.]+)ms\s+[–-]\s+([0-9.]+)ms\s+\|\s+Cold range:\s+([0-9.]+)ms\s+[–-]\s+([0-9.]+)ms")
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as exc:
+        return {"available": False, "log": str(path), "reason": str(exc)}
+    for line in lines:
+        if key := section_key(line):
+            current = key
+            continue
+        if current not in ("baseline", "tuned"):
+            continue
+        target = details[current]
+        stripped = line.strip()
+        if stripped.startswith("CPU gov:"):
+            target["cpu_governor"] = stripped.split(":", 1)[1].strip()
+        elif stripped.startswith("GPU freq:"):
+            target["gpu_freq_before_pass_mhz"] = try_float(re.sub(r"[^0-9.]", "", stripped.split(":", 1)[1]))
+        elif match := call_re.search(stripped):
+            target["calls"].append({
+                "call": int(match.group(1)),
+                "gpu_before": match.group(2).strip(),
+                "load_ms": try_float(match.group(3)),
+                "ttft_ms": try_float(match.group(4)),
+                "cold_total_ms": try_float(match.group(5)),
+                "tokps": try_float(match.group(6)),
+                "tokens": try_float(match.group(7)),
+            })
+        elif match := avg_re.search(stripped):
+            target["avg_load_ms"] = try_float(match.group(1))
+            target["avg_ttft_ms"] = try_float(match.group(2))
+            target["avg_cold_total_ms"] = try_float(match.group(3))
+            target["avg_tokps"] = try_float(match.group(4))
+        elif match := range_re.search(stripped):
+            target["load_range_ms"] = [try_float(match.group(1)), try_float(match.group(2))]
+            target["cold_range_ms"] = [try_float(match.group(3)), try_float(match.group(4))]
+    return details
+
+
+def parse_sustained_detail_log(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {"available": False, "reason": "detail log not found"}
+    details: dict[str, Any] = {"available": True, "log": str(path), "baseline": {"passes": []}, "tuned": {"passes": []}}
+    current: str | None = None
+    pass_re = re.compile(r"Pass\s+(\d+):\s+([0-9.]+)\s+tok/s\s+\|\s+TTFT:\s+([0-9.]+)s\s+\|\s+tokens:\s+([0-9.]+)")
+    avg_re = re.compile(r"Avg:\s+([0-9.]+)\s+tok/s\s+\|\s+TTFT avg:\s+([0-9.]+)s\s+\|\s+min:\s+([0-9.]+)\s+\|\s+max:\s+([0-9.]+)")
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as exc:
+        return {"available": False, "log": str(path), "reason": str(exc)}
+    for line in lines:
+        if key := section_key(line):
+            current = key
+            continue
+        if current not in ("baseline", "tuned"):
+            continue
+        target = details[current]
+        stripped = line.strip()
+        if stripped.startswith("Governor:"):
+            target["cpu_governor"] = stripped.split(":", 1)[1].strip()
+        elif stripped.startswith("Processor:"):
+            target["processor"] = stripped.split(":", 1)[1].strip()
+        elif match := pass_re.search(stripped):
+            target["passes"].append({
+                "pass": int(match.group(1)),
+                "tokps": try_float(match.group(2)),
+                "ttft_s": try_float(match.group(3)),
+                "tokens": try_float(match.group(4)),
+            })
+        elif match := avg_re.search(stripped):
+            target["avg_tokps"] = try_float(match.group(1))
+            target["avg_ttft_s"] = try_float(match.group(2))
+            target["range_tokps"] = [try_float(match.group(3)), try_float(match.group(4))]
+    return details
+
+
+def extract_structured_telemetry(data: dict[str, Any], result_path: Path) -> dict[str, Any]:
+    telemetry = data.get("telemetry", {})
+    if not isinstance(telemetry, dict):
+        telemetry = {}
+    logs = telemetry.get("detail_logs", {})
+    if not isinstance(logs, dict):
+        logs = {}
+    return {
+        "schema_version": "cursiveos.structured-telemetry.v0.2",
+        "network": parse_network_detail_log(resolve_detail_log(result_path, logs.get("network"))),
+        "coldstart": parse_coldstart_detail_log(resolve_detail_log(result_path, logs.get("coldstart"))),
+        "sustained": parse_sustained_detail_log(resolve_detail_log(result_path, logs.get("sustained"))),
+        "idle_power": telemetry.get("idle_power", {}),
+    }
+
+
+def measurement_quality_flags(data: dict[str, Any], structured: dict[str, Any]) -> dict[str, Any]:
+    flags: list[str] = []
+    sample_counts = data.get("sample_counts", {})
+    if not isinstance(sample_counts, dict):
+        sample_counts = {}
+    idle_samples = int(sample_counts.get("idle_power") or 0)
+    if idle_samples < 3:
+        flags.append("idle_power_has_fewer_than_3_samples")
+    for name in ("network", "coldstart", "sustained"):
+        details = structured.get(name, {})
+        if not isinstance(details, dict) or not details.get("available"):
+            flags.append(f"{name}_detail_log_missing")
+    sustained = structured.get("sustained", {})
+    if isinstance(sustained, dict):
+        tuned_proc = str(sustained.get("tuned", {}).get("processor", "")).lower()
+        if "cpu" in tuned_proc and "gpu" not in tuned_proc:
+            flags.append("sustained_inference_cpu_bound")
+    regression = data.get("regression", {})
+    if isinstance(regression, dict) and not regression.get("full_test_passed", True):
+        flags.append("full_test_regression_flag_false")
+    return {
+        "schema_version": "cursiveos.measurement-quality.v0.2",
+        "flags": flags,
+        "decision_grade": not flags,
+        "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+    }
+
+
 def load_full_test_metrics_json(path: Path) -> dict[str, Any]:
     data = read_json(path)
     baseline = data.get("baseline", {})
@@ -536,6 +743,7 @@ def load_full_test_metrics_json(path: Path) -> dict[str, Any]:
         raise SeedError(f"full-test result JSON missing baseline/variant objects: {path}")
     if not isinstance(regression, dict):
         regression = {}
+    structured = extract_structured_telemetry(data, path)
     return {
         "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
         "source_result_json": str(path),
@@ -544,6 +752,8 @@ def load_full_test_metrics_json(path: Path) -> dict[str, Any]:
         "source_provenance_notes": data.get("source_provenance_notes"),
         "benchmark_context": data.get("benchmark_context", {}),
         "telemetry": data.get("telemetry", {}),
+        "structured_telemetry": structured,
+        "measurement_quality": measurement_quality_flags(data, structured),
         "machine_id": data.get("machine_id") or data.get("hardware_fingerprint_hash"),
         "hardware_fingerprint_hash": data.get("hardware_fingerprint_hash"),
         "preset_version": data.get("preset_version", "v0.8"),
@@ -845,6 +1055,14 @@ def postgrest_upsert(table: str, conflict_key: str, payload: dict[str, Any]) -> 
         raise SeedError(f"Supabase upload failed for {table}: {exc.reason}") from exc
 
 
+def optional_postgrest_upsert(table: str, conflict_key: str, payload: dict[str, Any]) -> bool:
+    try:
+        postgrest_upsert(table, conflict_key, payload)
+        return True
+    except SeedError:
+        return False
+
+
 def postgrest_insert(table: str, payload: dict[str, Any]) -> None:
     url = f"{public_supabase_url().rstrip('/')}/rest/v1/{table}"
     body = json.dumps(payload, sort_keys=True).encode("utf-8")
@@ -920,6 +1138,47 @@ def payout_payload(report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def full_test_detail_payload(
+    result: dict[str, Any],
+    *,
+    source_hash: str,
+    result_path: Path | None = None,
+) -> dict[str, Any]:
+    structured = result.get("structured_telemetry")
+    if not isinstance(structured, dict):
+        structured = extract_structured_telemetry(result, result_path) if result_path else {}
+    quality = result.get("measurement_quality")
+    if not isinstance(quality, dict):
+        quality = measurement_quality_flags(result, structured) if structured else {}
+    baseline = result.get("baseline", {})
+    candidate = result.get("variant", {})
+    delta = result.get("delta", {})
+    if not isinstance(baseline, dict):
+        baseline = {}
+    if not isinstance(candidate, dict):
+        candidate = {}
+    if not isinstance(delta, dict):
+        delta = {}
+    run_date = str(result.get("created_at", ""))[:10] or dt.date.today().isoformat()
+    return {
+        "source_hash": source_hash,
+        "machine_id": result.get("machine_id") or result.get("hardware_fingerprint_hash"),
+        "run_date": run_date,
+        "preset_version": result.get("preset_version", "v0.8"),
+        "wrapper_version": result.get("wrapper_version", "v1.4"),
+        "structured_telemetry": structured,
+        "measurement_quality": quality,
+        "result_summary": {
+            "baseline": baseline,
+            "variant": candidate,
+            "delta": delta,
+            "benchmark_context": result.get("benchmark_context", {}),
+            "regression": result.get("regression", {}),
+        },
+        "source": "seed_organism.py",
+    }
+
+
 def cmd_upload(args: argparse.Namespace) -> None:
     state = state_path(args)
     ensure_state(state)
@@ -965,7 +1224,7 @@ def postgrest_get(endpoint: str) -> list[dict[str, Any]]:
     return [row for row in data if isinstance(row, dict)]
 
 
-def upload_full_test_result(result: dict[str, Any]) -> str:
+def upload_full_test_result(result: dict[str, Any], result_path: Path | None = None) -> str:
     machine_id = str(result.get("machine_id") or result.get("hardware_fingerprint_hash") or "").strip()
     if not machine_id:
         raise SeedError("full-test result is missing machine_id")
@@ -990,6 +1249,12 @@ def upload_full_test_result(result: dict[str, Any]) -> str:
     if not all(isinstance(x, dict) for x in [baseline, candidate, delta, regression]):
         raise SeedError("full-test result has invalid metrics structure")
     run_date = str(result.get("created_at", ""))[:10] or dt.date.today().isoformat()
+    source_hash = sha256_json(result)
+    optional_postgrest_upsert(
+        "run_detail_bundles",
+        "source_hash",
+        full_test_detail_payload(result, source_hash=source_hash, result_path=result_path),
+    )
     net_baseline = num(baseline, "network_mbps")
     net_variant = num(candidate, "network_mbps")
     preset_version = str(result.get("preset_version", "v0.8"))
@@ -1001,7 +1266,6 @@ def upload_full_test_result(result: dict[str, Any]) -> str:
     )
     if postgrest_get(duplicate_query):
         return "already_present"
-    source_hash = sha256_json(result)
     postgrest_insert("runs", {
         "machine_id": machine_id,
         "run_date": run_date,
@@ -1055,7 +1319,7 @@ def cmd_recover_result(args: argparse.Namespace) -> None:
     config = load_config(state)
     result_path = Path(args.result_json)
     full_result = read_json(result_path)
-    normal_status = upload_full_test_result(full_result)
+    normal_status = upload_full_test_result(full_result, result_path=result_path)
     variant = validate_variant(read_json(Path(args.variant)))
     metrics = load_full_test_metrics_json(result_path)
     record_evaluation(state, config, variant, metrics, args.cycle_id)
