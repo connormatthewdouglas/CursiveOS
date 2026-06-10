@@ -33,6 +33,8 @@ Compares the current parent preset (`v0.8`) against the first narrow candidate (
 
 **Data transparency:** At the end of a run, CursiveOS uploads benchmark results to **CursiveRoot** (the project's sensor array and hardware-performance database). It uploads hardware and performance metadata (CPU/GPU model, OS/kernel version, benchmark deltas) — **not** personal files, documents, browser data, or shell history. The organism needs this data to learn which optimizations work on which hardware and to improve recommendations safely over time.
 
+> **CursiveRoot durability:** CursiveRoot runs on free-tier Supabase and is backed up daily (encrypted) with an auto-pause keep-alive. See [supabase/README.md](supabase/README.md) and [docs/specs/cursiveroot-data-durability-v1.md](docs/specs/cursiveroot-data-durability-v1.md).
+
 **See live results from all machines:**
 
 ```

@@ -1,0 +1,103 @@
+name: CursiveRoot DB Backup
+
+# Why this exists: CursiveRoot runs on a FREE Supabase project. Free projects
+# auto-pause after 7 days of inactivity, and on resume Supabase restores from a
+# backup snapshot ("recovery to earliest consistent point") rather than rolling
+# forward to the moment it paused — which silently dropped all run data once
+# (2026-06-10). This workflow does two jobs at once:
+#   1. KEEP-ALIVE  — a daily DB connection resets the 7-day idle timer, so the
+#      project never pauses and never triggers the lossy restore path.
+#   2. BACKUP      — an independent, encrypted logical backup (pg_dump) committed
+#      to git history, so even if a pause ever slips through, run data is
+#      recoverable. See docs/specs/cursiveroot-data-durability-v1.md.
+
+on:
+  schedule:
+    # 09:00 UTC daily. Daily cadence gives ~7 attempts inside the 7-day window
+    # even if GitHub delays/skips some scheduled runs under load.
+    - cron: "0 9 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: cursiveroot-db-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required secrets are present
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -e
+          test -n "$SUPABASE_DB_URL"   || { echo "::error::Missing secret SUPABASE_DB_URL (Session pooler connection string incl. password)"; exit 1; }
+          test -n "$BACKUP_PASSPHRASE" || { echo "::error::Missing secret BACKUP_PASSPHRASE (gpg symmetric passphrase)"; exit 1; }
+
+      - name: Install PostgreSQL 17 client
+        run: |
+          set -euo pipefail
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
+
+      - name: Dump + encrypt full backup, snapshot schema
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          ts="$(date -u +%Y%m%d-%H%M%S)"
+          mkdir -p supabase/backups
+          plain="$RUNNER_TEMP/cursiveroot-${ts}.dump"
+
+          # Full logical backup of the public schema (custom format = compact + selective restore).
+          pg_dump "$SUPABASE_DB_URL" \
+            --schema=public --no-owner --no-privileges --format=custom \
+            --file="$plain"
+
+          # Encrypt at rest — repo is PUBLIC, so raw operational data must never be committed.
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$BACKUP_PASSPHRASE" \
+            --cipher-algo AES256 --symmetric \
+            --output "supabase/backups/cursiveroot-${ts}.dump.gpg" \
+            "$plain"
+          rm -f "$plain"
+
+          # Human-readable schema snapshot (structure only, no data → safe unencrypted).
+          pg_dump "$SUPABASE_DB_URL" \
+            --schema=public --schema-only --no-owner --no-privileges \
+            --file="supabase/schema.sql"
+
+          echo "cursiveroot-${ts}.dump.gpg" > supabase/backups/LATEST
+          echo "Backup written: cursiveroot-${ts}.dump.gpg"
+
+      - name: Rotate (keep last 30 encrypted backups in the working tree)
+        run: |
+          set -euo pipefail
+          cd supabase/backups
+          ls -1t cursiveroot-*.dump.gpg 2>/dev/null | tail -n +31 | xargs -r rm -f
+          # Note: rotation only trims the working tree. Older backups remain
+          # recoverable from git history.
+
+      - name: Commit backup
+        run: |
+          set -euo pipefail
+          git config user.name  "cursive-backup-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add supabase/backups supabase/schema.sql
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore(db): automated CursiveRoot backup $(date -u +%F) [skip ci]"
+            git push
+          fi
