@@ -32,3 +32,10 @@ Owner: Copper Sage
 ## Notes
 - This is scaffolding for Day 8-11.
 - Validator and contributor payout functions still next.
+
+## Data durability (CursiveRoot)
+CursiveRoot is on the free Supabase plan and lost all run data once to a
+free-tier auto-pause + snapshot-restore (2026-06-10). Durability is now handled
+by a daily encrypted backup + keep-alive job. See
+[cursiveroot-data-durability-v1.md](cursiveroot-data-durability-v1.md) and
+[../../supabase/README.md](../../supabase/README.md).
