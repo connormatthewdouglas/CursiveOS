@@ -415,6 +415,7 @@ read_watts() {
                 watts=$(python3 -c "print(f'{($e2 - $e1) / 1_000_000:.2f}')" 2>/dev/null)
                 if [[ -n "$watts" && "$watts" =~ ^[0-9] ]]; then
                     echo "[guard] power source=energy_counter path=$rapl watts=$watts" >&2
+                    echo "energy_counter:$rapl" > "$LOG_DIR/.power_source"
                     echo "$watts"
                     return
                 fi
@@ -441,6 +442,7 @@ read_watts() {
             watts=$(python3 -c "v=$pu; print(f'{(v/1_000_000) if v>10000 else v:.2f}')" 2>/dev/null)
             if [[ -n "$watts" && "$watts" =~ ^[0-9] ]]; then
                 echo "[guard] power source=hwmon_power path=$power_uw raw=$pu watts=$watts" >&2
+                echo "hwmon_power:$power_uw" > "$LOG_DIR/.power_source"
                 echo "$watts"
                 return
             fi
@@ -456,6 +458,7 @@ read_watts() {
             | grep -E '^[0-9]*\.[0-9]+' | grep -v '^0\.00$' | tail -1 | awk '{print $1}')
         if [[ -n "$w" && "$w" =~ ^[0-9] ]]; then
             echo "[guard] power source=turbostat watts=$w" >&2
+            echo "turbostat:package" > "$LOG_DIR/.power_source"
             echo "$w"
             return
         fi
@@ -463,6 +466,23 @@ read_watts() {
 
     echo "[guard] power unsupported: no readable energy/power sensor" >&2
     echo "N/A"
+}
+
+# One-line JSON snapshot of measurement context (cheap sysfs reads). Converts
+# "mystery variance" into attributable variance: thermal state, governor,
+# AC/battery, GPU clock, and background load at the moment a phase starts.
+phase_context() {
+    local cpu_temp gov ac load gpu_mhz
+    cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -1 || true)
+    if [[ "$cpu_temp" =~ ^[0-9]+$ ]]; then cpu_temp=$((cpu_temp / 1000)); else cpu_temp=null; fi
+    gov=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "unknown")
+    ac=$(cat /sys/class/power_supply/A*/online 2>/dev/null | head -1 || true)
+    [[ "$ac" =~ ^[0-9]+$ ]] || ac=null
+    load=$(cut -d' ' -f1 /proc/loadavg 2>/dev/null || echo null)
+    gpu_mhz=$(cat /sys/class/drm/card*/gt_cur_freq_mhz 2>/dev/null | head -1 || true)
+    [[ -z "$gpu_mhz" ]] && gpu_mhz=$(grep -oP '^[0-9]+' /sys/class/drm/card*/device/pp_dpm_sclk 2>/dev/null | head -1 || true)
+    [[ "$gpu_mhz" =~ ^[0-9]+$ ]] || gpu_mhz=null
+    echo "{\"cpu_temp_c\": $cpu_temp, \"governor\": \"$gov\", \"ac_online\": $ac, \"load_1m\": $load, \"gpu_cur_mhz\": $gpu_mhz}"
 }
 
 sample_idle_power() {
@@ -531,6 +551,7 @@ extract_sustained() {
 # ── Idle power — baseline ─────────────────────────────────────────────────────
 echo ""
 echo "Reading idle power (no presets; median of up to 5 samples)..."
+PHASE_CTX_BASELINE=$(phase_context)
 IFS='|' read -r PWR_IDLE PWR_IDLE_SAMPLES_JSON PWR_IDLE_MIN PWR_IDLE_MAX PWR_IDLE_COUNT <<< "$(sample_idle_power 5)"
 echo "  → Idle power (baseline median): ${PWR_IDLE}W (${PWR_IDLE_COUNT} samples, range ${PWR_IDLE_MIN:-N/A}-${PWR_IDLE_MAX:-N/A}W)"
 
@@ -583,6 +604,7 @@ echo ""
 echo "Reading idle power with presets active (median of up to 5 samples)..."
 bash "$PRESET" --apply-temp 2>&1 | grep "✓" | sed 's/^/  /' || true
 sleep 3
+PHASE_CTX_TUNED=$(phase_context)
 IFS='|' read -r PWR_TUNED_IDLE PWR_TUNED_SAMPLES_JSON PWR_TUNED_MIN PWR_TUNED_MAX PWR_TUNED_COUNT <<< "$(sample_idle_power 5)"
 echo "  → Idle power (tuned median): ${PWR_TUNED_IDLE}W (${PWR_TUNED_COUNT} samples, range ${PWR_TUNED_MIN:-N/A}-${PWR_TUNED_MAX:-N/A}W)"
 
@@ -684,6 +706,8 @@ if [[ "$WARM_D" == "null" ]]; then
     echo "  [guard] sustained delta skipped/non-numeric: delta='${WARM_DELTA:-<empty>}'"
 fi
 
+POWER_SOURCE=$(cat "$LOG_DIR/.power_source" 2>/dev/null || echo "unknown")
+
 python3 - "$RESULT_JSON" <<PYJSON
 import json, datetime, sys
 
@@ -708,7 +732,7 @@ data = {
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.1",
+    "wrapper_version": "v1.4.2",
     "hardware": {
         "cpu": "$CPU_MODEL",
         "gpu": "$GPU_MODEL",
@@ -737,7 +761,7 @@ data = {
         "idle_power_w": n("$PWR_D")
     },
     "sample_counts": {
-        "network": 1,
+        "network": 5,
         "coldstart": 1,
         "sustained": 1,
         "idle_power": min(ni("$PWR_IDLE_COUNT") or 0, ni("$PWR_TUNED_COUNT") or 0)
@@ -754,7 +778,12 @@ data = {
             "baseline_samples_w": json.loads('$PWR_IDLE_SAMPLES_JSON'),
             "tuned_samples_w": json.loads('$PWR_TUNED_SAMPLES_JSON'),
             "baseline_range_w": [n("$PWR_IDLE_MIN"), n("$PWR_IDLE_MAX")],
-            "tuned_range_w": [n("$PWR_TUNED_MIN"), n("$PWR_TUNED_MAX")]
+            "tuned_range_w": [n("$PWR_TUNED_MIN"), n("$PWR_TUNED_MAX")],
+            "power_source": "$POWER_SOURCE"
+        },
+        "phase_context": {
+            "baseline": json.loads('${PHASE_CTX_BASELINE:-null}'),
+            "tuned": json.loads('${PHASE_CTX_TUNED:-null}')
         },
         "detail_logs": {
             "network": "$NET_LOG",
@@ -883,7 +912,7 @@ data = {
     "machine_id": "$MACHINE_ID",
     "run_date": "$( date +%Y-%m-%d )",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.1",
+    "wrapper_version": "v1.4.2",
     "network_baseline_mbit": n("$NET_B"),
     "network_tuned_mbit": n("$NET_T"),
     "network_delta_pct": n("$NET_D"),
@@ -896,7 +925,7 @@ data = {
     "power_idle_baseline_w": n("$PWR_B"),
     "power_idle_tuned_w": n("$PWR_T"),
     "power_delta_w": n("$PWR_D"),
-    "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL power_median_samples:${PWR_IDLE_COUNT}/${PWR_TUNED_COUNT}$POWER_NOTE",
+    "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL power_median_samples:${PWR_IDLE_COUNT}/${PWR_TUNED_COUNT} power_src:${POWER_SOURCE%%:*}$POWER_NOTE",
     "cpu_microcode_version": "$CPU_MICROCODE" if "$CPU_MICROCODE" not in ("unknown","") else None,
     "cpu_l1_cache_kb": ni("$CPU_L1_CACHE_KB") if "$CPU_L1_CACHE_KB" != "null" else None,
     "cpu_l2_cache_kb": ni("$CPU_L2_CACHE_KB") if "$CPU_L2_CACHE_KB" != "null" else None,
@@ -930,6 +959,59 @@ if [[ "$RUN_RESP" == "201" ]]; then
 else
     echo "  → CursiveRoot submit failed (HTTP $RUN_RESP) — results saved locally only."
 fi
+
+# ── Detail bundle upload (every run, not just the seed path) ──────────────────
+# Per-pass telemetry, power source, and phase context go to run_detail_bundles
+# so within-session variance reaches CursiveRoot. Idempotent by source hash.
+python3 - "$RESULT_JSON" <<'PYDETAIL' || echo "  [guard] detail bundle upload skipped"
+import hashlib, json, sys, urllib.request
+
+path = sys.argv[1]
+data = json.load(open(path))
+source_hash = hashlib.sha256(
+    json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
+).hexdigest()
+payload = {
+    "source_hash": source_hash,
+    "machine_id": data.get("machine_id"),
+    "run_date": str(data.get("created_at", ""))[:10] or None,
+    "preset_version": data.get("preset_version"),
+    "wrapper_version": data.get("wrapper_version"),
+    "structured_telemetry": data.get("telemetry", {}),
+    "measurement_quality": {
+        "sample_counts": data.get("sample_counts", {}),
+        "power_source": data.get("telemetry", {}).get("idle_power", {}).get("power_source"),
+        "phase_context": data.get("telemetry", {}).get("phase_context"),
+        "fingerprint_version": data.get("fingerprint_version"),
+    },
+    "result_summary": {
+        "baseline": data.get("baseline"),
+        "variant": data.get("variant"),
+        "delta": data.get("delta"),
+        "regression": data.get("regression"),
+        "benchmark_context": data.get("benchmark_context"),
+    },
+    "source": "cursiveos-full-test",
+}
+url = "https://iovvktpuoinmjdgfxgvm.supabase.co/rest/v1/run_detail_bundles?on_conflict=source_hash"
+key = "sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
+req = urllib.request.Request(
+    url,
+    data=json.dumps(payload).encode(),
+    headers={
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=ignore-duplicates,return=minimal",
+    },
+    method="POST",
+)
+try:
+    with urllib.request.urlopen(req, timeout=30) as res:
+        print(f"  → Detail bundle uploaded (hash {source_hash[:12]}…)")
+except Exception as exc:
+    print(f"  [guard] detail bundle upload failed: {exc}")
+PYDETAIL
 
 # ── Append to local hardware-profiles.json (backup) ──────────────────────────
 if [[ -f "$HW_DB" ]] && command -v python3 &>/dev/null; then
@@ -977,7 +1059,7 @@ machine["runs"].append({
     "date": datetime.date.today().isoformat(),
     "submission_timestamp": "$SUBMISSION_TIMESTAMP",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.1",
+    "wrapper_version": "v1.4.2",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
