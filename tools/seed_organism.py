@@ -909,8 +909,14 @@ def cmd_screen_variant(args: argparse.Namespace) -> None:
     parent_variant = validate_variant(read_json(Path(args.parent_variant)))
     candidate_variant = validate_variant(read_json(Path(args.candidate_variant)))
     if args.execute:
-        parent_metrics = execute_linux_harness(parent_variant)
-        candidate_metrics = execute_linux_harness(candidate_variant)
+        if getattr(args, "reverse_order", False):
+            # Counterbalanced session: candidate measured first, parent second.
+            # Metric labeling is unaffected; only execution order changes.
+            candidate_metrics = execute_linux_harness(candidate_variant)
+            parent_metrics = execute_linux_harness(parent_variant)
+        else:
+            parent_metrics = execute_linux_harness(parent_variant)
+            candidate_metrics = execute_linux_harness(candidate_variant)
     else:
         if not args.parent_result_json or not args.candidate_result_json:
             raise SeedError("provide both result JSON files, or use --execute on a Linux test host")
@@ -1346,6 +1352,7 @@ def build_parser() -> argparse.ArgumentParser:
     screen.add_argument("--parent-result-json", help="existing full-test JSON for the parent preset")
     screen.add_argument("--candidate-result-json", help="existing full-test JSON for the candidate preset")
     screen.add_argument("--execute", action="store_true", help="run parent then candidate full tests on a Linux host")
+    screen.add_argument("--reverse-order", action="store_true", help="with --execute, measure candidate first then parent (counterbalancing)")
     screen.add_argument("--cycle-id", type=int, default=1)
 
     close = sub.add_parser("close-cycle", help="compute simulated payout report for accepted contributor fitness")
