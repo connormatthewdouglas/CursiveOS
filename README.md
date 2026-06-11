@@ -13,23 +13,32 @@ The OS-layer bottlenecks are the same for both: network transport ceilings, sche
 
 CursiveOS is building toward a v1.0 release that ships with a **natural-language shell as the default terminal**. The interface humans have used to operate Linux for fifty years becomes a conversation with a local agent. You describe outcomes; the agent finds the mechanism. Full roadmap: [ROADMAP.md](ROADMAP.md).
 
-## Try It Now
+## Try It Now — one paste, full session
 
-### Step 1: Run the full benchmark and upload telemetry
-
-```bash
-git clone https://github.com/connormatthewdouglas/CursiveOS.git 2>/dev/null; git -C ~/CursiveOS pull --ff-only 2>/dev/null || echo "⚠ Local changes detected — skipping update, running your local version."; chmod +x ~/CursiveOS/cursiveos-full-test-v1.4.sh; cd ~/CursiveOS && bash cursiveos-full-test-v1.4.sh
-```
-
-Runs all benchmarks, applies presets, shows you exactly what you gain, reverts automatically, and uploads the run plus structured telemetry to CursiveRoot.
-
-### Step 2: Run the first mutation screen
+Paste this one command on a Linux test machine. It runs the entire Phase 0
+measurement session and uploads everything to CursiveRoot automatically:
 
 ```bash
-command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | bash
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh) | bash
 ```
 
-Compares the current parent preset (`v0.8`) against the first narrow candidate (`v0.9-network-efficient`). This is a diagnostic screen only: one observation cannot accept a mutation or create a payout.
+What it does, in order:
+
+1. **Recovers** any results still saved locally from earlier installs.
+2. **Genesis baseline** — records this machine's v0.8 baseline under its
+   hardware fingerprint (skipped automatically if CursiveRoot already has one).
+3. **Mutation screen** — compares the parent preset (`v0.8`) against the first
+   narrow candidate (`v0.9-network-efficient`): can the network gain be kept
+   without the always-on power cost? A single screen is diagnostic only — one
+   observation can never accept a mutation or create a payout.
+4. **Uploads** all artifacts and prints the analyzer verdict.
+
+Every step is idempotent — if anything is interrupted, just paste the same
+command again. All presets are reverted automatically at the end of each
+benchmark pass. The genesis baseline does not produce a payout; accepted
+variants can later flow through a *simulated* revenue cycle that pays no real
+money, and benchmark testers are not paid for running a test unless they are
+also the contributor of an accepted variant.
 
 **Data transparency:** At the end of a run, CursiveOS uploads benchmark results to **CursiveRoot** (the project's sensor array and hardware-performance database). It uploads hardware and performance metadata (CPU/GPU model, OS/kernel version, benchmark deltas) — **not** personal files, documents, browser data, or shell history. The organism needs this data to learn which optimizations work on which hardware and to improve recommendations safely over time.
 
@@ -41,39 +50,17 @@ Compares the current parent preset (`v0.8`) against the first narrow candidate (
 ./scripts/cursiveroot-status.sh
 ```
 
-## One-Paste Phase 0 Session (recommended for test rigs)
+### Individual test paths (advanced)
 
-One command that does the entire Phase 0 measurement session: recovers any
-locally saved results from earlier installs, records this machine's genesis
-baseline (skipped if already recorded), runs the v0.8 vs v0.9-network-efficient
-mutation screen, uploads everything to CursiveRoot, and prints the analyzer
-verdict. Safe to re-paste — every step is idempotent.
+The full session above supersedes these for normal testing, but each phase can
+still be run on its own:
 
-```bash
-command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh) | bash
-```
+- **Benchmark only** (no seed organism bookkeeping):
+  `git clone https://github.com/connormatthewdouglas/CursiveOS.git; cd ~/CursiveOS && bash cursiveos-full-test-v1.4.sh`
+- **Genesis baseline only:** `seed-organism-linux-test.sh` (same curl-pipe pattern as above)
+- **Mutation screen only:** `seed-mutation-linux-test.sh` (same curl-pipe pattern as above)
 
-## Seed Organism Linux Test
-
-This is the one-command Phase 0 organism path for a real Linux test machine. It clones or updates CursiveOS, runs the full benchmark/preset loop, records the v0.8 run as a genesis baseline measurement, uploads seed artifacts to CursiveRoot, and leaves local backups under `~/CursiveOS/.cursiveos/seed/`.
-
-The genesis baseline measurement does not produce a payout. Later candidate variants that are accepted can be passed through a simulated revenue cycle; that simulation does not pay real money. If a variant is accepted, the `contributor_id` attached to it receives hypothetical sats in the payout report. Benchmark testers are not paid simply for running a test unless they are also the contributor for an accepted variant.
-
-```bash
-command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-organism-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-organism-linux-test.sh) | bash
-```
-
----
-
-## Next mutation screen
-
-The first true seed mutation is deliberately narrow: `v0.9-network-efficient` keeps only the network tunings from v0.8 and removes the CPU/GPU always-on power-state changes. It asks whether the network result can be retained without the Vega idle-power cost.
-
-This command runs v0.8 and the candidate consecutively on the same Linux host, submits the screen to CursiveRoot, and never creates a payout from a single observation:
-
-```bash
-command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | bash
-```
+Details and development workflows: [docs/specs/seed-organism-runbook-v0.1.md](docs/specs/seed-organism-runbook-v0.1.md).
 
 ## Results (v0.8 preset, initial measurements)
 
