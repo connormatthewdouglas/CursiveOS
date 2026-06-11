@@ -199,6 +199,93 @@ def machine_hygiene(runs: list[dict[str, Any]], machines: list[dict[str, Any]]) 
     }
 
 
+def screen_relative_delta(parent: dict[str, Any], candidate: dict[str, Any], metric: str) -> float | None:
+    p = num(parent.get(metric))
+    c = num(candidate.get(metric))
+    if p is None or c is None or p == 0:
+        return None
+    return (c - p) / abs(p) * 100.0
+
+
+def classify_latest_screen(screen_bundles: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Classify the most recent parent/candidate screen bundle.
+
+    Possible classifications:
+      invalid_regression  - a regression gate failed; fix before interpreting
+      negative_signal     - candidate clearly worse on a primary metric
+      repeat_worthy       - hypothesis holding; rerun with reversed order
+      diagnostic_only     - mixed/noisy; informative but not yet directional
+
+    A single screen can never accept a mutation regardless of classification.
+    """
+    for b in screen_bundles:
+        rb = b.get("result_bundle")
+        if not isinstance(rb, dict):
+            continue
+        metrics = rb.get("metrics")
+        if not isinstance(metrics, dict):
+            continue
+        if metrics.get("source_provenance") != "paired_full_test_screen":
+            continue
+
+        parent = metrics.get("baseline", {}) or {}
+        candidate = metrics.get("variant", {}) or {}
+        regression = metrics.get("regression", {}) or {}
+        comparison = metrics.get("comparison", {}) or {}
+
+        net_rel = screen_relative_delta(parent, candidate, "network_mbps")
+        cold_rel = screen_relative_delta(parent, candidate, "coldstart_ms")
+        sust_rel = screen_relative_delta(parent, candidate, "sustained_tokps")
+        p_w = num(parent.get("idle_watts"))
+        c_w = num(candidate.get("idle_watts"))
+        power_delta_w = (c_w - p_w) if (p_w is not None and c_w is not None) else None
+
+        reasons: list[str] = []
+        failures = list(regression.get("failures", []) or [])
+        if failures or not regression.get("full_test_passed", True):
+            classification = "invalid_regression"
+            reasons.append(f"regression gate problems: {failures or ['full-test gate failed']}")
+        elif (net_rel is not None and net_rel < -10) or \
+             (cold_rel is not None and cold_rel > 10) or \
+             (sust_rel is not None and sust_rel < -5):
+            classification = "negative_signal"
+            if net_rel is not None and net_rel < -10:
+                reasons.append(f"candidate network {net_rel:+.1f}% vs parent (lost the headline signal)")
+            if cold_rel is not None and cold_rel > 10:
+                reasons.append(f"candidate cold-start {cold_rel:+.1f}% vs parent (slower)")
+            if sust_rel is not None and sust_rel < -5:
+                reasons.append(f"candidate sustained {sust_rel:+.1f}% vs parent")
+        elif power_delta_w is not None and power_delta_w <= -1.0 and (net_rel is None or net_rel >= -10):
+            classification = "repeat_worthy"
+            reasons.append(f"idle power {power_delta_w:+.1f}W vs parent while network held ({fmt_pct(net_rel)})")
+            reasons.append("rerun the screen with reversed order before any acceptance step")
+        else:
+            classification = "diagnostic_only"
+            reasons.append(
+                "no clear directional result: "
+                f"net {fmt_pct(net_rel)}, cold {fmt_pct(cold_rel)}, "
+                f"sustained {fmt_pct(sust_rel)}, power {fmt_num(power_delta_w, 'W', digits=1, signed=True)}"
+            )
+
+        return {
+            "bundle_hash": b.get("bundle_hash"),
+            "created_at": b.get("created_at"),
+            "machine_id": b.get("machine_id"),
+            "parent_variant": comparison.get("parent_variant_id"),
+            "candidate_variant": comparison.get("candidate_variant_id"),
+            "candidate_vs_parent": {
+                "network_pct": net_rel,
+                "coldstart_pct": cold_rel,
+                "sustained_pct": sust_rel,
+                "idle_power_w": power_delta_w,
+            },
+            "classification": classification,
+            "reasons": reasons,
+            "acceptance_limit": "one screening session can never accept a mutation",
+        }
+    return None
+
+
 def decision_readiness(runs: list[dict[str, Any]], bundles: list[dict[str, Any]]) -> dict[str, Any]:
     accepted = [b for b in bundles if b.get("decision") == "accepted"]
     inconclusive = [b for b in bundles if b.get("decision") == "inconclusive"]
@@ -290,6 +377,11 @@ def fetch_snapshot(limit: int) -> dict[str, Any]:
         "run_detail_bundles": optional_postgrest_get(
             f"run_detail_bundles?select={safe_detail_cols}&order=created_at.desc&limit={limit}"
         ),
+        # Recent bundles with full payloads, for screen classification only.
+        "screen_bundles": optional_postgrest_get(
+            f"seed_bundles?select={safe_bundle_cols},result_bundle"
+            "&order=created_at.desc&limit=10"
+        ),
     }
 
 
@@ -321,6 +413,7 @@ def analyze(snapshot: dict[str, Any]) -> dict[str, Any]:
         },
         "hygiene": machine_hygiene(runs, machines),
         "decision_readiness": decision_readiness(runs, bundles),
+        "screen_verdict": classify_latest_screen(snapshot.get("screen_bundles", [])),
     }
 
 
@@ -388,6 +481,32 @@ def print_report(snapshot: dict[str, Any], result: dict[str, Any], latest: int) 
             f"{latest_bundle.get('variant_id')} -> {latest_bundle.get('decision')} "
             f"confidence={latest_bundle.get('confidence')}"
         )
+
+    verdict = result.get("screen_verdict")
+    if verdict:
+        print("")
+        print("Latest Screen Verdict")
+        print("---------------------")
+        labels = {
+            "repeat_worthy": "REPEAT-WORTHY — hypothesis holding, rerun with reversed order",
+            "negative_signal": "NEGATIVE SIGNAL — candidate underperformed the parent",
+            "invalid_regression": "INVALID — regression gate failed, fix before interpreting",
+            "diagnostic_only": "DIAGNOSTIC ONLY — mixed/noisy, no directional call yet",
+        }
+        print(f"screen:       {verdict.get('parent_variant')} vs {verdict.get('candidate_variant')}")
+        print(f"machine:      {verdict.get('machine_id')}  at {str(verdict.get('created_at') or '')[:19]}")
+        cmp_ = verdict.get("candidate_vs_parent", {})
+        print(
+            "cand-parent:  "
+            f"net {fmt_pct(cmp_.get('network_pct'))}, "
+            f"cold {fmt_pct(cmp_.get('coldstart_pct'))}, "
+            f"sustained {fmt_pct(cmp_.get('sustained_pct'))}, "
+            f"power {fmt_num(cmp_.get('idle_power_w'), 'W', digits=1, signed=True)}"
+        )
+        print(f"verdict:      {labels.get(verdict.get('classification'), verdict.get('classification'))}")
+        for reason in verdict.get("reasons", []):
+            print(f"  - {reason}")
+        print(f"  - {verdict.get('acceptance_limit')}")
 
     print("")
     print("Decision Notes")

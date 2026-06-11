@@ -1,8 +1,8 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-05-31
+**Last updated:** 2026-06-10
 **Current parent preset:** v0.8 (28 tweaks)
 **Current candidate:** v0.9-network-efficient (network-only power tradeoff screen)
-**Current wrapper:** v1.4
+**Current wrapper:** v1.4.1 (stable fingerprint v2)
 **Board reviewed:** 2026-03-23 05:30 EDT
 
 ---
@@ -11,13 +11,20 @@
 
 Phase 0 has begun in operation. CursiveRoot now has a live decision-grade analyzer that separates characterization data from mutation-selection evidence. One real Vega genesis baseline is recorded in CursiveRoot with decision `measured_baseline`, not accepted fitness: network +515.20% under loopback WAN simulation, cold-start -3.11%, sustained -0.36%, idle power +3.2W. The latest Intel i5 run on 2026-05-31 shows the same pattern: strong network lift, a promising cold-start result, small sustained-inference movement, and a measurable idle-power cost. The next action is still to screen a network-only candidate against v0.8, with multi-sample power capture and no payout from one observation.
 
-**CursiveRoot status at May 31, 2026:**
-- 74 regular benchmark run records are visible.
+**CursiveRoot status at June 10, 2026:**
+- 77 regular benchmark run records are visible (Mar 20 → Jun 1).
 - 1 seed bundle exists (`genesis-baseline-v0.8`, machine `bda4bd63b3564822`).
 - 0 accepted seed mutations and 0 seed payout reports exist.
-- 0 candidate screen bundles are visible.
-- 0 run detail bundles are visible until the v0.2 migration is applied.
+- 0 candidate screen bundles are visible (a v0.9 run row exists from Jun 1 on the i5, but no screen bundle was uploaded).
+- 0 run detail bundles; the v0.2 migration **is applied** (table exists), detail bundles will appear with the next recovered/new upload.
 - Public insert/read policy is acceptable only for controlled Phase 0 and must be hardened before external rollout.
+
+**Infrastructure status at June 10, 2026:**
+- **Data durability incident:** the free-tier auto-pause + resume left CursiveRoot looking empty for 1–2 hours before the async restore completed. A daily encrypted backup + keep-alive GitHub Action now prevents the pause and keeps independent backups. See `docs/specs/cursiveroot-data-durability-v1.md`. ⚠️ Requires two repo secrets (`SUPABASE_DB_URL`, `BACKUP_PASSPHRASE`) — not yet configured.
+- **Schema is now tracked:** full CursiveRoot schema captured as migrations under `supabase/migrations/` and registered in `supabase_migrations` on the live project.
+- **Security hardening applied:** `security_invoker` on `v_l5_*` views, pinned `search_path` on all l5 functions, anon/authenticated EXECUTE revoked on economics functions.
+- **Machine identity canonicalized (board task #3 done):** wrapper v1.4.1 computes fingerprint v2 from stable hardware only (CPU model | board | GPU PCI ids) so kernel updates no longer fragment identity. Legacy slugs and v1 hashes map via the new `machine_aliases` table (backfilled: vega, elizabe, stardust). Missing `os`/`kernel` on machine rows backfilled.
+- **Founder rig hardware changed:** the Vega rig was rebuilt (Intel CPU + Arc A750, 64 GB RAM, 1 TB NVMe). New hardware = new fingerprint = new machine; it needs its own genesis baseline before the v0.9 screen. The one-paste session script `seed-session-linux-test.sh` handles recovery → genesis → screen → upload in a single command.
 
 **v0.8 confirmed stack (3 tweaks on top of v0.7 base):**
 - `kernel.sched_util_clamp_min=128` (wq-013)
@@ -28,20 +35,20 @@ Phase 0 has begun in operation. CursiveRoot now has a live decision-grade analyz
 
 ## Active Board Tasks — Priority Order
 
-### 1. Apply the decision-grade sensor migration
-- Apply `references/SUPABASE-MIGRATION-decision-grade-sensors-v0.2.sql` to CursiveRoot.
-- Confirm `run_detail_bundles` accepts recovered full-test detail uploads.
-- Keep anon insert/select only for founder bootstrap; plan authenticated tester/machine identity before external rollout.
+### 1. ~~Apply the decision-grade sensor migration~~ ✅ done (2026-06-10)
+- `run_detail_bundles` exists on CursiveRoot and is part of the tracked baseline migration.
+- Anon insert/select retained for founder bootstrap; authenticated tester/machine identity still required before external rollout.
 
-### 2. Run the v0.9 network-efficient parent/candidate screen
-- Run v0.8 -> v0.9 and then v0.9 -> v0.8 on the same host.
-- Repeat on at least one additional machine.
+### 2. Run the v0.9 network-efficient parent/candidate screen ← NEXT PHYSICAL TEST
+- On the rebuilt founder rig (Intel + Arc A750), paste the one-command session:
+  it recovers any saved results, records the new machine's genesis baseline,
+  runs the v0.8 → v0.9 screen, uploads everything, and prints the verdict.
+- Then repeat with reversed order (v0.9 → v0.8) and on at least one additional machine.
 - Treat each single screen as diagnostic only; do not accept inheritance from one host/order.
 
-### 3. Canonicalize machine identity
-- Use hardware fingerprint ids as the canonical CursiveRoot join key.
-- Preserve old slug machine ids as aliases, not primary organism identity.
-- Backfill missing `os` and `kernel` on old machine rows where possible.
+### 3. ~~Canonicalize machine identity~~ ✅ done (2026-06-10)
+- Fingerprint v2 (stable hardware identity) is the canonical join key as of wrapper v1.4.1.
+- Old slug ids and v1 hashes preserved in `machine_aliases`; `os`/`kernel` backfilled.
 
 ### 4. Define the Founding Operator program
 - Write the simple rules for who qualifies, what they do, what they get, and how future upside will be considered.

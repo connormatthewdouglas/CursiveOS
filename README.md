@@ -41,6 +41,18 @@ Compares the current parent preset (`v0.8`) against the first narrow candidate (
 ./scripts/cursiveroot-status.sh
 ```
 
+## One-Paste Phase 0 Session (recommended for test rigs)
+
+One command that does the entire Phase 0 measurement session: recovers any
+locally saved results from earlier installs, records this machine's genesis
+baseline (skipped if already recorded), runs the v0.8 vs v0.9-network-efficient
+mutation screen, uploads everything to CursiveRoot, and prints the analyzer
+verdict. Safe to re-paste — every step is idempotent.
+
+```bash
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh) | bash
+```
+
 ## Seed Organism Linux Test
 
 This is the one-command Phase 0 organism path for a real Linux test machine. It clones or updates CursiveOS, runs the full benchmark/preset loop, records the v0.8 run as a genesis baseline measurement, uploads seed artifacts to CursiveRoot, and leaves local backups under `~/CursiveOS/.cursiveos/seed/`.

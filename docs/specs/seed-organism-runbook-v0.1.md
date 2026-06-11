@@ -25,6 +25,18 @@ python3 tools/seed_organism.py remote-status
 
 Local state is written under `.cursiveos/seed/` and is intentionally ignored by git.
 
+## One-paste full session (preferred for test rigs)
+
+`seed-session-linux-test.sh` runs the complete Phase 0 session in one paste:
+recovery of any locally saved results → genesis baseline for this machine's
+fingerprint (skipped if CursiveRoot already has one) → v0.8 vs
+v0.9-network-efficient screen → upload → analyzer verdict. Every step is safe
+to repeat; re-pasting the same command resumes/retries idempotently.
+
+```bash
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh) | bash
+```
+
 ## Linux test-host loop
 
 Use this path on a Linux machine that can safely run the existing CursiveOS full-test harness. This is the intended non-technical tester path: open Terminal, paste one command, and let the local runner clone/update the repo before running the seed organism.

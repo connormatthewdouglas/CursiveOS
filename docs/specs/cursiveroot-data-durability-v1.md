@@ -1,13 +1,33 @@
 # CursiveRoot Data Durability v1
 
-Date: 2026-06-10
+Date: 2026-06-10 (corrected same day — see Addendum)
 Status: Active
 Scope: CursiveRoot Supabase project (`iovvktpuoinmjdgfxgvm`), free plan
+
+> **ADDENDUM (2026-06-10, ~2h later): the data came back.** Roughly 1–2 hours
+> after the project resumed, all 77 runs, 5 machines, the genesis seed bundle,
+> and the Layer 5 rows were visible again. The restore after unpausing is
+> evidently **asynchronous**: the project reports `ACTIVE_HEALTHY` and serves
+> queries while tables are still empty (confirmed via `pg_stat_user_tables`
+> showing zero inserts and zero live tuples ~10 minutes after resume), and the
+> data lands later. Revised lessons:
+>
+> 1. **An empty database right after unpausing is not proof of data loss.**
+>    Wait 1–2 hours and re-check before concluding anything.
+> 2. **Do not write to or "repair" the database during that window** — writes
+>    could collide with the late-arriving restore. (Our re-seeded parameter
+>    rows used `on conflict do nothing`, so no harm was done.)
+> 3. **Everything else below still stands.** The free tier has no PITR and no
+>    user-accessible backups; the auto-pause → restore path is still the
+>    biggest data risk, and the daily backup + keep-alive job remains the
+>    protection. The original analysis is preserved below as written, with
+>    the loss conclusion corrected by this addendum.
 
 ## Why this document exists
 
 On **2026-06-10** CursiveRoot was found with its full schema intact but **every
-table empty** — all run data was gone. Root cause was identified from the
+table empty** immediately after resuming from a free-tier auto-pause (the data
+reappeared 1–2 hours later — see Addendum). Root cause was identified from the
 Postgres logs and project metadata.
 
 ## What happened (root cause)
@@ -94,9 +114,13 @@ repo; backups are unrecoverable without it).
 
 ## If data loss recurs
 
-1. Do **not** write to the database — avoid overwriting any recoverable state.
-2. Restore the newest backup into a **scratch** database and verify
-   (`supabase/restore.sh`), then promote.
-3. Check `pg_stat_user_tables` and the Postgres logs (look again for
-   "recovery to earliest consistent point") to confirm whether a pause/restore
-   was the cause, then verify the daily workflow is still green.
+1. Do **not** write to the database — avoid colliding with a possibly
+   still-running restore.
+2. **Wait 1–2 hours and re-check** (`pg_stat_user_tables`, row counts). The
+   post-unpause restore is asynchronous and the database can look empty while
+   it is still in flight.
+3. Only if the data has not returned: restore the newest backup into a
+   **scratch** database and verify (`supabase/restore.sh`), then promote.
+4. Check the Postgres logs (look for "recovery to earliest consistent point")
+   to confirm whether a pause/restore was the cause, then verify the daily
+   workflow is still green.
