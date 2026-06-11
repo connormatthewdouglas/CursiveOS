@@ -1,0 +1,14 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.9b-gpu-retained",
+  "parent_variant_id": "genesis-baseline-v0.8",
+  "contributor_id": "local-founder",
+  "commit_ref": "candidate-v0.9b-gpu-retained",
+  "preset_version": "v0.9b-gpu-retained",
+  "preset_path": "presets/cursiveos-presets-v0.9b-gpu-retained.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "declared_scope": "Keep the v0.9 network stack and the Arc GPU frequency tweaks; remove only CPU C-state, governor, EPP, scheduler, and memory tuning.",
+  "hypothesis": "The Arc cold-start improvement survives via the GPU frequency tweaks while most of the v0.8 idle-power cost (attributed to CPU power-state tuning) is recovered. Motivated by the 2026-06-11 screen where v0.9-network-efficient saved 3.3W but lost the entire -51% cold-start gain.",
+  "rollback_method": "The full-test harness applies temporary presets and runs preset --undo before completion."
+}

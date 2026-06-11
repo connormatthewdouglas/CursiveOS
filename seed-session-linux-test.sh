@@ -158,19 +158,36 @@ else
   fi
 fi
 
-step "4/5 Mutation screen: v0.8 parent vs v0.9-network-efficient candidate"
-note "Two full benchmark sessions, back to back. Screening only — one screen"
-note "cannot accept a mutation or create a payout."
-if python3 tools/seed_organism.py screen-variant \
-    --parent-variant references/seed-organism/variant.genesis-linux.json \
-    --candidate-variant references/seed-organism/variant.v0.9-network-efficient.json \
-    --execute \
-    --cycle-id "$CYCLE_ID"; then
-  PASS=$((PASS+1))
-else
-  FAIL=$((FAIL+1))
-  note "Screen had a problem — see logs/. Artifacts are saved locally."
-fi
+# Screens to run, space-separated "order:variant" entries. Order is "normal"
+# (parent first) or "reversed" (candidate first, for counterbalancing).
+SCREENS="${CURSIVEOS_SCREENS:-normal:v0.9-network-efficient}"
+
+step "4/5 Mutation screen(s): $SCREENS"
+note "Each screen is two full benchmark sessions, back to back. Screening only —"
+note "one screen cannot accept a mutation or create a payout."
+for entry in $SCREENS; do
+  order="${entry%%:*}"
+  cand="${entry#*:}"
+  cand_file="references/seed-organism/variant.${cand}.json"
+  if [[ ! -f "$cand_file" ]]; then
+    note "Unknown candidate variant '$cand' (no $cand_file) — skipping."
+    FAIL=$((FAIL+1))
+    continue
+  fi
+  extra=()
+  [[ "$order" == "reversed" ]] && extra+=(--reverse-order)
+  note "── Screen: v0.8 vs $cand (order: $order)"
+  if python3 tools/seed_organism.py screen-variant \
+      --parent-variant references/seed-organism/variant.genesis-linux.json \
+      --candidate-variant "$cand_file" \
+      --execute "${extra[@]}" \
+      --cycle-id "$CYCLE_ID"; then
+    PASS=$((PASS+1))
+  else
+    FAIL=$((FAIL+1))
+    note "Screen '$cand' had a problem — see logs/. Artifacts are saved locally."
+  fi
+done
 
 step "5/5 Uploading artifacts and computing the verdict"
 python3 tools/seed_organism.py upload || note "Upload unavailable — bundles remain saved under .cursiveos/seed/."
