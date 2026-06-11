@@ -17,6 +17,11 @@ on:
     # even if GitHub delays/skips some scheduled runs under load.
     - cron: "0 9 * * *"
   workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      # Self-test: any edit to this workflow runs a backup immediately.
+      - ".github/workflows/db-backup.yml"
 
 concurrency:
   group: cursiveroot-db-backup
