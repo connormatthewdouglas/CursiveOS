@@ -243,12 +243,29 @@ OS_NAME=$(lsb_release -ds 2>/dev/null || echo "unknown")
 CPU_CORES=$(nproc)
 SUBMISSION_TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-# ── v1.4: Hardware fingerprint hash ──────────────────────────────────────────
+# ── Hardware fingerprint hash ────────────────────────────────────────────────
+# v2 (canonical): built only from stable hardware identity, so the machine
+# keeps the same CursiveRoot identity across kernel updates, microcode
+# updates, and driver/vBIOS changes. It changes only when the actual hardware
+# (CPU, motherboard, GPU) changes — which correctly registers as a new machine.
 CPU_MICROCODE=$(grep -m1 'microcode' /proc/cpuinfo | awk '{print $3}' 2>/dev/null || echo "unknown")
 GPU_VBIOS=$(cat /sys/class/drm/card*/device/vbios_version 2>/dev/null | head -1 || echo "unknown")
-HW_FINGERPRINT=$(echo "${CPU_MICROCODE}-${GPU_VBIOS}-${KERNEL}" | sha256sum | cut -c1-16)
-# Use the fingerprint as the canonical CursiveRoot machine key so run rows
-# align with seed-organism bundles across host renames and repeated cycles.
+BOARD_VENDOR=$(cat /sys/class/dmi/id/board_vendor 2>/dev/null | xargs || echo "unknown")
+BOARD_NAME=$(cat /sys/class/dmi/id/board_name 2>/dev/null | xargs || echo "unknown")
+GPU_PCI_IDS=$(lspci -nn 2>/dev/null | grep -Ei 'vga|3d|display' | grep -oE '\[[0-9a-f]{4}:[0-9a-f]{4}\]' | sort | tr -d '\n' || true)
+HW_ID_TUPLE="${CPU_MODEL:-unknown}|${BOARD_VENDOR:-unknown}|${BOARD_NAME:-unknown}|${GPU_PCI_IDS:-nogpu}"
+if [[ "$HW_ID_TUPLE" == "unknown|unknown|unknown|nogpu" ]]; then
+    # No DMI/PCI identity available (some VMs/containers): fall back to the
+    # OS install identity so the fingerprint is still deterministic.
+    HW_ID_TUPLE="machineid|$(cat /etc/machine-id 2>/dev/null || hostname)"
+fi
+HW_FINGERPRINT=$(echo "$HW_ID_TUPLE" | sha256sum | cut -c1-16)
+FINGERPRINT_VERSION=2
+# v1 (legacy): microcode+vBIOS+kernel hash used by wrapper <= v1.4. Recorded as
+# an alias so rows uploaded under the old scheme stay joinable to this machine.
+LEGACY_FINGERPRINT_V1=$(echo "${CPU_MICROCODE}-${GPU_VBIOS}-${KERNEL}" | sha256sum | cut -c1-16)
+# The fingerprint is the canonical CursiveRoot machine key so run rows align
+# with seed-organism bundles across host renames and repeated cycles.
 MACHINE_ID="$HW_FINGERPRINT"
 
 # ── v1.5: Extended hardware fingerprint ───────────────────────────────────────
@@ -688,8 +705,10 @@ data = {
     "created_at": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat(),
     "machine_id": "$HW_FINGERPRINT",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
+    "fingerprint_version": $FINGERPRINT_VERSION,
+    "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4",
+    "wrapper_version": "v1.4.1",
     "hardware": {
         "cpu": "$CPU_MODEL",
         "gpu": "$GPU_MODEL",
@@ -784,7 +803,8 @@ if [[ "$MACHINE_EXISTS" == "[]" ]]; then
   "gpu_vendor": $GPU_VENDOR_JSON,
   "ram_gb": $RAM_GB,
   "os": "$OS_NAME",
-  "kernel": "$KERNEL"
+  "kernel": "$KERNEL",
+  "fingerprint_version": $FINGERPRINT_VERSION
 }
 JSON
 )
@@ -829,6 +849,16 @@ if [[ "$MACHINE_RESP" != "200" && "$MACHINE_RESP" != "201" ]]; then
     [[ -n "${MACHINE_RESP_BODY:-}" ]] && echo "  [guard] machines response: $MACHINE_RESP_BODY"
 fi
 
+# Record the legacy v1 fingerprint as an alias of this machine so rows
+# uploaded by wrapper <= v1.4 stay joinable (best-effort, idempotent).
+if [[ -n "${LEGACY_FINGERPRINT_V1:-}" && "$LEGACY_FINGERPRINT_V1" != "$MACHINE_ID" ]]; then
+    curl -s -o /dev/null -X POST \
+        "${SUPABASE_HEADERS[@]}" \
+        -H "Prefer: resolution=ignore-duplicates,return=minimal" \
+        "$SUPABASE_URL/rest/v1/machine_aliases?on_conflict=alias" \
+        -d "{\"alias\": \"$LEGACY_FINGERPRINT_V1\", \"machine_id\": \"$MACHINE_ID\", \"alias_kind\": \"legacy_fingerprint_v1\", \"source\": \"cursiveos-full-test\"}" 2>/dev/null || true
+fi
+
 # Insert run (columns matching current DB schema + v1.5 extended fields)
 # v1.5 adds hardware_extended (cpu_microcode_version, cache sizes, GPU VRAM, RAM speed)
 # and stability_extended (dmesg errors, throttle events, temp throttle counts)
@@ -853,7 +883,7 @@ data = {
     "machine_id": "$MACHINE_ID",
     "run_date": "$( date +%Y-%m-%d )",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4",
+    "wrapper_version": "v1.4.1",
     "network_baseline_mbit": n("$NET_B"),
     "network_tuned_mbit": n("$NET_T"),
     "network_delta_pct": n("$NET_D"),
@@ -947,8 +977,10 @@ machine["runs"].append({
     "date": datetime.date.today().isoformat(),
     "submission_timestamp": "$SUBMISSION_TIMESTAMP",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4",
+    "wrapper_version": "v1.4.1",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
+    "fingerprint_version": $FINGERPRINT_VERSION,
+    "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
     "stability_flag": to_bool("$STABILITY_FLAG"),
     "thermal_headroom_c": to_int("$THERMAL_HEADROOM"),
     "kernel_version": "$KERNEL",
