@@ -21,14 +21,13 @@
 
 set -uo pipefail
 
-# This script is normally run via `curl ... | bash`, which makes stdin the
-# script pipe instead of the keyboard. Rebind stdin to the real terminal so
-# sudo and any prompts (here or in the benchmark harness) reach the operator.
-# Without this, prompts hit EOF, default to "No", and the harness exits in
-# seconds without benchmarking — the failure mode observed on 2026-06-10.
-if [[ -e /dev/tty && -r /dev/tty ]]; then
-  exec < /dev/tty
-fi
+# The entire session lives inside main() so that bash parses the whole script
+# from the curl pipe BEFORE executing anything. main() is then invoked with
+# stdin bound to /dev/tty so sudo and all prompts (here and in the benchmark
+# harness) reach the operator's keyboard. Never `exec < /dev/tty` at top
+# level in a piped script: bash would start reading the rest of the script
+# from the keyboard and hang silently with no output (observed 2026-06-11).
+main() {
 
 REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveOS.git}"
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
@@ -198,4 +197,16 @@ else
   note "The session did NOT complete a full measured upload. Scroll up to the"
   note "first red/error line to see what failed, then re-paste the same"
   note "command — every step is safe to repeat."
+fi
+
+}
+
+# Bind stdin to the real terminal when available (required under `curl|bash`
+# so prompts work); otherwise run as-is for fully non-interactive contexts.
+# `: < /dev/tty` actually opens the device — existence alone is not enough
+# (it can exist without a controlling terminal).
+if { : < /dev/tty; } 2>/dev/null; then
+  main "$@" < /dev/tty
+else
+  main "$@"
 fi
