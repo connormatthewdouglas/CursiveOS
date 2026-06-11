@@ -21,6 +21,15 @@
 
 set -uo pipefail
 
+# This script is normally run via `curl ... | bash`, which makes stdin the
+# script pipe instead of the keyboard. Rebind stdin to the real terminal so
+# sudo and any prompts (here or in the benchmark harness) reach the operator.
+# Without this, prompts hit EOF, default to "No", and the harness exits in
+# seconds without benchmarking — the failure mode observed on 2026-06-10.
+if [[ -e /dev/tty && -r /dev/tty ]]; then
+  exec < /dev/tty
+fi
+
 REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveOS.git}"
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
 BRANCH="${CURSIVEOS_BRANCH:-main}"
@@ -39,14 +48,36 @@ if [[ "$(uname -s)" != "Linux" ]]; then
 fi
 
 step "1/5 Preparing the machine"
-missing=()
-command -v git >/dev/null 2>&1 || missing+=("git")
-command -v python3 >/dev/null 2>&1 || missing+=("python3")
-command -v curl >/dev/null 2>&1 || missing+=("curl")
-if [[ ${#missing[@]} -gt 0 ]]; then
-  note "Installing required basics: ${missing[*]}"
-  sudo apt-get update && sudo apt-get install -y "${missing[@]}"
+# Ask for sudo ONCE, up front. The harness reuses TAO_SUDO_PASS for its long
+# benchmark phases (sudo's 15-minute cache can expire mid-run), and skips its
+# own password prompt when the variable is already exported.
+if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+  if sudo -n true 2>/dev/null; then
+    TAO_SUDO_PASS=""
+    note "sudo already authorized (passwordless or cached)."
+  else
+    read -rsp "  [CursiveOS] sudo password (asked once, used by the benchmarks): " TAO_SUDO_PASS && echo
+  fi
 fi
+export TAO_SUDO_PASS
+echo "$TAO_SUDO_PASS" | sudo -S -v 2>/dev/null || sudo -v || { echo "sudo is required for benchmarks (tc/sysctl). Aborting."; exit 1; }
+
+# Install everything the session AND the benchmark harness need, so no
+# install prompt ever triggers mid-run (jq/bc/iperf3 are hard requirements
+# of the harness; pciutils provides lspci for the hardware fingerprint).
+missing=()
+for dep in git python3 curl jq bc iperf3 lspci; do
+  command -v "$dep" >/dev/null 2>&1 || missing+=("$dep")
+done
+if [[ ${#missing[@]} -gt 0 ]]; then
+  pkgs=("${missing[@]/lspci/pciutils}")
+  note "Installing required packages: ${pkgs[*]}"
+  echo "$TAO_SUDO_PASS" | sudo -S DEBIAN_FRONTEND=noninteractive apt-get update -qq
+  echo "$TAO_SUDO_PASS" | sudo -S DEBIAN_FRONTEND=noninteractive apt-get install -y "${pkgs[@]}"
+fi
+for dep in git python3 curl jq bc iperf3; do
+  command -v "$dep" >/dev/null 2>&1 || { echo "Required dependency '$dep' could not be installed. Aborting."; exit 1; }
+done
 
 if ! command -v ollama >/dev/null 2>&1; then
   note "Ollama not found — installing it so inference benchmarks can run."
@@ -151,8 +182,20 @@ step "Session complete"
 note "machine fingerprint : $FINGERPRINT"
 note "phases with errors  : $FAIL"
 note "All raw logs: $TARGET_DIR/logs/   Local audit bundles: $TARGET_DIR/.cursiveos/seed/"
-note "Results are uploaded to CursiveRoot automatically — nothing else to paste."
-if [[ "$FAIL" -gt 0 ]]; then
-  note "Something needed attention: scroll up for the failing phase, or just"
-  note "re-paste the same command — every step is safe to repeat."
+
+# Hard verification against CursiveRoot — never let a silent failure look
+# like success. Counts run rows uploaded for this machine today.
+TODAY=$(date +%Y-%m-%d)
+UPLOADED_TODAY=$(curl -s \
+  -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+  "$SUPABASE_URL/rest/v1/runs?machine_id=eq.$FINGERPRINT&run_date=eq.$TODAY&select=id" 2>/dev/null \
+  | grep -o '"id"' | wc -l || echo 0)
+if [[ "${UPLOADED_TODAY:-0}" -gt 0 && "$FAIL" -eq 0 ]]; then
+  printf '\n\033[1;32m  ✔ VERIFIED: %s benchmark run(s) from this machine reached CursiveRoot today.\033[0m\n' "$UPLOADED_TODAY"
+  note "Nothing else to paste — the data is uploaded."
+else
+  printf '\n\033[1;31m  ✘ NOT VERIFIED: %s run(s) in CursiveRoot today, %s phase(s) had errors.\033[0m\n' "${UPLOADED_TODAY:-0}" "$FAIL"
+  note "The session did NOT complete a full measured upload. Scroll up to the"
+  note "first red/error line to see what failed, then re-paste the same"
+  note "command — every step is safe to repeat."
 fi
