@@ -53,7 +53,9 @@ jobs:
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
+          # The runner preinstalls an older client that shadows v17 on PATH;
+          # always invoke the v17 binaries explicitly.
+          /usr/lib/postgresql/17/bin/pg_dump --version
 
       - name: Dump + encrypt full backup, snapshot schema
         env:
@@ -66,7 +68,7 @@ jobs:
           plain="$RUNNER_TEMP/cursiveroot-${ts}.dump"
 
           # Full logical backup of the public schema (custom format = compact + selective restore).
-          pg_dump "$SUPABASE_DB_URL" \
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
             --schema=public --no-owner --no-privileges --format=custom \
             --file="$plain"
 
@@ -79,7 +81,7 @@ jobs:
           rm -f "$plain"
 
           # Human-readable schema snapshot (structure only, no data → safe unencrypted).
-          pg_dump "$SUPABASE_DB_URL" \
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
             --schema=public --schema-only --no-owner --no-privileges \
             --file="supabase/schema.sql"
 
