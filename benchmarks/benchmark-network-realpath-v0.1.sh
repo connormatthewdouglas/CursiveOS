@@ -33,7 +33,7 @@ run_side() {
     sudo sysctl -w net.ipv4.tcp_congestion_control="$cc" >/dev/null || { echo "cannot set $cc"; return 1; }
     echo "── $cc: $PASSES x 10s to $SERVER" | tee -a "$LOG"
     for ((i=1;i<=PASSES;i++)); do
-        r=$(iperf3 -c "$SERVER" -t 10 -J 2>/dev/null | python3 -c \
+        r=$(iperf3 -c "$SERVER" ${IPERF_PORT:+-p $IPERF_PORT} -t 10 -J 2>/dev/null | python3 -c \
             "import json,sys; print(round(json.load(sys.stdin)['end']['sum_sent']['bits_per_second']/1e6,1))" 2>/dev/null || echo "")
         [[ -n "$r" ]] && { rates+=("$r"); echo "  pass $i: ${r} Mbit/s" | tee -a "$LOG"; } \
                       || echo "  pass $i: FAILED (server reachable?)" | tee -a "$LOG"
