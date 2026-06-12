@@ -27,10 +27,9 @@ What it does, in order:
 1. **Recovers** any results still saved locally from earlier installs.
 2. **Genesis baseline** — records this machine's v0.8 baseline under its
    hardware fingerprint (skipped automatically if CursiveRoot already has one).
-3. **Mutation screen** — compares the parent preset (`v0.8`) against the first
-   narrow candidate (`v0.9-network-efficient`): can the network gain be kept
-   without the always-on power cost? A single screen is diagnostic only — one
-   observation can never accept a mutation or create a payout.
+3. **Mutation screen** — compares the parent preset (`v0.8`) against the
+   current candidate. A single screen is diagnostic only — one observation
+   can never accept a mutation or create a payout.
 4. **Uploads** all artifacts and prints the analyzer verdict.
 
 Every step is idempotent — if anything is interrupted, just paste the same
@@ -49,6 +48,27 @@ also the contributor of an accepted variant.
 ```
 ./scripts/cursiveroot-status.sh
 ```
+
+### Second-machine confirmation run (current ask)
+
+The active candidate **v0.9c-cpu-retained** (v0.8 minus the GPU frequency pin)
+held its full cold-start win on the founder rig and needs confirmation on a
+second Linux machine. On any Linux box (a live-USB Linux Mint session on a
+Windows machine works — no install needed), paste:
+
+```bash
+command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh | CURSIVEOS_SCREENS="normal:v0.9c-cpu-retained" bash
+```
+
+### A note on the network numbers (honesty box)
+
+The headline "+500–900% network" figures measure **transport resilience under
+emulated lossy-WAN conditions** — and most of that delta comes from switching
+TCP congestion control from CUBIC (Linux default) to BBR, a well-documented
+algorithm behavior, not a CursiveOS invention. What our tuning adds *beyond*
+BBR is measured separately by `benchmarks/benchmark-network-stackdelta-v0.1.sh`
+(BBR held constant, only the CursiveOS buffer/qdisc tuning toggled). Real-path
+(non-loopback) validation is in progress.
 
 ### Individual test paths (advanced)
 
