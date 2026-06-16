@@ -7,6 +7,18 @@
 
 ---
 
+## 2026-06-16 Sprint Outcomes
+
+- **Lineage advanced: v0.8 → v0.9** (first inheritance). v0.9 = v0.8 minus the Arc GPU frequency pin, confirmed equal-or-simpler on both machines (Stardust both orders + i5 laptop). GPU pin proven dead weight.
+- **Network claim corrected (real-path A/B).** On a real 1GbE NIC at 50ms+0.5% loss: CUBIC 43 → BBR 851 Mbit/s (+1875%), but BBR+our-buffer-stack 845 (−0.7%). The real-world network win is **entirely the CUBIC→BBR swap**; our buffer/qdisc tuning adds ~0 on ordinary links. The loopback "+246% ours" was a BDP artifact. Public claim going forward = "switch to BBR," not buffer tuning.
+- **Noise floor measured (6× v0.9).** Cold-start CV 0.002 (rock-solid, the reliable selection channel), network CV 0.192 (needs CV-escalation; magnitude unreliable), sustained signal<noise, idle-power(CPU) CV 0.83 (near-random). Use per-channel confirmation counts; don't gate on sustained-single-stream or idle power until measurement improves.
+- **Telemetry/tooling:** wrapper v1.4.3 adds a working GPU-side power channel (A750 ~37W idle; total power now visible). Fitness gained a parsimony term (equal-performance-fewer-knobs is now acceptable). Buffer-decomposition + real-path benchmarks added.
+
+### Next steps (post-sprint)
+1. **Fix the power measurement** before any power-gated decision (CV 0.83): more samples / longer settle, and use total CPU+GPU power now that the GPU channel works. Re-measure v0.8 (GPU pinned) vs v0.9 to quantify the pin's true GPU-side cost.
+2. **Add a concurrency inference sensor** — single-stream sustained is below its noise floor; scheduler tweaks can only show under parallel load.
+3. **Next mutation candidate** should be evaluated primarily on cold-start (the only low-noise channel today): a memory-pressure (zram/THP) or scheduler tweak vs v0.9. Network is no longer a useful mutation axis (lever is just BBR, already in the stack).
+
 ## Current State
 
 Phase 0 has begun in operation. CursiveRoot now has a live decision-grade analyzer that separates characterization data from mutation-selection evidence. One real Vega genesis baseline is recorded in CursiveRoot with decision `measured_baseline`, not accepted fitness: network +515.20% under loopback WAN simulation, cold-start -3.11%, sustained -0.36%, idle power +3.2W. The latest Intel i5 run on 2026-05-31 shows the same pattern: strong network lift, a promising cold-start result, small sustained-inference movement, and a measurable idle-power cost. The next action is still to screen a network-only candidate against v0.8, with multi-sample power capture and no payout from one observation.
