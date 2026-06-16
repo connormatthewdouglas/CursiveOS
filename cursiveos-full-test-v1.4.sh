@@ -385,6 +385,59 @@ STABILITY_FLAG="true"
 # read_watts: use RAPL energy counters (works even with C-states disabled).
 # Turbostat fails with "Insanely slow TSC rate" when C-states are off — RAPL is immune.
 # AMD: uses amd_energy powercap path (same sysfs interface, same units as Intel RAPL).
+
+# read_gpu_watts: discrete-GPU power, measured SEPARATELY from read_watts (which
+# on these hosts reports CPU package power only — so a pinned dGPU's draw was
+# invisible). energy1_input is microjoules; delta over 1s -> watts. Falls back
+# to an instantaneous power sensor, else N/A. Records the source it used.
+read_gpu_watts() {
+    local genergy ginst
+    genergy=$(ls /sys/class/drm/card*/device/hwmon/hwmon*/energy1_input 2>/dev/null | head -1)
+    if [[ -n "$genergy" && -r "$genergy" ]]; then
+        local e1 e2 w
+        e1=$(cat "$genergy" 2>/dev/null)
+        if [[ "$e1" =~ ^[0-9]+$ ]]; then
+            sleep 1
+            e2=$(cat "$genergy" 2>/dev/null)
+            if [[ "$e2" =~ ^[0-9]+$ ]]; then
+                w=$(python3 -c "print(f'{($e2 - $e1) / 1_000_000:.2f}')" 2>/dev/null)
+                if [[ -n "$w" && "$w" =~ ^[0-9] ]]; then
+                    echo "gpu_energy_counter:$genergy" > "$LOG_DIR/.gpu_power_source"
+                    echo "$w"; return
+                fi
+            fi
+        fi
+    fi
+    ginst=$(ls /sys/class/drm/card*/device/hwmon/hwmon*/power1_average 2>/dev/null | head -1)
+    [[ -z "$ginst" ]] && ginst=$(ls /sys/class/drm/card*/device/hwmon/hwmon*/power1_input 2>/dev/null | head -1)
+    if [[ -n "$ginst" && -r "$ginst" ]]; then
+        local pu w
+        pu=$(cat "$ginst" 2>/dev/null)
+        if [[ "$pu" =~ ^[0-9]+$ ]]; then
+            w=$(python3 -c "v=$pu; print(f'{(v/1_000_000) if v>10000 else v:.2f}')" 2>/dev/null)
+            if [[ -n "$w" && "$w" =~ ^[0-9] ]]; then
+                echo "gpu_power_sensor:$ginst" > "$LOG_DIR/.gpu_power_source"
+                echo "$w"; return
+            fi
+        fi
+    fi
+    echo "gpu_none" > "$LOG_DIR/.gpu_power_source"
+    echo "N/A"
+}
+
+sample_gpu_idle() {
+    local n="${1:-3}" r=() i v
+    for ((i=1; i<=n; i++)); do
+        v=$(read_gpu_watts)
+        [[ "$v" =~ ^[0-9]+([.][0-9]+)?$ ]] && r+=("$v")
+    done
+    python3 - "${r[@]}" <<'PY'
+import statistics, sys
+s = [float(x) for x in sys.argv[1:]]
+print(f"{statistics.median(s):.2f}" if s else "N/A")
+PY
+}
+
 read_watts() {
     local rapl="/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj"
     local power_uw=""
@@ -553,6 +606,7 @@ echo ""
 echo "Reading idle power (no presets; median of up to 5 samples)..."
 PHASE_CTX_BASELINE=$(phase_context)
 IFS='|' read -r PWR_IDLE PWR_IDLE_SAMPLES_JSON PWR_IDLE_MIN PWR_IDLE_MAX PWR_IDLE_COUNT <<< "$(sample_idle_power 5)"
+GPU_PWR_IDLE=$(sample_gpu_idle 3)
 echo "  → Idle power (baseline median): ${PWR_IDLE}W (${PWR_IDLE_COUNT} samples, range ${PWR_IDLE_MIN:-N/A}-${PWR_IDLE_MAX:-N/A}W)"
 
 # ── Benchmark 1: Network ──────────────────────────────────────────────────────
@@ -606,6 +660,7 @@ bash "$PRESET" --apply-temp 2>&1 | grep "✓" | sed 's/^/  /' || true
 sleep 3
 PHASE_CTX_TUNED=$(phase_context)
 IFS='|' read -r PWR_TUNED_IDLE PWR_TUNED_SAMPLES_JSON PWR_TUNED_MIN PWR_TUNED_MAX PWR_TUNED_COUNT <<< "$(sample_idle_power 5)"
+GPU_PWR_TUNED=$(sample_gpu_idle 3)
 echo "  → Idle power (tuned median): ${PWR_TUNED_IDLE}W (${PWR_TUNED_COUNT} samples, range ${PWR_TUNED_MIN:-N/A}-${PWR_TUNED_MAX:-N/A}W)"
 
 # v1.4: Stability check — dmesg errors since presets were applied
@@ -707,6 +762,8 @@ if [[ "$WARM_D" == "null" ]]; then
 fi
 
 POWER_SOURCE=$(cat "$LOG_DIR/.power_source" 2>/dev/null || echo "unknown")
+GPU_POWER_SOURCE=$(cat "$LOG_DIR/.gpu_power_source" 2>/dev/null || echo "unknown")
+GPU_PWR_IDLE="${GPU_PWR_IDLE:-N/A}"; GPU_PWR_TUNED="${GPU_PWR_TUNED:-N/A}"
 
 python3 - "$RESULT_JSON" <<PYJSON
 import json, datetime, sys
@@ -732,7 +789,7 @@ data = {
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.2",
+    "wrapper_version": "v1.4.3",
     "hardware": {
         "cpu": "$CPU_MODEL",
         "gpu": "$GPU_MODEL",
@@ -780,6 +837,11 @@ data = {
             "baseline_range_w": [n("$PWR_IDLE_MIN"), n("$PWR_IDLE_MAX")],
             "tuned_range_w": [n("$PWR_TUNED_MIN"), n("$PWR_TUNED_MAX")],
             "power_source": "$POWER_SOURCE"
+        },
+        "gpu_power": {
+            "baseline_w": n("$GPU_PWR_IDLE"),
+            "tuned_w": n("$GPU_PWR_TUNED"),
+            "source": "$GPU_POWER_SOURCE"
         },
         "phase_context": {
             "baseline": json.loads('${PHASE_CTX_BASELINE:-null}'),
@@ -912,7 +974,7 @@ data = {
     "machine_id": "$MACHINE_ID",
     "run_date": "$( date +%Y-%m-%d )",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.2",
+    "wrapper_version": "v1.4.3",
     "network_baseline_mbit": n("$NET_B"),
     "network_tuned_mbit": n("$NET_T"),
     "network_delta_pct": n("$NET_D"),
@@ -1059,7 +1121,7 @@ machine["runs"].append({
     "date": datetime.date.today().isoformat(),
     "submission_timestamp": "$SUBMISSION_TIMESTAMP",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.2",
+    "wrapper_version": "v1.4.3",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",

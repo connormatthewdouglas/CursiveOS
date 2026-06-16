@@ -1,8 +1,8 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-06-10
-**Current parent preset:** v0.8 (28 tweaks)
-**Current candidate:** v0.9-network-efficient (network-only power tradeoff screen)
-**Current wrapper:** v1.4.1 (stable fingerprint v2)
+**Last updated:** 2026-06-16
+**Current parent preset:** v0.9 (v0.8 stack minus the Arc GPU frequency pin; promoted 2026-06-16 — first lineage inheritance)
+**Current candidate:** none active — next mutation TBD from the buffer-decomposition + variance sprint
+**Current wrapper:** v1.4.3 (stable fingerprint v2 + power-source/phase telemetry + GPU-side power)
 **Board reviewed:** 2026-03-23 05:30 EDT
 
 ---

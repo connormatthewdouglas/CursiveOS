@@ -1,0 +1,14 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "parent-baseline-v0.9",
+  "parent_variant_id": "genesis-baseline-v0.8",
+  "contributor_id": "founder-baseline",
+  "commit_ref": "canonical-v0.9",
+  "preset_version": "v0.9",
+  "preset_path": "presets/cursiveos-presets-v0.9.sh",
+  "evaluation_role": "parent_baseline",
+  "fitness_eligible": false,
+  "declared_scope": "Canonical parent baseline as of 2026-06-16: the v0.8 network + CPU stack with the Arc GPU frequency pin removed. Future candidates screen against this.",
+  "promotion_basis": "Accepted promotion of candidate v0.9c-cpu-retained. Confirmed equal-or-simpler than v0.8 on the Arc desktop (both run orders) and the i5 laptop: full -51% cold-start retained on Arc, equivalent network and package power, one fewer invasive knob (GPU pin = dead weight). See CursiveResearch Chapter 16 §5.",
+  "rollback_method": "Delegates to the v0.8 preset state restore via --undo; harness reverts at run end."
+}

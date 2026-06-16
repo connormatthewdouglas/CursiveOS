@@ -44,6 +44,14 @@ DEFAULT_CONFIG = {
         "sustained": 0.20,
         "idle_power": 0.10,
     },
+    # Parsimony: reward a variant that removes invasive knobs without losing
+    # performance (e.g. v0.9c dropped the dead-weight Arc GPU pin at equal
+    # performance — the old scalar fitness scored that ~0 and could not accept
+    # it). A small bonus per removed knob applies ONLY when performance is
+    # non-regressing, so it never lets a worse-but-simpler variant through.
+    "parsimony_weight_per_knob": 0.02,
+    "parsimony_cap_knobs": 5,
+    "parsimony_min_base_fitness": -0.01,  # performance must be ~neutral-or-better
     "caps_pct": {
         "network": 50.0,
         "coldstart": 50.0,
@@ -266,7 +274,7 @@ def score_performance(
 
     weights = config["weights"]
     caps = config["caps_pct"]
-    fitness = (
+    base_fitness = (
         weights["network"] * normalize_pct(deltas["network_pct"], caps["network"])
         + weights["coldstart"] * normalize_pct(deltas["coldstart_pct"], caps["coldstart"])
         + weights["sustained"] * normalize_pct(deltas["sustained_pct"], caps["sustained"])
@@ -283,6 +291,21 @@ def score_performance(
         severe.append(f"sustained regression {deltas['sustained_pct']:.2f}%")
     if deltas["idle_power_pct"] is not None and deltas["idle_power_pct"] > thresholds["idle_power_cost"]:
         severe.append(f"idle power cost {deltas['idle_power_pct']:.2f}%")
+
+    # Parsimony bonus: a variant that declares it removed N invasive knobs vs
+    # its parent earns a small bonus, but ONLY when performance is non-regressing
+    # (no severe regressions and base fitness ~neutral-or-better). This lets an
+    # equal-performance-but-simpler variant clear the acceptance threshold.
+    knobs_removed = int(variant.get("knobs_removed_vs_parent", 0) or 0)
+    parsimony_bonus = 0.0
+    if (
+        knobs_removed > 0
+        and not severe
+        and base_fitness >= float(config.get("parsimony_min_base_fitness", -0.01))
+    ):
+        capped = min(knobs_removed, int(config.get("parsimony_cap_knobs", 5)))
+        parsimony_bonus = capped * float(config.get("parsimony_weight_per_knob", 0.02))
+    fitness = base_fitness + parsimony_bonus
 
     result = {
         "schema_version": "seed-organism.sensor-result.v0.1",
@@ -305,6 +328,9 @@ def score_performance(
         "delta": deltas,
         "confidence": derive_confidence(metrics, missing_core),
         "fitness_score": round(fitness, 8),
+        "base_fitness": round(base_fitness, 8),
+        "parsimony_bonus": round(parsimony_bonus, 8),
+        "knobs_removed_vs_parent": knobs_removed,
         "missing_core_metrics": missing_core,
         "severe_regressions": severe,
         "timestamp": now_iso(),
