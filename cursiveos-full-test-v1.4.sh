@@ -426,10 +426,11 @@ read_gpu_watts() {
 }
 
 sample_gpu_idle() {
-    local n="${1:-3}" r=() i v
+    local n="${1:-5}" r=() i v
     for ((i=1; i<=n; i++)); do
         v=$(read_gpu_watts)
         [[ "$v" =~ ^[0-9]+([.][0-9]+)?$ ]] && r+=("$v")
+        sleep 1
     done
     python3 - "${r[@]}" <<'PY'
 import statistics, sys
@@ -542,11 +543,16 @@ sample_idle_power() {
     local requested="${1:-5}"
     local readings=()
     local i watts
+    # Phase D finding: the high idle-power variance (CV 0.83) was a sampling
+    # artifact — sampling during the post-benchmark thermal/activity tail.
+    # Settle first, then space samples, for stable readings (CV ~0.01).
+    sleep "${IDLE_SETTLE:-6}"
     for ((i=1; i<=requested; i++)); do
         watts=$(read_watts)
         if [[ "$watts" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
             readings+=("$watts")
         fi
+        sleep 1
     done
     python3 - "${readings[@]}" <<'PY'
 import json
@@ -605,8 +611,8 @@ extract_sustained() {
 echo ""
 echo "Reading idle power (no presets; median of up to 5 samples)..."
 PHASE_CTX_BASELINE=$(phase_context)
-IFS='|' read -r PWR_IDLE PWR_IDLE_SAMPLES_JSON PWR_IDLE_MIN PWR_IDLE_MAX PWR_IDLE_COUNT <<< "$(sample_idle_power 5)"
-GPU_PWR_IDLE=$(sample_gpu_idle 3)
+IFS='|' read -r PWR_IDLE PWR_IDLE_SAMPLES_JSON PWR_IDLE_MIN PWR_IDLE_MAX PWR_IDLE_COUNT <<< "$(sample_idle_power 8)"
+GPU_PWR_IDLE=$(sample_gpu_idle 5)
 echo "  → Idle power (baseline median): ${PWR_IDLE}W (${PWR_IDLE_COUNT} samples, range ${PWR_IDLE_MIN:-N/A}-${PWR_IDLE_MAX:-N/A}W)"
 
 # ── Benchmark 1: Network ──────────────────────────────────────────────────────
@@ -659,8 +665,8 @@ echo "Reading idle power with presets active (median of up to 5 samples)..."
 bash "$PRESET" --apply-temp 2>&1 | grep "✓" | sed 's/^/  /' || true
 sleep 3
 PHASE_CTX_TUNED=$(phase_context)
-IFS='|' read -r PWR_TUNED_IDLE PWR_TUNED_SAMPLES_JSON PWR_TUNED_MIN PWR_TUNED_MAX PWR_TUNED_COUNT <<< "$(sample_idle_power 5)"
-GPU_PWR_TUNED=$(sample_gpu_idle 3)
+IFS='|' read -r PWR_TUNED_IDLE PWR_TUNED_SAMPLES_JSON PWR_TUNED_MIN PWR_TUNED_MAX PWR_TUNED_COUNT <<< "$(sample_idle_power 8)"
+GPU_PWR_TUNED=$(sample_gpu_idle 5)
 echo "  → Idle power (tuned median): ${PWR_TUNED_IDLE}W (${PWR_TUNED_COUNT} samples, range ${PWR_TUNED_MIN:-N/A}-${PWR_TUNED_MAX:-N/A}W)"
 
 # v1.4: Stability check — dmesg errors since presets were applied
@@ -789,7 +795,7 @@ data = {
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.3",
+    "wrapper_version": "v1.4.4",
     "hardware": {
         "cpu": "$CPU_MODEL",
         "gpu": "$GPU_MODEL",
@@ -974,7 +980,7 @@ data = {
     "machine_id": "$MACHINE_ID",
     "run_date": "$( date +%Y-%m-%d )",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.3",
+    "wrapper_version": "v1.4.4",
     "network_baseline_mbit": n("$NET_B"),
     "network_tuned_mbit": n("$NET_T"),
     "network_delta_pct": n("$NET_D"),
@@ -1121,7 +1127,7 @@ machine["runs"].append({
     "date": datetime.date.today().isoformat(),
     "submission_timestamp": "$SUBMISSION_TIMESTAMP",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.3",
+    "wrapper_version": "v1.4.4",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
