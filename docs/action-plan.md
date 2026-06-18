@@ -14,10 +14,14 @@
 - **Noise floor measured (6× v0.9).** Cold-start CV 0.002 (rock-solid, the reliable selection channel), network CV 0.192 (needs CV-escalation; magnitude unreliable), sustained signal<noise, idle-power(CPU) CV 0.83 (near-random). Use per-channel confirmation counts; don't gate on sustained-single-stream or idle power until measurement improves.
 - **Telemetry/tooling:** wrapper v1.4.3 adds a working GPU-side power channel (A750 ~37W idle; total power now visible). Fitness gained a parsimony term (equal-performance-fewer-knobs is now acceptable). Buffer-decomposition + real-path benchmarks added.
 
-### Next steps (post-sprint)
-1. **Fix the power measurement** before any power-gated decision (CV 0.83): more samples / longer settle, and use total CPU+GPU power now that the GPU channel works. Re-measure v0.8 (GPU pinned) vs v0.9 to quantify the pin's true GPU-side cost.
-2. **Add a concurrency inference sensor** — single-stream sustained is below its noise floor; scheduler tweaks can only show under parallel load.
-3. **Next mutation candidate** should be evaluated primarily on cold-start (the only low-noise channel today): a memory-pressure (zram/THP) or scheduler tweak vs v0.9. Network is no longer a useful mutation axis (lever is just BBR, already in the stack).
+### Phase D outcomes (2026-06-16)
+- ✅ **Power measurement fixed (wrapper v1.4.4).** The CV 0.83 idle-power noise was a *sampling artifact* (sampling during the post-benchmark thermal tail), not inherent. Added settle (`IDLE_SETTLE` 6s) + inter-sample spacing + higher counts (CPU 8, GPU 5). Settled true-idle gives CV ≈ 0.01 — idle power is now a usable selection channel.
+- ✅ **GPU-pin power cost quantified: ~0 W at idle** (42.15 W unpinned vs 42.16 W pinned, reproduced). So v0.9 dropping the pin is **parsimony, not power savings** (corrects the earlier "unmeasured GPU power" worry). A750 idle is static-dominated; **load-time power still untested**.
+
+### Next steps
+1. **Add a concurrency inference sensor** — single-stream sustained is below its noise floor; scheduler tweaks can only show under parallel load. (Now the top measurement gap.)
+2. **Next mutation candidate** evaluated primarily on cold-start (lowest-noise channel) + now-reliable idle power: a memory-pressure (zram/THP) or scheduler tweak vs v0.9. Network is no longer a useful mutation axis (lever is just BBR, already in the stack).
+3. **Load-time power** measurement (the probe covers idle only) before any load-power claim about GPU pinning or governors.
 
 ## Current State
 
