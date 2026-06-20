@@ -1,0 +1,157 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CursiveRoot — the living organism</title>
+<!--
+  CursiveRoot dashboard — a single static page, no backend, no build step.
+  It reads the PUBLIC CursiveRoot data (Supabase REST, publishable key) and
+  shows the organism's state in plain language. Deploy on GitHub Pages, or
+  just open it. To change what it shows, edit this one file.
+-->
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#262b36; --ink:#e7ebf2; --mut:#9aa4b2;
+    --good:#43d17a; --warn:#f2c14e; --accent:#6ea8fe;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 64px}
+  h1{font-size:30px;margin:0 0 4px} h2{font-size:20px;margin:34px 0 12px}
+  .sub{color:var(--mut);margin:0 0 20px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
+  .stat .n{font-size:28px;font-weight:700} .stat .l{color:var(--mut);font-size:13px}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.accepted{background:rgba(67,209,122,.15);color:var(--good)}
+  .pill.rejected{background:rgba(242,193,78,.15);color:var(--warn)}
+  .pill.baseline{background:rgba(110,168,254,.15);color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-weight:600}
+  .num{font-variant-numeric:tabular-nums;text-align:right}
+  .good{color:var(--good)} .mut{color:var(--mut)}
+  .note{background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.3);border-radius:10px;padding:12px 16px;color:#f5e6bf;font-size:14px}
+  .lineage{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .gene{background:#11141a;border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:120px}
+  .gene b{display:block;font-size:16px} .gene span{color:var(--mut);font-size:12px}
+  .arrow{color:var(--mut);font-size:22px}
+  a{color:var(--accent)}
+  footer{color:var(--mut);font-size:13px;margin-top:36px;border-top:1px solid var(--line);padding-top:16px}
+  .loading{color:var(--mut)}
+</style>
+
+<div class="wrap">
+  <h1>CursiveRoot</h1>
+  <p class="sub">The shared memory of CursiveOS — a Linux performance "organism" that keeps the changes that measurably help and discards the ones that don't. This page shows what it has learned so far, in plain language.</p>
+
+  <div class="grid" id="stats">
+    <div class="stat"><div class="n loading">…</div><div class="l">machines contributing</div></div>
+    <div class="stat"><div class="n loading">…</div><div class="l">measurements recorded</div></div>
+    <div class="stat"><div class="n loading">…</div><div class="l">improvements accepted</div></div>
+    <div class="stat"><div class="n loading">…</div><div class="l">cycles closed</div></div>
+  </div>
+
+  <h2>Current best configuration</h2>
+  <div class="panel" id="lineage">
+    <div class="lineage">
+      <div class="gene"><b>v0.8</b><span>genesis baseline</span></div>
+      <div class="arrow">→</div>
+      <div class="gene" style="border-color:var(--good)"><b>v0.9 <span class="pill accepted">current</span></b><span>v0.8 minus the GPU frequency pin</span></div>
+    </div>
+    <p class="mut" style="margin:12px 0 0;font-size:14px">Why v0.9 was kept: across two machines and counterbalanced repeats it matched v0.8 on every measured axis (cold-start, network, power) while removing one invasive, inert setting — equal results, simpler and safer. The organism accepted it because it is a genuine simplification, not because it was faster.</p>
+  </div>
+
+  <h2>Latest accepted improvement</h2>
+  <div class="panel" id="accepted"><span class="loading">Loading…</span></div>
+
+  <h2>Simulated reward</h2>
+  <div class="panel" id="payout"><span class="loading">Loading…</span></div>
+  <div class="note">⚠ <b>Not real money.</b> Payouts are a simulation that proves the economic machinery works before any real Bitcoin is involved. No one is paid real funds. "Sats" here are pretend accounting units.</div>
+
+  <h2>The fleet</h2>
+  <div class="panel" id="machines"><span class="loading">Loading…</span></div>
+
+  <h2>Recent measurements</h2>
+  <div class="panel" style="overflow-x:auto"><table id="runs"><tbody><tr><td class="loading">Loading…</td></tr></tbody></table></div>
+
+  <h2>How to read these numbers (honestly)</h2>
+  <div class="panel" style="font-size:14px">
+    <ul style="margin:0;padding-left:20px">
+      <li><b>Cold-start</b> = how fast the machine produces the first AI token after idle. Lower is better; this is the project's most reliable measurement.</li>
+      <li><b>Network</b> figures come from a <b>lab simulation (loopback)</b>, not a real internet link. On real hardware the gain is essentially "switch TCP to BBR" — real under packet loss, but not a CursiveOS invention. Treat the big percentages as lab-only.</li>
+      <li><b>Idle power</b> is the machine's package power at rest (watts). Lower is better.</li>
+      <li>A result on <b>one machine is not a fleet result</b> — gains can be hardware-specific (e.g. the cold-start win is large on the Arc desktop, ~zero on the laptop).</li>
+    </ul>
+  </div>
+
+  <footer>
+    Live data from CursiveRoot · read-only · <span id="updated"></span><br>
+    Code: <a href="https://github.com/connormatthewdouglas/CursiveOS">CursiveOS</a> · research corpus: <a href="https://github.com/connormatthewdouglas/CursiveResearch">CursiveResearch</a>
+  </footer>
+</div>
+
+<script>
+const URL = "https://iovvktpuoinmjdgfxgvm.supabase.co/rest/v1";
+const KEY = "sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn";
+const H = { apikey: KEY, Authorization: "Bearer " + KEY };
+const q = (path) => fetch(`${URL}/${path}`, { headers: H }).then(r => r.ok ? r.json() : []);
+const esc = s => String(s ?? "").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+const pct = v => v==null ? "—" : (v>=0?"+":"") + Number(v).toFixed(1) + "%";
+const when = s => s ? new Date(s).toLocaleString() : "";
+
+async function main(){
+  const [runs, machines, accepted, payouts] = await Promise.all([
+    q("runs?select=machine_id,preset_version,network_delta_pct,coldstart_delta_pct,power_delta_w,created_at&order=created_at.desc&limit=20"),
+    q("machines?select=machine_id,cpu,gpu,os&order=created_at.desc"),
+    q("seed_bundles?decision=eq.accepted&select=variant_id,confidence,fitness_score,reason,machine_id,created_at&order=created_at.desc&limit=5"),
+    q("seed_payout_reports?select=cycle_id,simulated_revenue_sats,contributor_count,report,created_at&order=created_at.desc&limit=5"),
+  ]);
+
+  // stats
+  const allRuns = await q("runs?select=id");
+  const cells = document.querySelectorAll("#stats .n");
+  cells[0].textContent = new Set(machines.map(m=>m.machine_id)).size;
+  cells[1].textContent = allRuns.length;
+  cells[2].textContent = accepted.length;
+  cells[3].textContent = payouts.length;
+  cells.forEach(c=>c.classList.remove("loading"));
+
+  // accepted
+  const a = accepted[0];
+  document.getElementById("accepted").innerHTML = a ? `
+    <div><span class="pill accepted">accepted</span> <b>${esc(a.variant_id)}</b></div>
+    <p style="margin:10px 0 0">${esc(a.reason)}</p>
+    <p class="mut" style="margin:8px 0 0;font-size:14px">confidence ${Number(a.confidence).toFixed(2)} · fitness ${Number(a.fitness_score).toFixed(3)} · measured on ${esc(a.machine_id)} · ${when(a.created_at)}</p>`
+    : `<span class="mut">No accepted improvements yet — the organism is still screening candidates.</span>`;
+
+  // payout
+  const p = payouts[0];
+  let contrib = "";
+  try { const cs = (p.report.contributors)||[]; contrib = cs.map(c=>`${esc(c.contributor_id)}: ${c.total_payout_sats} sats`).join(" · "); } catch(e){}
+  document.getElementById("payout").innerHTML = p ? `
+    <div><b>${Number(p.simulated_revenue_sats).toLocaleString()}</b> simulated sats · cycle ${esc(p.cycle_id)} · ${p.contributor_count} contributor(s)</div>
+    ${contrib?`<p class="mut" style="margin:8px 0 0;font-size:14px">${contrib}</p>`:""}`
+    : `<span class="mut">No cycle has closed yet.</span>`;
+
+  // machines
+  document.getElementById("machines").innerHTML = machines.length ? `<table><thead><tr><th>id</th><th>CPU</th><th>GPU</th><th>OS</th></tr></thead><tbody>${
+    machines.map(m=>`<tr><td class="mut">${esc((m.machine_id||"").slice(0,16))}</td><td>${esc(m.cpu)}</td><td>${esc(m.gpu)}</td><td class="mut">${esc(m.os)}</td></tr>`).join("")
+  }</tbody></table>` : `<span class="mut">No machines yet.</span>`;
+
+  // runs
+  document.getElementById("runs").innerHTML = `<thead><tr><th>when</th><th>machine</th><th>config</th><th class="num">cold-start</th><th class="num">network (lab)</th><th class="num">power</th></tr></thead><tbody>${
+    runs.map(r=>`<tr>
+      <td class="mut">${when(r.created_at).split(",")[0]}</td>
+      <td class="mut">${esc((r.machine_id||"").slice(0,12))}</td>
+      <td>${esc(r.preset_version)}</td>
+      <td class="num ${r.coldstart_delta_pct<0?'good':''}">${pct(r.coldstart_delta_pct)}</td>
+      <td class="num">${pct(r.network_delta_pct)}</td>
+      <td class="num">${r.power_delta_w==null?"—":(r.power_delta_w>0?"+":"")+Number(r.power_delta_w).toFixed(1)+"W"}</td>
+    </tr>`).join("")
+  }</tbody>`;
+
+  document.getElementById("updated").textContent = "updated " + new Date().toLocaleString();
+}
+main().catch(e => { document.getElementById("accepted").textContent = "Could not load live data: " + e; });
+</script>
