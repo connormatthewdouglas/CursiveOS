@@ -38,31 +38,42 @@ DEFAULT_CONFIG = {
     "lifetime_share": 0.80,
     "minimum_confidence": 0.65,
     "minimum_accept_fitness": 0.01,
+    # Weights retuned 2026-06-16 to match the measured reality (Chapter 16):
+    #  - network GATE-ONLY (0.40->0.0): its magnitude is a loopback artifact
+    #    (real-path A/B showed our buffers add ~0; the win is just BBR) AND it
+    #    is the noisiest channel (CV 0.19). It no longer scores — it only
+    #    rejects a real regression via the severe-regression gate below.
+    #  - cold-start UP (0.30->0.55): the only rock-solid channel (CV 0.002).
+    #  - sustained DOWN (0.20->0.10): single-stream signal is below its noise.
+    #  - idle_power UP (0.10->0.35): now reliable after the v1.4.4 sampling fix
+    #    (settled-idle CV ~0.01, was a 0.83 sampling artifact).
     "weights": {
-        "network": 0.40,
-        "coldstart": 0.30,
-        "sustained": 0.20,
-        "idle_power": 0.10,
+        "network": 0.0,
+        "coldstart": 0.55,
+        "sustained": 0.10,
+        "idle_power": 0.35,
     },
     # Parsimony: reward a variant that removes invasive knobs without losing
-    # performance (e.g. v0.9c dropped the dead-weight Arc GPU pin at equal
-    # performance — the old scalar fitness scored that ~0 and could not accept
-    # it). A small bonus per removed knob applies ONLY when performance is
-    # non-regressing, so it never lets a worse-but-simpler variant through.
-    "parsimony_weight_per_knob": 0.02,
+    # performance (e.g. v0.9 dropped the dead-weight Arc GPU pin at equal
+    # performance). A capped bonus per removed knob applies ONLY when
+    # performance is non-regressing, so it never lets a worse-but-simpler
+    # variant through.
+    "parsimony_weight_per_knob": 0.03,
     "parsimony_cap_knobs": 5,
-    "parsimony_min_base_fitness": -0.01,  # performance must be ~neutral-or-better
+    "parsimony_min_base_fitness": -0.05,  # tolerate within-noise wobble; real regressions still trip the gates
     "caps_pct": {
         "network": 50.0,
         "coldstart": 50.0,
         "sustained": 50.0,
         "idle_power": 50.0,
     },
+    # Severe-regression thresholds sit OUTSIDE each channel's measured noise
+    # floor (Chapter 16) so the gate rejects real regressions, not noise.
     "severe_regression_pct": {
-        "network": -5.0,
-        "coldstart": -5.0,
-        "sustained": -3.0,
-        "idle_power_cost": 15.0,
+        "network": -25.0,
+        "coldstart": -8.0,
+        "sustained": -15.0,
+        "idle_power_cost": 25.0,
     },
 }
 

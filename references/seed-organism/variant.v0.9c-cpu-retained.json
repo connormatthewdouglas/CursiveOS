@@ -8,6 +8,7 @@
   "preset_path": "presets/cursiveos-presets-v0.9c-cpu-retained.sh",
   "evaluation_role": "candidate_screen",
   "fitness_eligible": true,
+  "knobs_removed_vs_parent": 1,
   "declared_scope": "Full v0.8 network and CPU tuning with GPU frequency controls left at driver defaults.",
   "hypothesis": "The -51% Arc cold-start improvement is CPU-side (v0.9b kept the GPU pin, verified active at 2000MHz, and got no cold-start gain). If cold-start survives without the GPU pin, the pin is dead weight and can leave the lineage.",
   "rollback_method": "Delegates to the v0.8 preset state restore via --undo; harness reverts at run end."
