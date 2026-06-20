@@ -872,6 +872,7 @@ def comparison_metrics(
     candidate_variant: dict[str, Any],
     parent_metrics: dict[str, Any],
     candidate_metrics: dict[str, Any],
+    confirmations: int = 1,
 ) -> dict[str, Any]:
     parent_machine = machine_id_from_metrics(parent_metrics)
     candidate_machine = machine_id_from_metrics(candidate_metrics)
@@ -920,9 +921,14 @@ def comparison_metrics(
             "sustained_tokps": num(candidate_tuned, "sustained_tokps"),
             "idle_watts": num(candidate_tuned, "idle_watts"),
         },
-        # A full-test internally repeats observations, but this remains one
-        # parent/candidate experiment and cannot establish selection confidence.
-        "confidence": 0.50,
+        # Confidence rises with the number of INDEPENDENT confirming sessions
+        # (repeated + counterbalanced + multi-machine): 1->0.50, 2->0.75,
+        # 3->0.875. A single screen stays diagnostic-only (0.50 < accept gate).
+        # Phase 0: `confirmations` is founder-attested and recorded for audit;
+        # pre-external-rollout this must be auto-counted from independent
+        # confirming bundles in CursiveRoot rather than asserted.
+        "confidence": round(min(0.95, 1.0 - 0.5 ** max(1, int(confirmations))), 4),
+        "confirmation_count": max(1, int(confirmations)),
         "sample_counts": {"network": 1, "coldstart": 1, "sustained": 1, "idle_power": 1},
         "source_runs": {
             "parent": parent_metrics,
@@ -964,6 +970,7 @@ def cmd_screen_variant(args: argparse.Namespace) -> None:
         candidate_variant=candidate_variant,
         parent_metrics=parent_metrics,
         candidate_metrics=candidate_metrics,
+        confirmations=int(getattr(args, "confirmations", 1) or 1),
     )
     record_evaluation(state, config, candidate_variant, metrics, args.cycle_id)
 
@@ -1390,6 +1397,7 @@ def build_parser() -> argparse.ArgumentParser:
     screen.add_argument("--candidate-result-json", help="existing full-test JSON for the candidate preset")
     screen.add_argument("--execute", action="store_true", help="run parent then candidate full tests on a Linux host")
     screen.add_argument("--reverse-order", action="store_true", help="with --execute, measure candidate first then parent (counterbalancing)")
+    screen.add_argument("--confirmations", type=int, default=1, help="count of independent confirming sessions (repeated + counterbalanced + multi-machine); raises confidence 1->0.50, 2->0.75, 3->0.875. Phase 0: founder-attested, recorded for audit.")
     screen.add_argument("--cycle-id", type=int, default=1)
 
     close = sub.add_parser("close-cycle", help="compute simulated payout report for accepted contributor fitness")
