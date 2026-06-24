@@ -101,17 +101,26 @@ const pct = v => v==null ? "—" : (v>=0?"+":"") + Number(v).toFixed(1) + "%";
 const when = s => s ? new Date(s).toLocaleString() : "";
 
 async function main(){
-  const [runs, machines, accepted, payouts] = await Promise.all([
+  const [runs, machines, accepted, payouts, aliases] = await Promise.all([
     q("runs?select=machine_id,preset_version,network_delta_pct,coldstart_delta_pct,power_delta_w,created_at&order=created_at.desc&limit=20"),
     q("machines?select=machine_id,cpu,gpu,os&order=created_at.desc"),
     q("seed_bundles?decision=eq.accepted&select=variant_id,confidence,fitness_score,reason,machine_id,created_at&order=created_at.desc&limit=5"),
     q("seed_payout_reports?select=cycle_id,simulated_revenue_sats,contributor_count,report,created_at&order=created_at.desc&limit=5"),
+    q("machine_aliases?select=alias,machine_id"),
   ]);
+
+  // Collapse hardware fingerprints (rebuilds / fingerprint-scheme changes) to
+  // their canonical PHYSICAL machine, so the count is honest (not inflated).
+  const aliasTo = Object.fromEntries(aliases.map(a => [a.alias, a.machine_id]));
+  const aliasKeys = new Set(aliases.map(a => a.alias));
+  const canon = id => aliasTo[id] || id || "";
+  const physical = machines.filter(m => !aliasKeys.has(m.machine_id));
+  const fpCount = id => 1 + aliases.filter(a => a.machine_id === id).length;
 
   // stats
   const allRuns = await q("runs?select=id");
   const cells = document.querySelectorAll("#stats .n");
-  cells[0].textContent = new Set(machines.map(m=>m.machine_id)).size;
+  cells[0].textContent = physical.length;
   cells[1].textContent = allRuns.length;
   cells[2].textContent = accepted.length;
   cells[3].textContent = payouts.length;
@@ -135,15 +144,15 @@ async function main(){
     : `<span class="mut">No cycle has closed yet.</span>`;
 
   // machines
-  document.getElementById("machines").innerHTML = machines.length ? `<table><thead><tr><th>id</th><th>CPU</th><th>GPU</th><th>OS</th></tr></thead><tbody>${
-    machines.map(m=>`<tr><td class="mut">${esc((m.machine_id||"").slice(0,16))}</td><td>${esc(m.cpu)}</td><td>${esc(m.gpu)}</td><td class="mut">${esc(m.os)}</td></tr>`).join("")
-  }</tbody></table>` : `<span class="mut">No machines yet.</span>`;
+  document.getElementById("machines").innerHTML = physical.length ? `<table><thead><tr><th>physical machine</th><th>CPU</th><th>GPU</th><th class="num">fingerprints</th></tr></thead><tbody>${
+    physical.map(m=>`<tr><td class="mut">${esc((m.machine_id||"").slice(0,16))}</td><td>${esc(m.cpu)}</td><td>${esc(m.gpu)}</td><td class="num mut">${fpCount(m.machine_id)}</td></tr>`).join("")
+  }</tbody></table><p class="mut" style="margin:10px 0 0;font-size:13px">${physical.length} physical machines have contributed. "Fingerprints" counts identity changes across GPU rebuilds and fingerprint-scheme updates — collapsed here so the count is honest.</p>` : `<span class="mut">No machines yet.</span>`;
 
   // runs
   document.getElementById("runs").innerHTML = `<thead><tr><th>when</th><th>machine</th><th>config</th><th class="num">cold-start</th><th class="num">network (lab)</th><th class="num">power</th></tr></thead><tbody>${
     runs.map(r=>`<tr>
       <td class="mut">${when(r.created_at).split(",")[0]}</td>
-      <td class="mut">${esc((r.machine_id||"").slice(0,12))}</td>
+      <td class="mut">${esc(canon(r.machine_id).slice(0,12))}</td>
       <td>${esc(r.preset_version)}</td>
       <td class="num ${r.coldstart_delta_pct<0?'good':''}">${pct(r.coldstart_delta_pct)}</td>
       <td class="num">${pct(r.network_delta_pct)}</td>
