@@ -1,0 +1,15 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.10-zram",
+  "parent_variant_id": "parent-baseline-v0.9",
+  "contributor_id": "local-founder",
+  "commit_ref": "candidate-v0.10-zram",
+  "preset_version": "v0.10-zram",
+  "preset_path": "presets/cursiveos-presets-v0.10-zram.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "knobs_removed_vs_parent": 0,
+  "declared_scope": "v0.9 parent stack plus a compressed-RAM (zram) swap device. First ADDED optimization (cycle 2), not a v0.8 subset.",
+  "hypothesis": "On a RAM-constrained machine, zram reduces memory pressure. NOTE: the current sensor suite does not stress memory, so this screen mainly tests safe apply/revert and non-regression; proving the benefit needs a memory-pressure sensor.",
+  "rollback_method": "Preset removes only the zram device it created, then delegates to the v0.9 preset undo; harness reverts at run end."
+}
