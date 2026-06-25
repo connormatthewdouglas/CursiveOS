@@ -1090,7 +1090,13 @@ def postgrest_upsert(table: str, conflict_key: str, payload: dict[str, Any]) -> 
             "apikey": key,
             "Authorization": f"Bearer {key}",
             "Content-Type": "application/json",
-            "Prefer": "resolution=merge-duplicates,return=minimal",
+            # Rows are content-addressed by their hash, so a conflicting key means
+            # byte-identical content: ignore the duplicate rather than UPDATE it.
+            # merge-duplicates would emit ON CONFLICT DO UPDATE, which the anon role
+            # has no UPDATE policy for (insert+select only) and fails with an RLS
+            # "USING expression" violation on re-upload. ignore-duplicates stays on
+            # the INSERT path and matches the rest of the fleet ingest.
+            "Prefer": "resolution=ignore-duplicates,return=minimal",
         },
         method="POST",
     )
