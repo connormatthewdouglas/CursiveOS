@@ -1387,12 +1387,15 @@ def cmd_simulate_qd(args: argparse.Namespace) -> None:
         raise SeedError(
             f"simulation archive underfilled: elites={report.archive_size} cells={report.occupied_cells}"
         )
-    if report.rejected_regressions > 0 and args.require_zero_regression_accepts:
-        accepted_regressions = [
-            s for s in report.steps if s["decision"] == "accepted" and "regression" in s["reason"].lower()
+    if args.require_zero_regression_accepts:
+        accepted_probes = [
+            s for s in report.steps
+            if s.get("forced_regression_probe") and s["decision"] == "accepted"
         ]
-        if accepted_regressions:
-            raise SeedError("regression case was accepted")
+        if accepted_probes:
+            raise SeedError(
+                f"forced regression probe accepted: {accepted_probes[0]['variant_id']}"
+            )
 
 
 def cmd_recover_result(args: argparse.Namespace) -> None:

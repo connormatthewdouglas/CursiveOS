@@ -147,6 +147,23 @@ class CoreEvaluationTest(unittest.TestCase):
         sensor = seed_organism.score_performance(variant=variant, metrics=metrics, config=seed_organism.DEFAULT_CONFIG)
         self.assertGreater(sensor["parsimony_bonus"], 0.0)
 
+    def test_overdeclared_parsimony_synced_before_qd_eval(self) -> None:
+        parent = qd_organism.make_variant(
+            variant_id="parent",
+            parent=None,
+            knobs={"cpu_governor_boost": 0.4, "gpu_idle_pin_mhz": 0.2, "scheduler_aggressive": 0.1, "power_cap_relief": 0.0},
+        )
+        child = qd_organism.make_variant(
+            variant_id="child",
+            parent=parent,
+            knobs={"cpu_governor_boost": 0.4, "gpu_idle_pin_mhz": 0.2, "scheduler_aggressive": 0.1, "power_cap_relief": 0.0},
+        )
+        child["knobs_removed_vs_parent"] = 6
+        metrics = metrics_from_variant(coldstart_pct=0.5, sustained_pct=0.5)
+        sensor, _, _, _ = qd_organism.evaluate_variant(child, metrics, seed_organism.DEFAULT_CONFIG)
+        self.assertEqual(child["knobs_removed_vs_parent"], 0)
+        self.assertEqual(sensor["parsimony_bonus"], 0.0)
+
 
 class FullTestTelemetryExtractionTest(unittest.TestCase):
     def test_load_full_test_metrics_extracts_detail_logs_without_confidence_side_effects(self) -> None:
@@ -360,6 +377,24 @@ class MutationProposerTest(unittest.TestCase):
         self.assertNotEqual(qd_organism.knobs_from_variant(parent), qd_organism.knobs_from_variant(child))
         self.assertIn(child.get("mutation_operator"), qd_organism.MUTATION_OPERATORS)
 
+    def test_knob_remove_does_not_count_inactive_as_removed(self) -> None:
+        inactive = {k: 0.0 for k in qd_organism.KNOB_NAMES}
+        rng = __import__("random").Random(1)
+        out, removed = qd_organism.apply_knob_remove(inactive, rng)
+        self.assertFalse(removed)
+        self.assertEqual(qd_organism.count_knobs_removed_vs_parent(inactive, out), 0)
+
+    def test_knobs_removed_matches_genome_diff(self) -> None:
+        parent = qd_organism.make_variant(
+            variant_id="parent",
+            parent=None,
+            knobs={"cpu_governor_boost": 0.5, "gpu_idle_pin_mhz": 0.3, "scheduler_aggressive": 0.2, "power_cap_relief": 0.1},
+        )
+        child_knobs = {"cpu_governor_boost": 0.0, "gpu_idle_pin_mhz": 0.3, "scheduler_aggressive": 0.0, "power_cap_relief": 0.1}
+        child = qd_organism.make_variant(variant_id="child", parent=parent, knobs=child_knobs, generation=1)
+        self.assertEqual(child["knobs_removed_vs_parent"], 2)
+        self.assertLessEqual(child["knobs_removed_vs_parent"], len(qd_organism.KNOB_NAMES))
+
     def test_proposer_draws_from_archive(self) -> None:
         archive = qd_organism.QualityDiversityArchive()
         archive.insert(
@@ -401,6 +436,18 @@ class SimulationLoopTest(unittest.TestCase):
         self.assertTrue(all(s["fitness_score"] > seed_organism.DEFAULT_CONFIG["minimum_accept_fitness"] for s in accepted_steps))
         archived_steps = [s for s in report.steps if s["archived"]]
         self.assertTrue(all(s["decision"] == "accepted" for s in archived_steps))
+        for step in report.steps:
+            self.assertLessEqual(step.get("knobs_removed_vs_parent", 0), len(qd_organism.KNOB_NAMES))
+        probe_steps = [s for s in report.steps if s.get("forced_regression_probe")]
+        self.assertTrue(probe_steps)
+        self.assertTrue(all(s["decision"] == "rejected_regression" for s in probe_steps))
+
+    def test_simulation_elites_parsimony_not_gamed(self) -> None:
+        report = qd_organism.run_qd_simulation(generations=10, seed=77, proposals_per_generation=3)
+        for elite in report.elites:
+            removed = elite.get("knobs_removed_vs_parent", 0)
+            self.assertLessEqual(removed, len(qd_organism.KNOB_NAMES))
+            self.assertGreaterEqual(removed, 0)
 
     def test_simulation_uses_real_evaluation_functions(self) -> None:
         variant = qd_organism.make_variant(
@@ -446,6 +493,21 @@ class SimulateQdCliTest(unittest.TestCase):
             self.assertGreaterEqual(data["archive_size"], 2)
             self.assertGreaterEqual(data["occupied_cells"], 3)
             self.assertGreater(data["max_fitness"], seed_organism.DEFAULT_CONFIG["minimum_accept_fitness"])
+
+    def test_cli_require_zero_regression_accepts_passes_when_probes_rejected(self) -> None:
+        rc = seed_organism.main(
+            [
+                "simulate-qd",
+                "--generations",
+                "8",
+                "--seed",
+                "99",
+                "--regression-probe-generation",
+                "4",
+                "--require-zero-regression-accepts",
+            ]
+        )
+        self.assertEqual(rc, 0)
 
 
 if __name__ == "__main__":

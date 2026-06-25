@@ -42,6 +42,8 @@ KNOB_NAMES = (
 
 MUTATION_OPERATORS = ("knob_tweak", "knob_remove", "scale_profile")
 
+KNOB_ACTIVE_THRESHOLD = 0.05
+
 
 def bin_descriptor_pct(value: float | None, *, neutral_band: float = 1.0) -> int:
     """0=negative, 1=neutral, 2=positive."""
@@ -147,15 +149,50 @@ def knobs_from_variant(variant: dict[str, Any]) -> dict[str, float]:
     return knobs
 
 
+def knob_is_active(value: float) -> bool:
+    return float(value) > KNOB_ACTIVE_THRESHOLD
+
+
+def count_knobs_removed_vs_parent(
+    parent_knobs: dict[str, float],
+    child_knobs: dict[str, float],
+) -> int:
+    """Count knobs that were active in parent and inactive in child (immediate parent only)."""
+    removed = 0
+    for key in KNOB_NAMES:
+        if knob_is_active(parent_knobs.get(key, 0.0)) and not knob_is_active(child_knobs.get(key, 0.0)):
+            removed += 1
+    return removed
+
+
+def sync_parsimony_from_genome(variant: dict[str, Any]) -> int:
+    """
+    Overwrite knobs_removed_vs_parent from genome truth vs stored parent snapshot.
+    Prevents declared-over-actual parsimony gaming before score_performance runs.
+    """
+    parent_knobs = variant.get("parent_genome_knobs")
+    child_knobs = knobs_from_variant(variant)
+    if not isinstance(parent_knobs, dict):
+        variant["knobs_removed_vs_parent"] = 0
+        return 0
+    removed = count_knobs_removed_vs_parent(parent_knobs, child_knobs)
+    variant["knobs_removed_vs_parent"] = removed
+    return removed
+
+
 def make_variant(
     *,
     variant_id: str,
     parent: dict[str, Any] | None,
     knobs: dict[str, float],
-    knobs_removed: int = 0,
     generation: int = 0,
     mutation_operator: str | None = None,
 ) -> dict[str, Any]:
+    child_knobs = dict(knobs)
+    knobs_removed = 0
+    if parent is not None:
+        parent_knobs = knobs_from_variant(parent)
+        knobs_removed = count_knobs_removed_vs_parent(parent_knobs, child_knobs)
     variant = {
         "schema_version": "seed-organism.variant.qd-sim.v0.1",
         "variant_id": variant_id,
@@ -165,14 +202,15 @@ def make_variant(
         "declared_scope": "quality-diversity simulation only",
         "rollback_method": "simulation discard",
         "fitness_eligible": True,
-        "genome_knobs": dict(knobs),
+        "genome_knobs": child_knobs,
         "knobs_removed_vs_parent": knobs_removed,
         "qd_generation": generation,
     }
     if mutation_operator:
         variant["mutation_operator"] = mutation_operator
-    if parent:
+    if parent is not None:
         variant["parent_variant_id"] = parent.get("variant_id")
+        variant["parent_genome_knobs"] = knobs_from_variant(parent)
     return variant
 
 
@@ -184,15 +222,14 @@ def apply_knob_tweak(knobs: dict[str, float], rng: random.Random) -> dict[str, f
     return out
 
 
-def apply_knob_remove(knobs: dict[str, float], rng: random.Random) -> tuple[dict[str, float], int]:
+def apply_knob_remove(knobs: dict[str, float], rng: random.Random) -> tuple[dict[str, float], bool]:
     out = dict(knobs)
-    active = [k for k in KNOB_NAMES if out[k] > 0.05]
+    active = [k for k in KNOB_NAMES if knob_is_active(out[k])]
     if not active:
-        out[rng.choice(KNOB_NAMES)] = 0.0
-        return out, 1
+        return apply_knob_tweak(out, rng), False
     key = rng.choice(active)
     out[key] = 0.0
-    return out, 1
+    return out, True
 
 
 def apply_scale_profile(knobs: dict[str, float], rng: random.Random) -> dict[str, float]:
@@ -208,20 +245,17 @@ def mutate_genome(
     generation: int,
 ) -> dict[str, Any]:
     knobs = knobs_from_variant(parent_variant)
-    parent_removed = int(parent_variant.get("knobs_removed_vs_parent", 0) or 0)
     op = rng.choice(MUTATION_OPERATORS)
-    removed_delta = 0
     if op == "knob_tweak":
         knobs = apply_knob_tweak(knobs, rng)
     elif op == "knob_remove":
-        knobs, removed_delta = apply_knob_remove(knobs, rng)
+        knobs, _removed = apply_knob_remove(knobs, rng)
     else:
         knobs = apply_scale_profile(knobs, rng)
     return make_variant(
         variant_id=variant_id,
         parent=parent_variant,
         knobs=knobs,
-        knobs_removed=parent_removed + removed_delta,
         generation=generation,
         mutation_operator=op,
     )
@@ -235,6 +269,8 @@ def propose_offspring(
     variant_counter: int,
 ) -> dict[str, Any]:
     parents = archive.select_parents(rng, count=2)
+    if not parents:
+        raise seed_organism.SeedError("QD archive empty; cannot propose offspring")
     parent = parents[rng.randrange(len(parents))]
     return mutate_genome(
         parent.variant,
@@ -314,6 +350,7 @@ def evaluate_variant(
     metrics: dict[str, Any],
     config: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any], str, str]:
+    sync_parsimony_from_genome(variant)
     sensor = seed_organism.score_performance(variant=variant, metrics=metrics, config=config)
     regression = seed_organism.evaluate_regression(variant, metrics)
     decision, reason = seed_organism.verdict(variant, sensor, regression, config)
@@ -385,10 +422,13 @@ def seed_archive(
         generation=0,
         mutation_operator="seed",
     )
-    metrics = synthesize_metrics(variant, rng=rng)
+    zero_noise = {k: 0.0 for k in DEFAULT_NOISE_PROFILE}
+    metrics = synthesize_metrics(variant, rng=rng, noise_profile=zero_noise)
     sensor, regression, decision, reason = evaluate_variant(variant, metrics, config)
     if decision != "accepted":
-        return None
+        raise seed_organism.SeedError(
+            f"QD seed bootstrap failed: {decision} ({reason}); fitness={sensor['fitness_score']}"
+        )
     cell_key = descriptor_cell_key(sensor, variant)
     elite = ArchiveElite(
         variant=variant,
@@ -474,6 +514,8 @@ def run_qd_simulation(
                     "cell_key": list(cell_key) if cell_key else None,
                     "archived": archived,
                     "mutation_operator": variant.get("mutation_operator"),
+                    "forced_regression_probe": force_regression,
+                    "knobs_removed_vs_parent": variant.get("knobs_removed_vs_parent", 0),
                 }
             )
 
