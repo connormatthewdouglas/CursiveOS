@@ -1364,6 +1364,37 @@ def cmd_remote_status(args: argparse.Namespace) -> None:
         )
 
 
+def cmd_simulate_qd(args: argparse.Namespace) -> None:
+    from qd_organism import format_summary, run_qd_simulation, write_simulation_report
+
+    config = load_config(state_path(args)) if args.state_dir else dict(DEFAULT_CONFIG)
+    report = run_qd_simulation(
+        generations=int(args.generations),
+        seed=int(args.seed),
+        config=config,
+        proposals_per_generation=int(args.proposals_per_generation),
+        regression_probe_generation=int(args.regression_probe_generation)
+        if args.regression_probe_generation is not None
+        else None,
+    )
+    summary = format_summary(report)
+    print(summary)
+    if args.report:
+        out = Path(args.report).expanduser().resolve()
+        write_simulation_report(report, out)
+        print(f"report: {rel(out)}")
+    if report.archive_size < 2 or report.occupied_cells < 3:
+        raise SeedError(
+            f"simulation archive underfilled: elites={report.archive_size} cells={report.occupied_cells}"
+        )
+    if report.rejected_regressions > 0 and args.require_zero_regression_accepts:
+        accepted_regressions = [
+            s for s in report.steps if s["decision"] == "accepted" and "regression" in s["reason"].lower()
+        ]
+        if accepted_regressions:
+            raise SeedError("regression case was accepted")
+
+
 def cmd_recover_result(args: argparse.Namespace) -> None:
     state = state_path(args)
     config = load_config(state)
@@ -1413,6 +1444,26 @@ def build_parser() -> argparse.ArgumentParser:
     recover.add_argument("--result-json", required=True, help="saved full-test JSON from the Linux host")
     recover.add_argument("--variant", default="references/seed-organism/variant.genesis-linux.json")
     recover.add_argument("--cycle-id", type=int, default=1)
+
+    sim = sub.add_parser(
+        "simulate-qd",
+        help="run quality-diversity archive simulation with synthetic metrics (no hardware)",
+    )
+    sim.add_argument("--generations", type=int, default=20, help="number of evolutionary generations")
+    sim.add_argument("--seed", type=int, default=42, help="RNG seed for reproducible simulation")
+    sim.add_argument("--proposals-per-generation", type=int, default=4, help="offspring proposals per generation")
+    sim.add_argument(
+        "--regression-probe-generation",
+        type=int,
+        default=None,
+        help="optional generation that forces a regression failure probe",
+    )
+    sim.add_argument("--report", help="write machine-readable simulation report JSON to this path")
+    sim.add_argument(
+        "--require-zero-regression-accepts",
+        action="store_true",
+        help="fail if any accepted step looks like a regression",
+    )
     return p
 
 
@@ -1430,6 +1481,7 @@ def main(argv: list[str] | None = None) -> int:
             "upload": cmd_upload,
             "remote-status": cmd_remote_status,
             "recover-result": cmd_recover_result,
+            "simulate-qd": cmd_simulate_qd,
         }[args.cmd](args)
     except SeedError as exc:
         print(f"seed-organism error: {exc}", file=sys.stderr)

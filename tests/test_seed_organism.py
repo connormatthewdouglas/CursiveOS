@@ -2,17 +2,150 @@
 
 from __future__ import annotations
 
+import io
 import json
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
+import qd_organism  # noqa: E402
 import seed_organism  # noqa: E402
+
+
+FIXTURE_VARIANT = {
+    "schema_version": "seed-organism.variant.v0.1",
+    "variant_id": "test-variant",
+    "contributor_id": "tester",
+    "commit_ref": "test",
+    "preset_version": "v0.8",
+    "fitness_eligible": True,
+}
+
+FIXTURE_BASELINE = {
+    "network_mbps": 930.0,
+    "coldstart_ms": 1820.0,
+    "sustained_tokps": 41.0,
+    "idle_watts": 71.0,
+}
+
+
+def metrics_from_variant(
+    *,
+    coldstart_pct: float = 0.0,
+    sustained_pct: float = 0.0,
+    idle_power_pct: float = 0.0,
+    network_pct: float = 0.0,
+    sample_counts: dict | None = None,
+    regression: dict | None = None,
+) -> dict:
+    baseline = dict(FIXTURE_BASELINE)
+    variant = {
+        "network_mbps": baseline["network_mbps"] * (1.0 + network_pct / 100.0),
+        "coldstart_ms": baseline["coldstart_ms"] * (1.0 - coldstart_pct / 100.0),
+        "sustained_tokps": baseline["sustained_tokps"] * (1.0 + sustained_pct / 100.0),
+        "idle_watts": baseline["idle_watts"] * (1.0 + idle_power_pct / 100.0),
+    }
+    return {
+        "schema_version": "seed-organism.metrics.fixture.v0.1",
+        "machine_id": "fixture-founder-rig",
+        "preset_version": "v0.8",
+        "baseline": baseline,
+        "variant": variant,
+        "sample_counts": sample_counts
+        or {"network": 3, "coldstart": 3, "sustained": 3, "idle_power": 5},
+        "regression": regression
+        or {
+            "full_test_passed": True,
+            "reverted_cleanly": True,
+            "host_safety_passed": True,
+            "failures": [],
+        },
+    }
+
+
+class CoreEvaluationTest(unittest.TestCase):
+    def test_score_performance_positive_coldstart(self) -> None:
+        metrics = metrics_from_variant(coldstart_pct=10.0, sustained_pct=2.0, idle_power_pct=1.0)
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT,
+            metrics=metrics,
+            config=seed_organism.DEFAULT_CONFIG,
+        )
+        self.assertGreater(sensor["fitness_score"], seed_organism.DEFAULT_CONFIG["minimum_accept_fitness"])
+        self.assertEqual(sensor["missing_core_metrics"], [])
+        self.assertEqual(sensor["severe_regressions"], [])
+
+    def test_score_performance_severe_coldstart_regression(self) -> None:
+        metrics = metrics_from_variant(coldstart_pct=-12.0)
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT,
+            metrics=metrics,
+            config=seed_organism.DEFAULT_CONFIG,
+        )
+        self.assertTrue(sensor["severe_regressions"])
+
+    def test_evaluate_regression_failures(self) -> None:
+        metrics = metrics_from_variant(
+            regression={
+                "full_test_passed": False,
+                "reverted_cleanly": False,
+                "host_safety_passed": True,
+                "failures": ["dirty revert"],
+            }
+        )
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, metrics)
+        self.assertFalse(regression["passed"])
+        self.assertIn("full-test gate failed", regression["failures"])
+        self.assertIn("reversibility gate failed", regression["failures"])
+
+    def test_verdict_paths(self) -> None:
+        config = seed_organism.DEFAULT_CONFIG
+        good_metrics = metrics_from_variant(coldstart_pct=8.0, sustained_pct=1.0)
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=good_metrics, config=config
+        )
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, good_metrics)
+        decision, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor, regression, config)
+        self.assertEqual(decision, "accepted")
+
+        bad_metrics = metrics_from_variant(
+            regression={"full_test_passed": False, "reverted_cleanly": True, "host_safety_passed": True, "failures": []}
+        )
+        sensor_bad = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=bad_metrics, config=config
+        )
+        regression_bad = seed_organism.evaluate_regression(FIXTURE_VARIANT, bad_metrics)
+        decision_bad, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_bad, regression_bad, config)
+        self.assertEqual(decision_bad, "rejected_regression")
+
+        low_conf_metrics = metrics_from_variant(coldstart_pct=8.0, sample_counts={"network": 1, "coldstart": 1, "sustained": 1})
+        sensor_low = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=low_conf_metrics, config=config
+        )
+        regression_low = seed_organism.evaluate_regression(FIXTURE_VARIANT, low_conf_metrics)
+        decision_low, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_low, regression_low, config)
+        self.assertEqual(decision_low, "inconclusive")
+
+        negative_metrics = metrics_from_variant(coldstart_pct=-15.0)
+        sensor_neg = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=negative_metrics, config=config
+        )
+        regression_neg = seed_organism.evaluate_regression(FIXTURE_VARIANT, negative_metrics)
+        decision_neg, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_neg, regression_neg, config)
+        self.assertEqual(decision_neg, "rejected_negative_fitness")
+
+    def test_parsimony_bonus_only_when_non_regressing(self) -> None:
+        metrics = metrics_from_variant(coldstart_pct=0.5, sustained_pct=0.5)
+        variant = dict(FIXTURE_VARIANT)
+        variant["knobs_removed_vs_parent"] = 2
+        sensor = seed_organism.score_performance(variant=variant, metrics=metrics, config=seed_organism.DEFAULT_CONFIG)
+        self.assertGreater(sensor["parsimony_bonus"], 0.0)
 
 
 class FullTestTelemetryExtractionTest(unittest.TestCase):
@@ -133,6 +266,186 @@ class FullTestTelemetryExtractionTest(unittest.TestCase):
         self.assertEqual(metrics["structured_telemetry"]["network"]["baseline"]["runs"][0]["retransmits"], 1.0)
         self.assertEqual(metrics["structured_telemetry"]["coldstart"]["tuned"]["calls"][0]["gpu_before"], "2000MHz")
         self.assertEqual(metrics["structured_telemetry"]["sustained"]["baseline"]["processor"], "100% GPU")
+
+
+class DescriptorArchiveTest(unittest.TestCase):
+    def test_cell_key_bins_deltas_and_parsimony(self) -> None:
+        sensor = {
+            "delta": {
+                "coldstart_pct": 5.0,
+                "sustained_pct": -2.0,
+                "idle_power_pct": 3.0,
+            }
+        }
+        variant = {"knobs_removed_vs_parent": 1}
+        key = qd_organism.descriptor_cell_key(sensor, variant)
+        self.assertEqual(key, (2, 0, 0, 1))
+
+    def test_archive_replaces_only_with_higher_fitness(self) -> None:
+        archive = qd_organism.QualityDiversityArchive()
+        cell = (2, 1, 1, 0)
+        low = qd_organism.ArchiveElite(
+            variant={"variant_id": "low"},
+            sensor={"delta": {}},
+            regression={},
+            metrics={},
+            cell_key=cell,
+            fitness_score=0.05,
+            generation=1,
+            decision="accepted",
+            reason="ok",
+        )
+        high = qd_organism.ArchiveElite(
+            variant={"variant_id": "high"},
+            sensor={"delta": {}},
+            regression={},
+            metrics={},
+            cell_key=cell,
+            fitness_score=0.12,
+            generation=2,
+            decision="accepted",
+            reason="ok",
+        )
+        self.assertTrue(archive.insert(low))
+        self.assertTrue(archive.insert(high))
+        self.assertEqual(archive.cells[cell].variant["variant_id"], "high")
+        worse = qd_organism.ArchiveElite(
+            variant={"variant_id": "worse"},
+            sensor={"delta": {}},
+            regression={},
+            metrics={},
+            cell_key=cell,
+            fitness_score=0.08,
+            generation=3,
+            decision="accepted",
+            reason="ok",
+        )
+        self.assertFalse(archive.insert(worse))
+        self.assertEqual(archive.cells[cell].variant["variant_id"], "high")
+
+    def test_parent_selection_prefers_diverse_high_fitness(self) -> None:
+        archive = qd_organism.QualityDiversityArchive()
+        rng = __import__("random").Random(7)
+        for idx, (fitness, cell) in enumerate(
+            [(0.20, (2, 2, 2, 0)), (0.18, (1, 1, 1, 0)), (0.17, (0, 0, 0, 1))]
+        ):
+            archive.insert(
+                qd_organism.ArchiveElite(
+                    variant={"variant_id": f"v{idx}"},
+                    sensor={"delta": {}},
+                    regression={},
+                    metrics={},
+                    cell_key=cell,
+                    fitness_score=fitness,
+                    generation=idx,
+                    decision="accepted",
+                    reason="ok",
+                )
+            )
+        parents = archive.select_parents(rng, count=2)
+        self.assertEqual(len(parents), 2)
+        self.assertEqual(parents[0].fitness_score, 0.20)
+        self.assertNotEqual(parents[0].cell_key, parents[1].cell_key)
+
+
+class MutationProposerTest(unittest.TestCase):
+    def test_mutations_change_genome(self) -> None:
+        parent = qd_organism.make_variant(
+            variant_id="parent",
+            parent=None,
+            knobs={"cpu_governor_boost": 0.4, "gpu_idle_pin_mhz": 0.1, "scheduler_aggressive": 0.1, "power_cap_relief": 0.0},
+        )
+        rng = __import__("random").Random(99)
+        child = qd_organism.mutate_genome(parent, rng=rng, variant_id="child", generation=1)
+        self.assertNotEqual(qd_organism.knobs_from_variant(parent), qd_organism.knobs_from_variant(child))
+        self.assertIn(child.get("mutation_operator"), qd_organism.MUTATION_OPERATORS)
+
+    def test_proposer_draws_from_archive(self) -> None:
+        archive = qd_organism.QualityDiversityArchive()
+        archive.insert(
+            qd_organism.ArchiveElite(
+                variant=qd_organism.make_variant(
+                    variant_id="seed",
+                    parent=None,
+                    knobs={"cpu_governor_boost": 0.3, "gpu_idle_pin_mhz": 0.2, "scheduler_aggressive": 0.1, "power_cap_relief": 0.1},
+                ),
+                sensor={"delta": {}},
+                regression={},
+                metrics={},
+                cell_key=(2, 1, 1, 0),
+                fitness_score=0.1,
+                generation=0,
+                decision="accepted",
+                reason="ok",
+            )
+        )
+        rng = __import__("random").Random(5)
+        child = qd_organism.propose_offspring(archive, rng=rng, generation=2, variant_counter=1)
+        self.assertTrue(child["variant_id"].startswith("qd-sim-g002-"))
+
+
+class SimulationLoopTest(unittest.TestCase):
+    def test_loop_archives_only_accepted_non_regressed(self) -> None:
+        report = qd_organism.run_qd_simulation(
+            generations=12,
+            seed=123,
+            config=seed_organism.DEFAULT_CONFIG,
+            proposals_per_generation=3,
+            regression_probe_generation=5,
+        )
+        self.assertGreaterEqual(report.archive_size, 2)
+        self.assertGreaterEqual(report.occupied_cells, 3)
+        self.assertGreater(report.max_fitness, seed_organism.DEFAULT_CONFIG["minimum_accept_fitness"])
+        self.assertGreaterEqual(report.rejected_regressions, 1)
+        accepted_steps = [s for s in report.steps if s["decision"] == "accepted"]
+        self.assertTrue(all(s["fitness_score"] > seed_organism.DEFAULT_CONFIG["minimum_accept_fitness"] for s in accepted_steps))
+        archived_steps = [s for s in report.steps if s["archived"]]
+        self.assertTrue(all(s["decision"] == "accepted" for s in archived_steps))
+
+    def test_simulation_uses_real_evaluation_functions(self) -> None:
+        variant = qd_organism.make_variant(
+            variant_id="direct",
+            parent=None,
+            knobs={"cpu_governor_boost": 0.5, "gpu_idle_pin_mhz": 0.3, "scheduler_aggressive": 0.2, "power_cap_relief": 0.2},
+        )
+        metrics = qd_organism.synthesize_metrics(variant, rng=__import__("random").Random(1))
+        sensor, regression, decision, reason = qd_organism.evaluate_variant(
+            variant, metrics, seed_organism.DEFAULT_CONFIG
+        )
+        self.assertEqual(sensor["schema_version"], "seed-organism.sensor-result.v0.1")
+        self.assertEqual(regression["schema_version"], "seed-organism.regression-result.v0.1")
+        self.assertIn(decision, {"accepted", "rejected_regression", "rejected_negative_fitness", "inconclusive", "invalid"})
+        self.assertTrue(reason)
+
+
+class SimulateQdCliTest(unittest.TestCase):
+    def test_cli_simulate_qd_smoke(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = Path(tmp) / "qd-report.json"
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = seed_organism.main(
+                    [
+                        "simulate-qd",
+                        "--generations",
+                        "15",
+                        "--seed",
+                        "42",
+                        "--proposals-per-generation",
+                        "4",
+                        "--report",
+                        str(report_path),
+                    ]
+                )
+            self.assertEqual(rc, 0)
+            output = buf.getvalue()
+            self.assertIn("archive elites:", output)
+            self.assertIn("descriptor cells occupied:", output)
+            self.assertTrue(report_path.exists())
+            data = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertGreaterEqual(data["archive_size"], 2)
+            self.assertGreaterEqual(data["occupied_cells"], 3)
+            self.assertGreater(data["max_fitness"], seed_organism.DEFAULT_CONFIG["minimum_accept_fitness"])
 
 
 if __name__ == "__main__":
