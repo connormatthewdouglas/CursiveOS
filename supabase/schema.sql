@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict VWrriUrTo9lWzvGH2nJPFpv0aLCls2KpaUpex3k7VDHaRiCiYqWrVqnEiTlSavQ
+\restrict JoTfamAoaJ4oPWPS9Fjh0eSFWQiAsJYpKub9qXKA8IenUwfUxKryCB99e20YREt
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -1576,8 +1576,44 @@ CREATE TABLE public.runs (
     gpu_throttle_events_baseline integer,
     gpu_throttle_events_tuned integer,
     temp_throttle_count_baseline integer,
-    temp_throttle_count_tuned integer
+    temp_throttle_count_tuned integer,
+    memory_refault_baseline_s double precision,
+    memory_refault_tuned_s double precision,
+    memory_refault_delta_pct double precision,
+    memory_zram_ratio double precision,
+    memory_zram_peak_orig_mib double precision,
+    memory_sensor_mode text,
+    memory_ws_mb integer,
+    memory_ceiling_mb integer
 );
+
+
+--
+-- Name: COLUMN runs.memory_refault_baseline_s; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.runs.memory_refault_baseline_s IS 'Memory-pressure sensor: median refault time (s) in baseline/parent state. Lower is better.';
+
+
+--
+-- Name: COLUMN runs.memory_refault_tuned_s; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.runs.memory_refault_tuned_s IS 'Memory-pressure sensor: median refault time (s) in tuned/candidate state. Lower is better.';
+
+
+--
+-- Name: COLUMN runs.memory_refault_delta_pct; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.runs.memory_refault_delta_pct IS 'Memory-pressure sensor: percent improvement (positive = tuned faster), lower-is-better convention.';
+
+
+--
+-- Name: COLUMN runs.memory_sensor_mode; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.runs.memory_sensor_mode IS 'cgroup-high (memory.high ceiling, valid) or uncapped (no ceiling, low validity).';
 
 
 --
@@ -2817,5 +2853,5 @@ CREATE POLICY seed_payout_reports_anon_select ON public.seed_payout_reports FOR 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VWrriUrTo9lWzvGH2nJPFpv0aLCls2KpaUpex3k7VDHaRiCiYqWrVqnEiTlSavQ
+\unrestrict JoTfamAoaJ4oPWPS9Fjh0eSFWQiAsJYpKub9qXKA8IenUwfUxKryCB99e20YREt
 
