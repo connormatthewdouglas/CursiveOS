@@ -12,8 +12,9 @@
 #      2026-06-10 CursiveRoot data loss).
 #   3. GENESIS: records a v0.8 genesis baseline for this machine's hardware
 #      fingerprint (skipped automatically if CursiveRoot already has one).
-#   4. SCREEN: runs the v0.8 parent vs v0.9-network-efficient candidate
-#      mutation screen (two full benchmark sessions, back to back).
+#   4. SCREEN: runs the current parent (default v0.9) vs the current candidate
+#      (default v0.11-zram-swappiness) mutation screen (two full benchmark
+#      sessions, back to back).
 #   5. Uploads all artifacts and prints the analyzer verdict.
 #
 # This takes a while (up to three full benchmark passes). Leave the terminal
@@ -32,7 +33,7 @@ main() {
 REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveOS.git}"
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
 BRANCH="${CURSIVEOS_BRANCH:-main}"
-CYCLE_ID="${CURSIVEOS_CYCLE_ID:-1}"
+CYCLE_ID="${CURSIVEOS_CYCLE_ID:-3}"
 SUPABASE_URL="${CURSIVEOS_SUPABASE_URL:-https://iovvktpuoinmjdgfxgvm.supabase.co}"
 SUPABASE_KEY="${CURSIVEOS_SUPABASE_KEY:-sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn}"
 
@@ -160,7 +161,24 @@ fi
 
 # Screens to run, space-separated "order:variant" entries. Order is "normal"
 # (parent first) or "reversed" (candidate first, for counterbalancing).
-SCREENS="${CURSIVEOS_SCREENS:-normal:v0.9-network-efficient}"
+# Parent defaults to the current canonical parent (v0.9). Override with
+# CURSIVEOS_PARENT_VARIANT=v0.8/genesis for old screens, or v0.12 after promotion.
+SCREENS="${CURSIVEOS_SCREENS:-normal:v0.11-zram-swappiness}"
+PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.9}"
+case "$PARENT_VARIANT" in
+  v0.8|genesis|genesis-linux)
+    PARENT_FILE="references/seed-organism/variant.genesis-linux.json"
+    PARENT_LABEL="v0.8/genesis"
+    ;;
+  *)
+    PARENT_FILE="references/seed-organism/variant.${PARENT_VARIANT}.json"
+    PARENT_LABEL="$PARENT_VARIANT"
+    ;;
+esac
+if [[ ! -f "$PARENT_FILE" ]]; then
+  echo "Parent variant not found: $PARENT_FILE (CURSIVEOS_PARENT_VARIANT=$PARENT_VARIANT)"
+  exit 1
+fi
 
 step "4/5 Mutation screen(s): $SCREENS"
 note "Each screen is two full benchmark sessions, back to back. Screening only —"
@@ -176,9 +194,9 @@ for entry in $SCREENS; do
   fi
   extra=()
   [[ "$order" == "reversed" ]] && extra+=(--reverse-order)
-  note "── Screen: v0.8 vs $cand (order: $order)"
+  note "── Screen: $PARENT_LABEL vs $cand (order: $order)"
   if python3 tools/seed_organism.py screen-variant \
-      --parent-variant references/seed-organism/variant.genesis-linux.json \
+      --parent-variant "$PARENT_FILE" \
       --candidate-variant "$cand_file" \
       --execute "${extra[@]}" \
       --cycle-id "$CYCLE_ID"; then

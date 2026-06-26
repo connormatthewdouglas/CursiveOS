@@ -27,8 +27,8 @@ What it does, in order:
 1. **Recovers** any results still saved locally from earlier installs.
 2. **Genesis baseline** — records this machine's v0.8 baseline under its
    hardware fingerprint (skipped automatically if CursiveRoot already has one).
-3. **Mutation screen** — compares the parent preset (`v0.8`) against the
-   current candidate. A single screen is diagnostic only — one observation
+3. **Mutation screen** — compares the current parent preset (`v0.9`) against
+   the current candidate (`v0.11-zram-swappiness`). A single screen is diagnostic only — one observation
    can never accept a mutation or create a payout.
 4. **Uploads** all artifacts and prints the analyzer verdict.
 
@@ -49,16 +49,26 @@ also the contributor of an accepted variant.
 ./scripts/cursiveroot-status.sh
 ```
 
-### Second-machine confirmation run (current ask)
+### Cycle-3 confirmation run (current ask)
 
-The active candidate **v0.9c-cpu-retained** (v0.8 minus the GPU frequency pin)
-held its full cold-start win on the founder rig and needs confirmation on a
-second Linux machine. On any Linux box (a live-USB Linux Mint session on a
-Windows machine works — no install needed), paste:
+The active candidate is **v0.11-zram-swappiness**: the v0.9 parent stack plus a
+zram swap device and `vm.swappiness=60`. This is the swappiness-aware successor
+to v0.10-zram; the validated finding is that zram alone stays neutral while
+v0.9 pins `vm.swappiness=0`, but v0.11 lets reclaim actually land in fast
+compressed RAM. On any Linux box (a live-USB Linux Mint session on a Windows
+machine works — no install needed), paste:
 
 ```bash
-command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh | CURSIVEOS_SCREENS="normal:v0.9c-cpu-retained" bash
+command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh | CURSIVEOS_CYCLE_ID=3 CURSIVEOS_PARENT_VARIANT=v0.9 CURSIVEOS_SCREENS="normal:v0.11-zram-swappiness" bash
 ```
+
+Current measured result (Stardust, harness v1.4.5, one full cycle-3 screen):
+v0.11 vs v0.9 scored **fitness +0.0954** with the decision still
+`inconclusive` only because it is a single screen (confidence 0.50). The memory
+channel drove the win (**+75.4%**, refault about 45s capped → **10.86s**), while
+the inference guardrails did **not** regress (cold-start −0.5%, sustained 0.0%).
+Next evidence needed: reversed-order and/or second-machine confirmation before
+promoting v0.11 as the new parent.
 
 ### A note on the network numbers (honesty box)
 

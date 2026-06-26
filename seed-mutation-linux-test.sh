@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# One-command Linux screen for the first true seed-organism mutation.
+# One-command Linux parent-vs-candidate seed-organism mutation screen.
 
 set -euo pipefail
 
 REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveOS.git}"
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
 BRANCH="${CURSIVEOS_BRANCH:-main}"
-CYCLE_ID="${CURSIVEOS_CYCLE_ID:-1}"
+CYCLE_ID="${CURSIVEOS_CYCLE_ID:-3}"
+PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.9}"
+CANDIDATE_VARIANT="${CURSIVEOS_CANDIDATE_VARIANT:-v0.11-zram-swappiness}"
 
 say() { printf '\n[CursiveOS mutation screen] %s\n' "$*"; }
 
@@ -35,14 +37,28 @@ else
 fi
 
 cd "$TARGET_DIR"
-chmod +x cursiveos-full-test-v1.4.sh presets/cursiveos-presets-v0.9-network-efficient.sh tools/seed_organism.py
+chmod +x cursiveos-full-test-v1.4.sh presets/*.sh tools/seed_organism.py
 python3 tools/seed_organism.py init
 
-say "Screening parent v0.8 against candidate v0.9-network-efficient."
+case "$PARENT_VARIANT" in
+  v0.8|genesis|genesis-linux)
+    PARENT_FILE="references/seed-organism/variant.genesis-linux.json"
+    PARENT_LABEL="v0.8/genesis"
+    ;;
+  *)
+    PARENT_FILE="references/seed-organism/variant.${PARENT_VARIANT}.json"
+    PARENT_LABEL="$PARENT_VARIANT"
+    ;;
+esac
+CANDIDATE_FILE="references/seed-organism/variant.${CANDIDATE_VARIANT}.json"
+[[ -f "$PARENT_FILE" ]] || { echo "Parent variant not found: $PARENT_FILE"; exit 1; }
+[[ -f "$CANDIDATE_FILE" ]] || { echo "Candidate variant not found: $CANDIDATE_FILE"; exit 1; }
+
+say "Screening parent $PARENT_LABEL against candidate $CANDIDATE_VARIANT."
 say "This runs two full measurements. It is a screening observation, not an acceptance or payout event."
 python3 tools/seed_organism.py screen-variant \
-  --parent-variant references/seed-organism/variant.genesis-linux.json \
-  --candidate-variant references/seed-organism/variant.v0.9-network-efficient.json \
+  --parent-variant "$PARENT_FILE" \
+  --candidate-variant "$CANDIDATE_FILE" \
   --execute \
   --cycle-id "$CYCLE_ID"
 

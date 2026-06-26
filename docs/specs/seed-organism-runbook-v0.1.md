@@ -29,8 +29,8 @@ Local state is written under `.cursiveos/seed/` and is intentionally ignored by 
 
 `seed-session-linux-test.sh` runs the complete Phase 0 session in one paste:
 recovery of any locally saved results → genesis baseline for this machine's
-fingerprint (skipped if CursiveRoot already has one) → v0.8 vs
-v0.9-network-efficient screen → upload → analyzer verdict. Every step is safe
+fingerprint (skipped if CursiveRoot already has one) → current parent-vs-candidate
+screen (default: v0.9 vs v0.11-zram-swappiness, cycle 3) → upload → analyzer verdict. Every step is safe
 to repeat; re-pasting the same command resumes/retries idempotently.
 
 ```bash
@@ -57,12 +57,12 @@ python3 tools/seed_organism.py run-variant \
 
 The `--execute` mode is Linux-only. It runs `cursiveos-full-test-v1.4.sh` with the canonical genesis preset path and turns the result into the same seed organism sensor bundle used by fixture mode. A first real v0.8 run is baseline characterization (`genesis-baseline-v0.8`), not a contributed mutation and not payout-eligible.
 
-### First candidate screen
+### Current candidate screen
 
-After a host has a genesis baseline, the next real test compares the current parent (`v0.8`) to a narrow candidate (`v0.9-network-efficient`). The candidate keeps only network tuning and avoids v0.8's always-on CPU/GPU power-state tuning. This screen runs two full tests back-to-back on one machine:
+After a host has a genesis baseline, the current real test compares the canonical parent (`v0.9`) to the active cycle-3 candidate (`v0.11-zram-swappiness`). v0.11 is v0.9 plus zram and `vm.swappiness=60`; it exists because validated memory-pressure results showed zram alone remains neutral while v0.9 pins `swappiness=0`. This screen runs two full tests back-to-back on one machine:
 
 ```bash
-command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | bash
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | CURSIVEOS_CYCLE_ID=3 CURSIVEOS_PARENT_VARIANT=v0.9 CURSIVEOS_CANDIDATE_VARIANT=v0.11-zram-swappiness bash
 ```
 
 One screen can reveal whether the hypothesis is worth repeating. It cannot accept a mutation or produce a payout: acceptance requires repeated, counterbalanced parent/candidate sessions so that thermal drift and run order do not masquerade as fitness.

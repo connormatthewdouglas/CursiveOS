@@ -731,6 +731,11 @@ if [[ "$MEM_BASELINE" != "N/A" && "$MEM_TUNED" != "N/A" ]]; then
 else
     MEM_DELTA="N/A"
 fi
+if [[ "$MEM_DELTA" == "N/A" ]]; then
+    MEM_DELTA_SUMMARY="N/A"
+else
+    MEM_DELTA_SUMMARY="${MEM_DELTA}% faster"
+fi
 
 # ── Summary table ─────────────────────────────────────────────────────────────
 SUMMARY=$(cat <<EOF
@@ -749,9 +754,12 @@ Network throughput     ${NET_BASELINE} Mbit/s      ${NET_TUNED} Mbit/s      ${NE
 Cold-start latency     ${COLD_BASELINE}ms           ${COLD_TUNED}ms            ${COLD_DELTA}%
 Sustained inference    ${WARM_BASELINE:-N/A}     ${WARM_TUNED:-N/A}   ${WARM_DELTA:-N/A}
 Idle power draw*       ${PWR_IDLE}W               ${PWR_TUNED_IDLE}W             ${PWR_DELTA}W
+Memory refault time    ${MEM_BASELINE}s           ${MEM_TUNED}s          ${MEM_DELTA_SUMMARY}
 Stability              ${STABILITY_FLAG} (dmesg errors: ${STABILITY_ERRORS})
 
 * Idle power values are medians of ${PWR_IDLE_COUNT}/${PWR_TUNED_COUNT} readable baseline/tuned samples.
+* Memory refault is the validated cgroup memory-pressure channel; lower is better.
+  Tuned zram ratio: ${MEM_RATIO_T:-N/A}x; tuned zram peak_orig: ${MEM_PEAK_T:-N/A} MiB.
 Note: Presets reverted — captured pre-test controls have been restored.
 Logs: $LOG_DIR/
 ======================================================

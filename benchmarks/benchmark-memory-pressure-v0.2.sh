@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Memory-pressure sensor PROTOTYPE (v0.2) -- the missing 5th genesis channel.
+# Memory-pressure sensor (v0.2) -- validated 5th genesis channel.
 #
 # Changes from v0.1: the zram engagement proof now uses a background sampler that
 # captures PEAK zram usage during the reps. v0.1 read /sys/block/zram0/mm_stat
@@ -26,16 +26,19 @@
 #    desktop (hardware-scoped comparability, Chapter 08).
 #  * `memory.high` THROTTLES, it does not OOM-kill (that's `memory.max`); the
 #    workload is also capped to a fraction of MemTotal as a backstop.
-#  * cgroup-forced reclaim swaps anon pages even under v0.9's `swappiness=0`, so
-#    this isolates zram's benefit BEFORE a swappiness-aware variant exists.
+#  * cgroup-forced reclaim proves zram engagement even under v0.9's
+#    `swappiness=0`, but validation showed swappiness=0 still throttles to the
+#    probe cap; the real selection win belongs to the swappiness-aware v0.11.
 #  * fixed working set + compressible payload + median of REPS with CV reported.
 #
 # HONEST CAVEATS:
 #  * The payload is synthetically compressible (~text-like). It probes the zram
 #    path; it is NOT a claim about a specific real workload's compressibility.
 #    The achieved ratio is reported from zram mm_stat so the number is auditable.
-#  * PROTOTYPE: logs locally, does NOT upload, NOT wired into fitness. Validate a
-#    noise floor across reps + machines, THEN integrate as a weighted channel.
+# STATUS: Validated 2026-06-25 on the i5-11300H laptop and Stardust. Wired into
+# full-test v1.4.5 and seed_organism as a provisional 0.10-weighted fifth
+# fitness channel (lower refault time is better). Absolute times remain
+# hardware-scoped; capped reps mean this config is refusing to service pressure.
 #
 # Usage: ./benchmark-memory-pressure-v0.2.sh [ws_mb] [high_mb] [passes] [reps]
 #        defaults: 1536 512 3 5
@@ -168,7 +171,7 @@ try:
     if pc > 0: ratio = round(po / pc, 2)
 except Exception:
     pass
-print("=== MEMORY-PRESSURE SENSOR (prototype v0.2) ===")
+print("=== MEMORY-PRESSURE SENSOR (v0.2) ===")
 print(f"working_set={ws}M  ceiling={high}M  mode={mode}  zram={zram}  zram_swap={zswap}")
 print(f"refault_time_s: median={med:.3f}  min={mn:.3f}  max={mx:.3f}  cv={cv:.3f}  n={len(ts)}")
 if capped:
@@ -180,7 +183,7 @@ elif zram == "yes":
     print("zram_engaged: no measurable peak (pressure may not have reached zram; raise WS or lower ceiling)")
 else:
     print("zram_engaged: n/a (no zram device)")
-print("note: PROTOTYPE -- lower median = better; validate CV across reps+machines before fitness integration.")
+print("note: lower median = better; validated 5th channel; capped reps indicate memory-pressure stall.")
 print("METRIC_JSON " + json.dumps({
     "sensor": "memory_pressure", "version": "v0.2",
     "working_set_mb": int(ws), "ceiling_mb": int(high), "mode": mode,
