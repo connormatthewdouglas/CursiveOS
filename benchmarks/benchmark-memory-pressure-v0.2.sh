@@ -43,6 +43,13 @@
 
 set -uo pipefail
 WS_MB="${1:-1536}"; HIGH_MB="${2:-512}"; PASSES="${3:-3}"; REPS="${4:-5}"
+# Per-rep wall-clock cap. Under a config that refuses to swap (e.g. swappiness=0
+# with only disk swap), cgroup memory.high throttles the workload almost to a
+# standstill; without a cap a rep can run for many minutes. A capped rep records
+# the cap value -- which correctly reads as "this config handles pressure badly"
+# -- and keeps the probe bounded. Default 45s; raise via CURSIVEOS_MEM_TIMEOUT.
+TIMEOUT_S="${CURSIVEOS_MEM_TIMEOUT:-45}"
+CAPPED=0
 SP="${TAO_SUDO_PASS:-}"
 sc() { if [[ -n "$SP" ]]; then echo "$SP" | sudo -S bash -c "$1" 2>/dev/null; else sudo bash -c "$1"; fi; }
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -67,7 +74,12 @@ echo "memsensor WS=${WS_MB}M high=${HIGH_MB}M passes=$PASSES reps=$REPS cg2=$CG2
 WORK=$(mktemp /tmp/memsensor.XXXXXX.py)
 PEAK=$(mktemp /tmp/memsensor.XXXXXX.peak)
 SAMP_PID=""
-cleanup_tmp() { [[ -n "$SAMP_PID" ]] && kill "$SAMP_PID" 2>/dev/null; rm -f "$WORK" "$PEAK"; }
+cleanup_tmp() {
+    [[ -n "$SAMP_PID" ]] && kill "$SAMP_PID" 2>/dev/null
+    # kill any workload child that a timeout left behind (transient scope payload)
+    pkill -f "$(basename "$WORK")" 2>/dev/null
+    rm -f "$WORK" "$PEAK"
+}
 trap cleanup_tmp EXIT
 cat > "$WORK" <<'PY'
 import sys
@@ -84,17 +96,26 @@ print(acc % 251)
 PY
 
 run_once() {
-    local t0 t1
+    local t0 t1 rc
     t0=$(date +%s.%N)
+    # timeout -k: SIGTERM at TIMEOUT_S, SIGKILL 5s later if it ignores it.
     if [[ "$MODE" == "cgroup-high" ]]; then
-        systemd-run --user --scope -q \
+        timeout -k 5 "${TIMEOUT_S}s" systemd-run --user --scope -q \
             -p MemoryHigh="${HIGH_MB}M" -p MemorySwapMax=infinity \
-            python3 "$WORK" "$WS_MB" "$PASSES" >/dev/null 2>&1 \
-        || sc "systemd-run --scope -q -p MemoryHigh=${HIGH_MB}M -p MemorySwapMax=infinity python3 $WORK $WS_MB $PASSES" >/dev/null 2>&1
+            python3 "$WORK" "$WS_MB" "$PASSES" >/dev/null 2>&1
+        rc=$?
+        if [[ $rc -ne 0 && $rc -ne 124 && -n "$SP" ]]; then
+            timeout -k 5 "${TIMEOUT_S}s" \
+                bash -c "echo '$SP' | sudo -S systemd-run --scope -q -p MemoryHigh=${HIGH_MB}M -p MemorySwapMax=infinity python3 '$WORK' $WS_MB $PASSES" >/dev/null 2>&1
+            rc=$?
+        fi
     else
-        python3 "$WORK" "$WS_MB" "$PASSES" >/dev/null 2>&1
+        timeout -k 5 "${TIMEOUT_S}s" python3 "$WORK" "$WS_MB" "$PASSES" >/dev/null 2>&1
+        rc=$?
     fi
     t1=$(date +%s.%N)
+    # 124 = hit the wall-clock cap (config refused to service the pressure in time)
+    [[ $rc -eq 124 ]] && CAPPED=$((CAPPED + 1))
     python3 -c "print(f'{$t1-$t0:.3f}')"
 }
 
@@ -127,11 +148,12 @@ done
 read -r PK_O PK_C < "$PEAK" 2>/dev/null || { PK_O=0; PK_C=0; }
 
 # --- summarize ---
-python3 - "$WS_MB" "$HIGH_MB" "$MODE" "$ZRAM" "$ZSWAP" "$PK_O" "$PK_C" "${times[@]}" <<'PY'
+python3 - "$WS_MB" "$HIGH_MB" "$MODE" "$ZRAM" "$ZSWAP" "$PK_O" "$PK_C" "$CAPPED" "$TIMEOUT_S" "${times[@]}" <<'PY'
 import sys, statistics, json
 ws, high, mode, zram, zswap = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 pk_o, pk_c = sys.argv[6], sys.argv[7]
-ts = [float(x) for x in sys.argv[8:]]
+capped, timeout_s = int(sys.argv[8]), float(sys.argv[9])
+ts = [float(x) for x in sys.argv[10:]]
 med = statistics.median(ts); mn = min(ts); mx = max(ts)
 cv = (statistics.pstdev(ts) / med) if med and len(ts) > 1 else 0.0
 ratio = None; peak_mib = None
@@ -144,6 +166,9 @@ except Exception:
 print("=== MEMORY-PRESSURE SENSOR (prototype v0.2) ===")
 print(f"working_set={ws}M  ceiling={high}M  mode={mode}  zram={zram}  zram_swap={zswap}")
 print(f"refault_time_s: median={med:.3f}  min={mn:.3f}  max={mx:.3f}  cv={cv:.3f}  n={len(ts)}")
+if capped:
+    print(f"capped_reps: {capped}/{len(ts)} hit the {timeout_s:.0f}s wall-clock cap "
+          f"-> this config refuses to service the pressure (e.g. swappiness=0 + no fast swap)")
 if zram == "yes" and peak_mib and peak_mib > 1:
     print(f"zram_engaged: yes  peak_orig={peak_mib}MiB  compression_ratio={ratio}x")
 elif zram == "yes":
@@ -156,6 +181,7 @@ print("METRIC_JSON " + json.dumps({
     "working_set_mb": int(ws), "ceiling_mb": int(high), "mode": mode,
     "zram": zram == "yes", "zram_swap": zswap == "yes",
     "refault_time_s_median": round(med, 3), "refault_time_s_cv": round(cv, 3),
+    "capped_reps": capped, "timeout_s": timeout_s,
     "samples": [round(x, 3) for x in ts],
     "zram_peak_orig_mib": peak_mib,
     "zram_compression_ratio": ratio,
