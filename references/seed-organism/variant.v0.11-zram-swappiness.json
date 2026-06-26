@@ -1,0 +1,15 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.11-zram-swappiness",
+  "parent_variant_id": "parent-baseline-v0.9",
+  "contributor_id": "local-founder",
+  "commit_ref": "candidate-v0.11-zram-swappiness",
+  "preset_version": "v0.11-zram-swappiness",
+  "preset_path": "presets/cursiveos-presets-v0.11-zram-swappiness.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "knobs_removed_vs_parent": 0,
+  "declared_scope": "v0.9 parent stack plus a compressed-RAM (zram) swap device AND vm.swappiness raised from v0.9's 0 to 60. Cycle 3. The swappiness-aware successor to v0.10-zram.",
+  "hypothesis": "Cycle-3 measurement showed v0.10-zram does not improve the memory-pressure channel because v0.9's swappiness=0 stops the kernel swapping to zram (both v0.9 and v0.10 throttle to the probe cap). Re-enabling swapping (swappiness=60) should let cgroup-pressure reclaim land in fast compressed RAM, cutting refault time far below v0.9's capped time. Risk: swapping model weights could regress cold-start/sustained inference; the multi-channel screen will catch any such regression.",
+  "rollback_method": "Preset removes the zram device it created, then delegates to the v0.9 preset undo, which restores the original swappiness it saved; harness reverts at run end."
+}

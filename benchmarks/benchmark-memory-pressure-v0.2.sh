@@ -114,9 +114,11 @@ run_once() {
         rc=$?
     fi
     t1=$(date +%s.%N)
-    # 124 = hit the wall-clock cap (config refused to service the pressure in time)
-    [[ $rc -eq 124 ]] && CAPPED=$((CAPPED + 1))
-    python3 -c "print(f'{$t1-$t0:.3f}')"
+    local el; el=$(python3 -c "print(f'{$t1-$t0:.3f}')")
+    # Time-based cap detection (robust): systemd-run can mask timeout's 124 by
+    # propagating the child's signal code, so compare elapsed to the cap directly.
+    awk "BEGIN{exit !($el >= $TIMEOUT_S * 0.97)}" && CAPPED=$((CAPPED + 1))
+    echo "$el"
 }
 
 # Background peak sampler: track the max orig_data_size seen and the compr bytes
