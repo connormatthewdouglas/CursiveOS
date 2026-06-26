@@ -39,8 +39,10 @@ previously invisible).
 ## TO FINISH THE SPRINT (do this when both background jobs report DONE)
 
 SSH: `ssh stardust` and `ssh laptop` (config already in `~/.ssh/config`, key
-`~/.ssh/cursive_rig`). sudo via `TAO_SUDO_PASS='***REDACTED***'`. For complex
-remote bash, base64-encode: `ssh host "echo <b64> | base64 -d | bash"`.
+`~/.ssh/cursive_rig`). If sudo is needed, export `TAO_SUDO_PASS` from the local
+secure channel/operator context; **do not commit sudo passwords or other secrets
+to this repo**. For complex remote bash, base64-encode:
+`ssh host "echo <b64> | base64 -d | bash"`.
 
 1. **Confirm both jobs finished:** `ssh laptop "cat /tmp/lapscreen.out"` and
    `ssh stardust "cat /tmp/sdrev.out"`. Grab the 4 JSON paths.
