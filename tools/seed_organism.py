@@ -43,15 +43,22 @@ DEFAULT_CONFIG = {
     #    (real-path A/B showed our buffers add ~0; the win is just BBR) AND it
     #    is the noisiest channel (CV 0.19). It no longer scores — it only
     #    rejects a real regression via the severe-regression gate below.
-    #  - cold-start UP (0.30->0.55): the only rock-solid channel (CV 0.002).
+    #  - cold-start (0.30->0.55->0.50): the only rock-solid channel (CV 0.002).
     #  - sustained DOWN (0.20->0.10): single-stream signal is below its noise.
-    #  - idle_power UP (0.10->0.35): now reliable after the v1.4.4 sampling fix
+    #  - idle_power UP (0.10->0.35->0.30): reliable after the v1.4.4 sampling fix
     #    (settled-idle CV ~0.01, was a 0.83 sampling artifact).
+    #  - memory NEW (0.10) 2026-06-25: the 5th channel. cgroup-memory.high
+    #    refault-time probe (benchmark-memory-pressure-v0.2.sh), validated on two
+    #    machines (zram ~2x faster than disk swap, CV 0.003-0.019, cross-machine
+    #    comparable). Lower-is-better. Weight is PROVISIONAL/cautious; raise once
+    #    more memory-class variants are screened. Optional channel: a run without
+    #    a memory metric simply scores 0 here (neutral), it is not required core.
     "weights": {
         "network": 0.0,
-        "coldstart": 0.55,
+        "coldstart": 0.50,
         "sustained": 0.10,
-        "idle_power": 0.35,
+        "idle_power": 0.30,
+        "memory": 0.10,
     },
     # Parsimony: reward a variant that removes invasive knobs without losing
     # performance (e.g. v0.9 dropped the dead-weight Arc GPU pin at equal
@@ -66,14 +73,19 @@ DEFAULT_CONFIG = {
         "coldstart": 50.0,
         "sustained": 50.0,
         "idle_power": 50.0,
+        "memory": 50.0,
     },
     # Severe-regression thresholds sit OUTSIDE each channel's measured noise
     # floor (Chapter 16) so the gate rejects real regressions, not noise.
+    # memory -20.0: the tuned refault path is low-noise (CV<0.02) but the
+    # disk-swap baseline is spiky (CV up to 0.19); -20% sits outside the
+    # median-to-median delta noise so only a real memory regression trips it.
     "severe_regression_pct": {
         "network": -25.0,
         "coldstart": -8.0,
         "sustained": -15.0,
         "idle_power_cost": 25.0,
+        "memory": -20.0,
     },
 }
 
@@ -281,6 +293,9 @@ def score_performance(
         "coldstart_pct": pct_lower_is_better(num(baseline, "coldstart_ms"), num(candidate, "coldstart_ms")),
         "sustained_pct": pct_higher_is_better(num(baseline, "sustained_tokps"), num(candidate, "sustained_tokps")),
         "idle_power_pct": pct_cost(num(baseline, "idle_watts"), num(candidate, "idle_watts")),
+        # Memory-pressure refault time (lower is better, like cold-start). Optional:
+        # absent on runs predating the 5th channel -> normalize_pct(None)=0=neutral.
+        "memory_pct": pct_lower_is_better(num(baseline, "memory_refault_s"), num(candidate, "memory_refault_s")),
     }
 
     weights = config["weights"]
@@ -290,6 +305,7 @@ def score_performance(
         + weights["coldstart"] * normalize_pct(deltas["coldstart_pct"], caps["coldstart"])
         + weights["sustained"] * normalize_pct(deltas["sustained_pct"], caps["sustained"])
         - weights["idle_power"] * normalize_pct(deltas["idle_power_pct"], caps["idle_power"])
+        + weights.get("memory", 0.0) * normalize_pct(deltas["memory_pct"], caps.get("memory", 50.0))
     )
 
     severe = []
@@ -302,6 +318,8 @@ def score_performance(
         severe.append(f"sustained regression {deltas['sustained_pct']:.2f}%")
     if deltas["idle_power_pct"] is not None and deltas["idle_power_pct"] > thresholds["idle_power_cost"]:
         severe.append(f"idle power cost {deltas['idle_power_pct']:.2f}%")
+    if deltas["memory_pct"] is not None and deltas["memory_pct"] < thresholds.get("memory", -20.0):
+        severe.append(f"memory regression {deltas['memory_pct']:.2f}%")
 
     # Parsimony bonus: a variant that declares it removed N invasive knobs vs
     # its parent earns a small bonus, but ONLY when performance is non-regressing
@@ -329,12 +347,14 @@ def score_performance(
             "coldstart_ms": num(baseline, "coldstart_ms"),
             "sustained_tokps": num(baseline, "sustained_tokps"),
             "idle_watts": num(baseline, "idle_watts"),
+            "memory_refault_s": num(baseline, "memory_refault_s"),
         },
         "variant": {
             "network_mbps": num(candidate, "network_mbps"),
             "coldstart_ms": num(candidate, "coldstart_ms"),
             "sustained_tokps": num(candidate, "sustained_tokps"),
             "idle_watts": num(candidate, "idle_watts"),
+            "memory_refault_s": num(candidate, "memory_refault_s"),
         },
         "delta": deltas,
         "confidence": derive_confidence(metrics, missing_core),
@@ -799,12 +819,14 @@ def load_full_test_metrics_json(path: Path) -> dict[str, Any]:
             "coldstart_ms": num(baseline, "coldstart_ms"),
             "sustained_tokps": num(baseline, "sustained_tokps"),
             "idle_watts": num(baseline, "idle_watts"),
+            "memory_refault_s": num(baseline, "memory_refault_s"),
         },
         "variant": {
             "network_mbps": num(candidate, "network_mbps"),
             "coldstart_ms": num(candidate, "coldstart_ms"),
             "sustained_tokps": num(candidate, "sustained_tokps"),
             "idle_watts": num(candidate, "idle_watts"),
+            "memory_refault_s": num(candidate, "memory_refault_s"),
         },
         "sample_counts": data.get("sample_counts", {"network": 1, "coldstart": 1, "sustained": 1}),
         "regression": {
@@ -914,12 +936,14 @@ def comparison_metrics(
             "coldstart_ms": num(parent_tuned, "coldstart_ms"),
             "sustained_tokps": num(parent_tuned, "sustained_tokps"),
             "idle_watts": num(parent_tuned, "idle_watts"),
+            "memory_refault_s": num(parent_tuned, "memory_refault_s"),
         },
         "variant": {
             "network_mbps": num(candidate_tuned, "network_mbps"),
             "coldstart_ms": num(candidate_tuned, "coldstart_ms"),
             "sustained_tokps": num(candidate_tuned, "sustained_tokps"),
             "idle_watts": num(candidate_tuned, "idle_watts"),
+            "memory_refault_s": num(candidate_tuned, "memory_refault_s"),
         },
         # Confidence rises with the number of INDEPENDENT confirming sessions
         # (repeated + counterbalanced + multi-machine): 1->0.50, 2->0.75,

@@ -41,15 +41,19 @@ def metrics_from_variant(
     sustained_pct: float = 0.0,
     idle_power_pct: float = 0.0,
     network_pct: float = 0.0,
+    memory_pct: float = 0.0,
     sample_counts: dict | None = None,
     regression: dict | None = None,
 ) -> dict:
     baseline = dict(FIXTURE_BASELINE)
+    baseline["memory_refault_s"] = 10.0
     variant = {
         "network_mbps": baseline["network_mbps"] * (1.0 + network_pct / 100.0),
         "coldstart_ms": baseline["coldstart_ms"] * (1.0 - coldstart_pct / 100.0),
         "sustained_tokps": baseline["sustained_tokps"] * (1.0 + sustained_pct / 100.0),
         "idle_watts": baseline["idle_watts"] * (1.0 + idle_power_pct / 100.0),
+        # lower-is-better: positive memory_pct = faster refault (improvement)
+        "memory_refault_s": baseline["memory_refault_s"] * (1.0 - memory_pct / 100.0),
     }
     return {
         "schema_version": "seed-organism.metrics.fixture.v0.1",
@@ -139,6 +143,27 @@ class CoreEvaluationTest(unittest.TestCase):
         regression_neg = seed_organism.evaluate_regression(FIXTURE_VARIANT, negative_metrics)
         decision_neg, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_neg, regression_neg, config)
         self.assertEqual(decision_neg, "rejected_negative_fitness")
+
+    def test_memory_channel_scores_rewards_gates_and_optional(self) -> None:
+        cfg = seed_organism.DEFAULT_CONFIG
+        # improvement (faster refault, e.g. zram vs disk swap) rewards fitness
+        improved = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=metrics_from_variant(memory_pct=50.0), config=cfg
+        )
+        self.assertGreater(improved["delta"]["memory_pct"], 0.0)
+        self.assertGreater(improved["fitness_score"], 0.0)
+        self.assertEqual(improved["severe_regressions"], [])
+        # a real memory regression trips the severe gate
+        regressed = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=metrics_from_variant(memory_pct=-25.0), config=cfg
+        )
+        self.assertTrue(any("memory regression" in s for s in regressed["severe_regressions"]))
+        # absent memory metric (runs predating the 5th channel) is neutral, no crash
+        m = metrics_from_variant()
+        del m["baseline"]["memory_refault_s"]
+        del m["variant"]["memory_refault_s"]
+        neutral = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=m, config=cfg)
+        self.assertIsNone(neutral["delta"]["memory_pct"])
 
     def test_parsimony_bonus_only_when_non_regressing(self) -> None:
         metrics = metrics_from_variant(coldstart_pct=0.5, sustained_pct=0.5)
