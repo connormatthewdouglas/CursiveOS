@@ -15,15 +15,16 @@ immediately found a real improvement: **v0.11 (v0.9 + zram + swappiness=60)**.
   (**v1.4.5**, `cursiveos-full-test-v1.4.sh`).
 - Sensor probe: `benchmarks/benchmark-memory-pressure-v0.2.sh` (cgroup `memory.high`
   refault-time, per-rep timeout, zram engagement proof). Validated on 2 machines.
-- **Cycle-3 first screen (Stardust, normal order):** v0.11 vs v0.9 = **fitness
-  +0.0954**, decision `inconclusive` (single screen, confidence 0.50). Bundle in
-  CursiveRoot.
-- **IN FLIGHT when this note was written:** two more confirming screens running in
-  parallel to reach confidence 0.875 and ACCEPT v0.11:
-  - **laptop** (cross-machine): `nohup` job, log `/tmp/lapscreen.out` (JSON paths
-    printed as `LAP_V09_JSON=` / `LAP_V11_JSON=`).
-  - **Stardust reversed-order**: `nohup` job, log `/tmp/sdrev.out`
-    (`SDREV_V11_JSON=` / `SDREV_V09_JSON=`).
+- **✅ v0.11 ACCEPTED (cycle 3 closed) 2026-06-26.** Three confirming screens all
+  positive — Stardust normal +0.0954, **laptop (cross-machine) +0.1004**, Stardust
+  reversed +0.0947 — so the accept ran at `--confirmations 3` → confidence **0.875**,
+  decision **accepted**, fitness **+0.1004**, anchored on the laptop
+  (`42e7c7257af11f46`). Cycle 3 closed (1 contributor, 100k simulated sats). Both
+  the accepted bundle and the cycle-3 payout report are in CursiveRoot. This is the
+  **2nd accepted variant ever and the FIRST selected by the memory channel.**
+- Net: 2 accepted bundles in CursiveRoot (v0.9c cycle 1, v0.11 cycle 3); 2 payout
+  reports (cycles 1, 3). Dashboard (https://connormatthewdouglas.github.io/CursiveOS/)
+  reads these live.
 
 ## Key finding this sprint (don't lose this)
 
@@ -36,7 +37,7 @@ to it. So **v0.10-zram is correctly NEUTRAL.** The real win is **v0.11 = v0.9 + 
 inference. Also: v0.9 itself *regresses* memory −55% vs untuned (swappiness=0 cost,
 previously invisible).
 
-## TO FINISH THE SPRINT (do this when both background jobs report DONE)
+## PICK UP HERE (sprint is complete; these are the next moves)
 
 SSH: `ssh stardust` and `ssh laptop` (config already in `~/.ssh/config`, key
 `~/.ssh/cursive_rig`). If sudo is needed, export `TAO_SUDO_PASS` from the local
@@ -44,43 +45,23 @@ secure channel/operator context; **do not commit sudo passwords or other secrets
 to this repo**. For complex remote bash, base64-encode:
 `ssh host "echo <b64> | base64 -d | bash"`.
 
-1. **Confirm both jobs finished:** `ssh laptop "cat /tmp/lapscreen.out"` and
-   `ssh stardust "cat /tmp/sdrev.out"`. Grab the 4 JSON paths.
-2. **Verify each confirmation is positive** (v0.11 beats v0.9). Quick check: each
-   candidate JSON's `variant.memory_refault_s` should be far below the v0.9
-   `variant.memory_refault_s` (capped ~45s). Or run a 1-confirmation screen for each
-   pair and confirm `fitness_score > 0`, `severe_regressions == []`.
-   - We already have confirmation #1: Stardust normal, +0.0954 (in CursiveRoot).
-   - #2 = laptop pair; #3 = Stardust-reversed pair.
-3. **Run the ACCEPT screen** (confidence 0.875). Use one representative pair — the
-   laptop (cross-machine) pair is the strongest evidence:
-   ```bash
-   ssh laptop "cd ~/CursiveOS && python3 tools/seed_organism.py --state-dir .cursiveos/seed-mem-c3 screen-variant \
-     --parent-variant references/seed-organism/variant.v0.9.json \
-     --candidate-variant references/seed-organism/variant.v0.11-zram-swappiness.json \
-     --parent-result-json <LAP_V09_JSON> --candidate-result-json <LAP_V11_JSON> \
-     --confirmations 3 --cycle-id 3"
-   ```
-   Expect `decision: accepted` (confidence 0.875 >= 0.65, fitness > 0.01).
-   `--confirmations 3` is founder-attested here; the 3 real screens (Stardust normal
-   + laptop + Stardust reversed) are the evidence. Phase 0 allows this attestation;
-   pre-rollout this must be auto-counted from independent bundles in CursiveRoot.
-4. **Upload + close cycle 3 + upload payout:**
-   ```bash
-   ssh laptop "cd ~/CursiveOS && python3 tools/seed_organism.py --state-dir .cursiveos/seed-mem-c3 upload"
-   ssh laptop "cd ~/CursiveOS && python3 tools/seed_organism.py --state-dir .cursiveos/seed-mem-c3 close-cycle --cycle-id 3 --revenue-sats 100000"
-   ssh laptop "cd ~/CursiveOS && python3 tools/seed_organism.py --state-dir .cursiveos/seed-mem-c3 upload"
-   ```
-   (100000 sats matches cycle-1's simulated revenue. close-cycle reads the ledger,
-   which only has an entry once the screen `decision == accepted`, so step 3 must run
-   in the SAME `--state-dir`.)
-5. **Verify in CursiveRoot:** `seed_bundles` has an `accepted` `candidate-v0.11-zram-swappiness`
-   row; `seed_payout_reports` has a cycle-3 report. The dashboard
-   (https://connormatthewdouglas.github.io/CursiveOS/) reads these live.
-6. **Promote v0.11 → new canonical parent** (mirrors the v0.9c→v0.9 promotion): create
-   `presets/cursiveos-presets-v0.12.sh` (= v0.11 settled) + `variant.v0.12.json`
-   (`evaluation_role: parent_baseline`, `fitness_eligible: false`), and point future
-   screens at it. Optional this session; can be its own task.
+**First, two loose ends from this sprint:**
+- **Rotate the sudo password.** An earlier version of this file (commit `d69487c`,
+  on origin) contained the literal sudo password before it was scrubbed at HEAD.
+  It is still in git history → treat it as compromised and rotate it on both
+  machines. (History rewrite + force-push is possible but disruptive; rotation is
+  the real fix.)
+- **Promote v0.11 → canonical parent** (mirrors v0.9c→v0.9): create
+  `presets/cursiveos-presets-v0.12.sh` (= v0.11 settled) + `variant.v0.12.json`
+  (`evaluation_role: parent_baseline`, `fitness_eligible: false`) and point future
+  screens at it. The accepted improvement should become the new baseline.
+- **Flip the corpus VALIDATION row** for v0.11 from "inconclusive screen" to
+  "Validated / accepted" and add a CHANGELOG note that cycle 3 closed.
+
+(For reference, the accept was done with: `seed_organism screen-variant
+--confirmations 3 ... --cycle-id 3` then `upload`, then `close-cycle --cycle-id 3
+--revenue-sats 100000`, then `upload`, all in state-dir `.cursiveos/seed-mem-c3`
+on the laptop.)
 
 ## After the sprint — candidate next steps (not started)
 
