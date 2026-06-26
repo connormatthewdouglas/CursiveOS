@@ -161,10 +161,10 @@ fi
 
 # Screens to run, space-separated "order:variant" entries. Order is "normal"
 # (parent first) or "reversed" (candidate first, for counterbalancing).
-# Parent defaults to the current canonical parent (v0.9). Override with
-# CURSIVEOS_PARENT_VARIANT=v0.8/genesis for old screens, or v0.12 after promotion.
+# Parent defaults to the current canonical parent (v0.12). Override with
+# CURSIVEOS_PARENT_VARIANT=v0.9 or v0.8/genesis for historical screens.
 SCREENS="${CURSIVEOS_SCREENS:-normal:v0.11-zram-swappiness}"
-PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.9}"
+PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.12}"
 case "$PARENT_VARIANT" in
   v0.8|genesis|genesis-linux)
     PARENT_FILE="references/seed-organism/variant.genesis-linux.json"

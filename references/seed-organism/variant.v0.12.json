@@ -1,0 +1,14 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "parent-baseline-v0.12",
+  "parent_variant_id": "parent-baseline-v0.9",
+  "contributor_id": "founder-baseline",
+  "commit_ref": "canonical-v0.12",
+  "preset_version": "v0.12",
+  "preset_path": "presets/cursiveos-presets-v0.12.sh",
+  "evaluation_role": "parent_baseline",
+  "fitness_eligible": false,
+  "declared_scope": "Canonical parent baseline as of 2026-06-26: the accepted v0.11-zram-swappiness stack (v0.9 + zram + swappiness=60). Future candidates screen against this.",
+  "promotion_basis": "Accepted promotion of candidate v0.11-zram-swappiness (cycle 3). Three confirming screens: Stardust normal fitness +0.0954, laptop cross-machine +0.1004, Stardust reversed +0.0947 -> confidence 0.875, decision accepted, fitness +0.1004. Memory channel +75.4% with no inference regression (cold-start -0.5%, sustained 0.0%). First variant selected by the memory-pressure channel. See CursiveOS/HANDOVER.md and CursiveResearch VALIDATION.md.",
+  "rollback_method": "Delegates to v0.11 preset undo (zram removal + v0.9 stack restore); harness reverts at run end."
+}

@@ -616,6 +616,30 @@ MEM_WS="${CURSIVEOS_MEM_WS:-1024}"; MEM_HIGH="${CURSIVEOS_MEM_HIGH:-384}"
 MEM_PASSES="${CURSIVEOS_MEM_PASSES:-3}"; MEM_REPS="${CURSIVEOS_MEM_REPS:-5}"
 MEM_BASELINE="N/A"; MEM_TUNED="N/A"; MEM_DELTA="N/A"
 MEM_MODE_B="none"; MEM_MODE_T="none"; MEM_RATIO_T="N/A"; MEM_PEAK_T="N/A"
+
+# ── Concurrency inference sensor (observe-only, weight 0) ───────────────────
+# Parallel-stream aggregate tok/s; not yet a fitness channel.
+CONC_PROBE="$SCRIPT_DIR/benchmarks/benchmark-inference-concurrency-v0.1.sh"
+CONC_STREAMS="${CURSIVEOS_CONC_STREAMS:-4}"
+CONC_AGG="N/A"; CONC_STREAMS_REPORT="N/A"
+run_concurrency_probe() {  # echoes "aggregate_tok_s|streams"; N/A on failure
+    local out
+    [[ -f "$CONC_PROBE" ]] || { echo "N/A|N/A"; return; }
+    out=$(bash "$CONC_PROBE" "$CONC_STREAMS" "$MODEL" 2>/dev/null \
+          | grep "METRIC_JSON" | sed 's/^METRIC_JSON //') || true
+    [[ -n "$out" ]] || { echo "N/A|N/A"; return; }
+    echo "$out" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    agg = d.get('aggregate_tok_s')
+    streams = d.get('streams')
+    print(f\"{agg if agg is not None else 'N/A'}|{streams if streams is not None else 'N/A'}\")
+except Exception:
+    print('N/A|N/A')
+" 2>/dev/null || echo "N/A|N/A"
+}
+
 run_memory_probe() {  # echoes "median|mode|ratio|peak"; N/A on any failure
     local out
     [[ -f "$MEM_PROBE" ]] || { echo "N/A|none|N/A|N/A"; return; }
@@ -690,6 +714,17 @@ else
     fi
 fi
 
+# ── Concurrency inference (observe-only) ─────────────────────────────────────
+if [[ "$SKIP_INFERENCE" == "1" ]]; then
+    echo ""
+    echo "[observe] Concurrency inference — SKIPPED (ollama unavailable)"
+else
+    echo ""
+    echo "[observe] Concurrency inference ($CONC_STREAMS parallel streams, weight 0)..."
+    IFS='|' read -r CONC_AGG CONC_STREAMS_REPORT <<< "$(run_concurrency_probe)"
+    echo "  → Concurrency aggregate tok/s: ${CONC_AGG} (${CONC_STREAMS_REPORT} streams)"
+fi
+
 # ── Idle power — tuned + stability check ─────────────────────────────────────
 echo ""
 echo "Reading idle power with presets active (median of up to 5 samples)..."
@@ -753,6 +788,7 @@ Benchmark              Baseline          Tuned             Delta
 Network throughput     ${NET_BASELINE} Mbit/s      ${NET_TUNED} Mbit/s      ${NET_DELTA}%
 Cold-start latency     ${COLD_BASELINE}ms           ${COLD_TUNED}ms            ${COLD_DELTA}%
 Sustained inference    ${WARM_BASELINE:-N/A}     ${WARM_TUNED:-N/A}   ${WARM_DELTA:-N/A}
+Concurrency tok/s*     ${CONC_AGG:-N/A} (${CONC_STREAMS_REPORT:-N/A} streams, observe-only)
 Idle power draw*       ${PWR_IDLE}W               ${PWR_TUNED_IDLE}W             ${PWR_DELTA}W
 Memory refault time    ${MEM_BASELINE}s           ${MEM_TUNED}s          ${MEM_DELTA_SUMMARY}
 Stability              ${STABILITY_FLAG} (dmesg errors: ${STABILITY_ERRORS})
@@ -916,6 +952,12 @@ data = {
             "network": "$NET_LOG",
             "coldstart": "$COLD_LOG",
             "sustained": "$WARM_LOG"
+        },
+        "concurrency_inference": {
+            "aggregate_tok_s": n("$CONC_AGG"),
+            "streams": ni("$CONC_STREAMS_REPORT"),
+            "weight": 0,
+            "observe_only": true
         }
     },
     "regression": {

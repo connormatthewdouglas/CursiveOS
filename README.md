@@ -62,13 +62,12 @@ machine works — no install needed), paste:
 command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh | CURSIVEOS_CYCLE_ID=3 CURSIVEOS_PARENT_VARIANT=v0.9 CURSIVEOS_SCREENS="normal:v0.11-zram-swappiness" bash
 ```
 
-Current measured result (Stardust, harness v1.4.5, one full cycle-3 screen):
-v0.11 vs v0.9 scored **fitness +0.0954** with the decision still
-`inconclusive` only because it is a single screen (confidence 0.50). The memory
-channel drove the win (**+75.4%**, refault about 45s capped → **10.86s**), while
-the inference guardrails did **not** regress (cold-start −0.5%, sustained 0.0%).
-Next evidence needed: reversed-order and/or second-machine confirmation before
-promoting v0.11 as the new parent.
+Cycle 3 result (accepted 2026-06-26): v0.11-zram-swappiness vs v0.9 parent,
+three confirming screens (Stardust normal +0.0954, laptop +0.1004, Stardust
+reversed +0.0947) → **accepted**, confidence 0.875, fitness +0.1004. Memory
+channel drove the win; no inference regression. **Canonical parent is now v0.12**
+(= settled v0.11 stack). CursiveRoot holds 2 accepted bundles and 2 payout
+reports.
 
 ### A note on the network numbers (honesty box)
 
@@ -211,7 +210,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Two-year claim window.** Accruals must be claimed within two years or redistribute to active claimants. Lifetime fitness itself is permanent.
 - **Forks inherit obligations.** The lifetime ledger is Bitcoin-anchored; forks that use the genome owe the same payments to the same contributors.
 
-**Current status (May 25, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 now has one real genesis baseline bundle in CursiveRoot and no accepted mutation or payout report. The Hub API remains older MVP scaffolding pending a v3.3 implementation. Public insert/read access used by the controlled seed upload must be hardened before broader testing.
+**Current status (June 26, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 has **2 accepted variants** (v0.9c cycle 1, v0.11 cycle 3) with simulated payout reports. Parent preset v0.12. Harness v1.4.5 with memory channel integrated. Hub API remains older MVP scaffolding. Public insert/read must be hardened before broader testing.
 
 ---
 

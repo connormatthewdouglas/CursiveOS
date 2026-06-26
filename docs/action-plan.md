@@ -1,39 +1,41 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-06-16
-**Current parent preset:** v0.9 (v0.8 stack minus the Arc GPU frequency pin; promoted 2026-06-16 — first lineage inheritance)
-**Current candidate:** none active — next mutation TBD from the buffer-decomposition + variance sprint
-**Current wrapper:** v1.4.3 (stable fingerprint v2 + power-source/phase telemetry + GPU-side power)
+**Last updated:** 2026-06-26
+**Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
+**Current candidate:** none active — next mutation TBD (swappiness tune or scheduler/concurrency-axis tweak vs v0.12)
+**Current wrapper:** v1.4.5 (memory-pressure 5th channel + observe-only concurrency probe)
 **Board reviewed:** 2026-03-23 05:30 EDT
 
 ---
 
-## 2026-06-16 Sprint Outcomes
+## 2026-06-26 Sprint Outcomes (memory-pressure + lineage promotion)
 
-- **Lineage advanced: v0.8 → v0.9** (first inheritance). v0.9 = v0.8 minus the Arc GPU frequency pin, confirmed equal-or-simpler on both machines (Stardust both orders + i5 laptop). GPU pin proven dead weight.
-- **Network claim corrected (real-path A/B).** On a real 1GbE NIC at 50ms+0.5% loss: CUBIC 43 → BBR 851 Mbit/s (+1875%), but BBR+our-buffer-stack 845 (−0.7%). The real-world network win is **entirely the CUBIC→BBR swap**; our buffer/qdisc tuning adds ~0 on ordinary links. The loopback "+246% ours" was a BDP artifact. Public claim going forward = "switch to BBR," not buffer tuning.
-- **Noise floor measured (6× v0.9).** Cold-start CV 0.002 (rock-solid, the reliable selection channel), network CV 0.192 (needs CV-escalation; magnitude unreliable), sustained signal<noise, idle-power(CPU) CV 0.83 (near-random). Use per-channel confirmation counts; don't gate on sustained-single-stream or idle power until measurement improves.
-- **Telemetry/tooling:** wrapper v1.4.3 adds a working GPU-side power channel (A750 ~37W idle; total power now visible). Fitness gained a parsimony term (equal-performance-fewer-knobs is now acceptable). Buffer-decomposition + real-path benchmarks added.
+- **Cycle 3 closed — v0.11 ACCEPTED.** Three confirming screens: Stardust normal +0.0954, laptop cross-machine +0.1004, Stardust reversed +0.0947 → confidence 0.875, fitness +0.1004. **2nd accepted variant ever; first selected by the memory channel.** CursiveRoot: 2 accepted bundles (v0.9c cycle 1, v0.11 cycle 3) + 2 payout reports.
+- **Key finding preserved:** zram is neutral under `vm.swappiness=0`; v0.11 (= v0.9 + zram + swappiness=60) wins memory (+75.4%) with no inference regression (cold-start −0.5%, sustained 0.0%).
+- **5th channel integrated:** `benchmark-memory-pressure-v0.2.sh` in harness v1.4.5; `runs` memory columns; fitness weight 0.10 (provisional).
+- **Lineage promoted:** v0.12 canonical parent (= settled v0.11 stack). Future screens use `CURSIVEOS_PARENT_VARIANT=v0.12` by default.
 
-### Phase D outcomes (2026-06-16)
-- ✅ **Power measurement fixed (wrapper v1.4.4).** The CV 0.83 idle-power noise was a *sampling artifact* (sampling during the post-benchmark thermal tail), not inherent. Added settle (`IDLE_SETTLE` 6s) + inter-sample spacing + higher counts (CPU 8, GPU 5). Settled true-idle gives CV ≈ 0.01 — idle power is now a usable selection channel.
-- ✅ **GPU-pin power cost quantified: ~0 W at idle** (42.15 W unpinned vs 42.16 W pinned, reproduced). So v0.9 dropping the pin is **parsimony, not power savings** (corrects the earlier "unmeasured GPU power" worry). A750 idle is static-dominated; **load-time power still untested**.
+### Next steps (measurement frontier)
+1. **Concurrency inference sensor** — single-stream sustained remains below noise floor; prototype `benchmark-inference-concurrency-v0.1.sh` wired observe-only in harness (weight 0). Validate CV on Stardust + laptop before any fitness weight.
+2. **Swappiness tune (optional):** screen v0.12 vs v0.12b (`swappiness=100`) if memory channel still has headroom.
+3. **Load-time power** measurement before any load-power claims about GPU pinning or governors.
+4. **Schema:** add `page_cache_state` to harness telemetry (Ch00 open gap).
 
-### Next steps
-1. **Add a concurrency inference sensor** — single-stream sustained is below its noise floor; scheduler tweaks can only show under parallel load. (Now the top measurement gap.)
-2. **Next mutation candidate** evaluated primarily on cold-start (lowest-noise channel) + now-reliable idle power: a memory-pressure (zram/THP) or scheduler tweak vs v0.9. Network is no longer a useful mutation axis (lever is just BBR, already in the stack).
-3. **Load-time power** measurement (the probe covers idle only) before any load-power claim about GPU pinning or governors.
+---
+
+## 2026-06-16 Sprint Outcomes (historical)
+
+- **Lineage advanced: v0.8 → v0.9** (first inheritance). v0.9 = v0.8 minus the Arc GPU frequency pin.
+- **Network claim corrected (real-path A/B):** real 1GbE win is CUBIC→BBR; buffer stack ~0% on ordinary links.
+- **Noise floor measured (6× v0.9):** cold-start CV 0.002; network CV 0.192; sustained signal<noise; idle-power fixed in v1.4.4 (CV ≈ 0.01 settled).
 
 ## Current State
 
-Phase 0 has begun in operation. CursiveRoot now has a live decision-grade analyzer that separates characterization data from mutation-selection evidence. One real Vega genesis baseline is recorded in CursiveRoot with decision `measured_baseline`, not accepted fitness: network +515.20% under loopback WAN simulation, cold-start -3.11%, sustained -0.36%, idle power +3.2W. The latest Intel i5 run on 2026-05-31 shows the same pattern: strong network lift, a promising cold-start result, small sustained-inference movement, and a measurable idle-power cost. The next action is still to screen a network-only candidate against v0.8, with multi-sample power capture and no payout from one observation.
+Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bundles** and **2 simulated payout reports** (cycles 1 and 3). The seed organism closes variant → measure → gate → ledger → simulated payout → inheritance on founder rigs. Dashboard: https://connormatthewdouglas.github.io/CursiveOS/
 
-**CursiveRoot status at June 10, 2026:**
-- 77 regular benchmark run records are visible (Mar 20 → Jun 1).
-- 1 seed bundle exists (`genesis-baseline-v0.8`, machine `bda4bd63b3564822`).
-- 0 accepted seed mutations and 0 seed payout reports exist.
-- 0 candidate screen bundles are visible (a v0.9 run row exists from Jun 1 on the i5, but no screen bundle was uploaded).
-- 0 run detail bundles; the v0.2 migration **is applied** (table exists), detail bundles will appear with the next recovered/new upload.
-- Public insert/read policy is acceptable only for controlled Phase 0 and must be hardened before external rollout.
+**CursiveRoot status at June 26, 2026:**
+- Accepted bundles: v0.9c-cpu-retained (cycle 1), v0.11-zram-swappiness (cycle 3).
+- Harness v1.4.5 uploads runs with memory columns + detail bundles.
+- Public insert/read policy acceptable for controlled Phase 0 only; harden before external rollout.
 
 **Infrastructure status at June 10, 2026:**
 - **Data durability incident:** the free-tier auto-pause + resume left CursiveRoot looking empty for 1–2 hours before the async restore completed. A daily encrypted backup + keep-alive GitHub Action now prevents the pause and keeps independent backups. See `docs/specs/cursiveroot-data-durability-v1.md`. ⚠️ Requires two repo secrets (`SUPABASE_DB_URL`, `BACKUP_PASSPHRASE`) — not yet configured.

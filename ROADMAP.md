@@ -4,19 +4,19 @@
 
 This roadmap describes what CursiveOS is becoming. It's organized around four transitions — each one changes what the project fundamentally is, not just what features it has. Every architectural decision in the current specifications is sized for the end state, which is why some choices look overbuilt for where the project is now. They're sized for where it's going.
 
-## Where We Are: Pre-Transition-One (May 25, 2026)
+## Where We Are: Pre-Transition-One (June 26, 2026)
 
 The current state of the project:
 
-- Tweak stack v0.8 (28 kernel/network/scheduler tweaks, reversible) with initial measurements on three hardware configurations and a recorded Vega seed baseline
-- Benchmark suite measuring network throughput, cold-start latency, sustained inference throughput
-- CursiveRoot: live hardware/performance database with auto-submit from any machine
-- White paper v2.3 separating technical claims from the software-organism manifesto
-- Layer 5 economics v3.3 (Bitcoin-native, no pool, no governance, sensor-driven)
-- Phase 0 seed organism running: one real genesis baseline bundle recorded, first narrow candidate screen prepared, no accepted mutation or payout yet
+- Canonical parent preset **v0.12** (v0.9 stack + zram + swappiness=60), promoted from accepted v0.11 (cycle 3, 2026-06-26)
+- Harness **v1.4.5** with five measured channels (network gate-only, cold-start, sustained, idle power, memory-pressure); concurrency probe observe-only
+- Benchmark suite: network, cold-start, sustained, memory-pressure, concurrency-inference (prototype)
+- CursiveRoot: live database with **2 accepted mutation bundles** and **2 simulated payout reports**
+- Layer 5 economics v3.3 specified; Hub API remains MVP scaffolding
+- Phase 0 seed organism: selection loop demonstrated (cycles 1 and 3 closed); next measurement gap = concurrency inference sensor
 - Hub rebuild in progress
 
-The Vega seed baseline confirmed the large network signal under the loopback WAN simulation, but also recorded a +3.2W idle-power cost and a slight sustained-inference regression. The immediate engineering step is therefore an A/B screen of v0.8 against a network-only candidate, followed by repeat/counterbalanced measurements before any selection decision.
+The immediate engineering frontier is validating parallel-stream inference throughput (concurrency sensor) so scheduler-class mutations can be measured above the single-stream sustained noise floor.
 
 What exists today is a set of shell scripts and a measurement apparatus. It is not yet an operating system. Making it one is Transition 1.
 
