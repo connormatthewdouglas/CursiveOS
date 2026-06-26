@@ -607,6 +607,32 @@ extract_sustained() {
     fi
 }
 
+# ── Memory-pressure sensor (5th channel) ─────────────────────────────────────
+# cgroup-memory.high refault-time probe; lower is better. Validated 2026-06-25
+# on two machines (zram ~2x faster than disk swap, CV 0.003-0.019). Defensive:
+# any failure yields N/A and never aborts the run.
+MEM_PROBE="$SCRIPT_DIR/benchmarks/benchmark-memory-pressure-v0.2.sh"
+MEM_WS="${CURSIVEOS_MEM_WS:-1024}"; MEM_HIGH="${CURSIVEOS_MEM_HIGH:-384}"
+MEM_PASSES="${CURSIVEOS_MEM_PASSES:-3}"; MEM_REPS="${CURSIVEOS_MEM_REPS:-5}"
+MEM_BASELINE="N/A"; MEM_TUNED="N/A"; MEM_DELTA="N/A"
+MEM_MODE_B="none"; MEM_MODE_T="none"; MEM_RATIO_T="N/A"; MEM_PEAK_T="N/A"
+run_memory_probe() {  # echoes "median|mode|ratio|peak"; N/A on any failure
+    local out
+    [[ -f "$MEM_PROBE" ]] || { echo "N/A|none|N/A|N/A"; return; }
+    out=$(bash "$MEM_PROBE" "$MEM_WS" "$MEM_HIGH" "$MEM_PASSES" "$MEM_REPS" 2>/dev/null \
+          | grep "METRIC_JSON" | sed 's/^METRIC_JSON //') || true
+    [[ -n "$out" ]] || { echo "N/A|none|N/A|N/A"; return; }
+    echo "$out" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    def s(x): return 'N/A' if x is None else x
+    print(f\"{s(d.get('refault_time_s_median'))}|{d.get('mode') or 'none'}|{s(d.get('zram_compression_ratio'))}|{s(d.get('zram_peak_orig_mib'))}\")
+except Exception:
+    print('N/A|none|N/A|N/A')
+" 2>/dev/null || echo "N/A|none|N/A|N/A"
+}
+
 # ── Idle power — baseline ─────────────────────────────────────────────────────
 echo ""
 echo "Reading idle power (no presets; median of up to 5 samples)..."
@@ -614,6 +640,11 @@ PHASE_CTX_BASELINE=$(phase_context)
 IFS='|' read -r PWR_IDLE PWR_IDLE_SAMPLES_JSON PWR_IDLE_MIN PWR_IDLE_MAX PWR_IDLE_COUNT <<< "$(sample_idle_power 8)"
 GPU_PWR_IDLE=$(sample_gpu_idle 5)
 echo "  → Idle power (baseline median): ${PWR_IDLE}W (${PWR_IDLE_COUNT} samples, range ${PWR_IDLE_MIN:-N/A}-${PWR_IDLE_MAX:-N/A}W)"
+
+echo ""
+echo "Reading memory-pressure refault (baseline; no presets)..."
+IFS='|' read -r MEM_BASELINE MEM_MODE_B _ _ <<< "$(run_memory_probe)"
+echo "  → Memory refault (baseline median): ${MEM_BASELINE}s (mode ${MEM_MODE_B})"
 
 # ── Benchmark 1: Network ──────────────────────────────────────────────────────
 echo ""
@@ -669,6 +700,11 @@ IFS='|' read -r PWR_TUNED_IDLE PWR_TUNED_SAMPLES_JSON PWR_TUNED_MIN PWR_TUNED_MA
 GPU_PWR_TUNED=$(sample_gpu_idle 5)
 echo "  → Idle power (tuned median): ${PWR_TUNED_IDLE}W (${PWR_TUNED_COUNT} samples, range ${PWR_TUNED_MIN:-N/A}-${PWR_TUNED_MAX:-N/A}W)"
 
+echo ""
+echo "Reading memory-pressure refault (tuned; preset active)..."
+IFS='|' read -r MEM_TUNED MEM_MODE_T MEM_RATIO_T MEM_PEAK_T <<< "$(run_memory_probe)"
+echo "  → Memory refault (tuned median): ${MEM_TUNED}s (mode ${MEM_MODE_T}, zram ratio ${MEM_RATIO_T})"
+
 # v1.4: Stability check — dmesg errors since presets were applied
 STABILITY_ERRORS=$(dmesg --since "1 minute ago" 2>/dev/null | grep -ci "error\|panic\|oops\|BUG" 2>/dev/null || true)
 STABILITY_ERRORS="${STABILITY_ERRORS:-0}"
@@ -687,6 +723,13 @@ if [[ "$PWR_IDLE" != "N/A" && "$PWR_TUNED_IDLE" != "N/A" ]]; then
     PWR_DELTA=$(python3 -c "print(f'{(float(\"$PWR_TUNED_IDLE\") - float(\"$PWR_IDLE\")):.1f}')" 2>/dev/null || echo "?")
 else
     PWR_DELTA="N/A"
+fi
+
+# Memory refault delta: lower-is-better, positive percent = tuned faster
+if [[ "$MEM_BASELINE" != "N/A" && "$MEM_TUNED" != "N/A" ]]; then
+    MEM_DELTA=$(python3 -c "b=float('$MEM_BASELINE'); t=float('$MEM_TUNED'); print(f'{((b-t)/b)*100:.2f}')" 2>/dev/null || echo "N/A")
+else
+    MEM_DELTA="N/A"
 fi
 
 # ── Summary table ─────────────────────────────────────────────────────────────
@@ -757,6 +800,11 @@ WARM_D=$(to_json_num "$WARM_DELTA")
 PWR_B=$(to_json_num "$PWR_IDLE")
 PWR_T=$(to_json_num "$PWR_TUNED_IDLE")
 PWR_D=$(to_json_num "$PWR_DELTA")
+MEM_B=$(to_json_num "$MEM_BASELINE")
+MEM_T=$(to_json_num "$MEM_TUNED")
+MEM_D=$(to_json_num "$MEM_DELTA")
+MEM_RATIO=$(to_json_num "${MEM_RATIO_T:-N/A}")
+MEM_PEAK=$(to_json_num "${MEM_PEAK_T:-N/A}")
 THERM=$(to_json_num "$THERMAL_HEADROOM")
 STAB=$(to_json_bool "$STABILITY_FLAG")
 
@@ -795,7 +843,7 @@ data = {
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.4",
+    "wrapper_version": "v1.4.5",
     "hardware": {
         "cpu": "$CPU_MODEL",
         "gpu": "$GPU_MODEL",
@@ -809,19 +857,22 @@ data = {
         "network_mbps": n("$NET_B"),
         "coldstart_ms": n("$COLD_B"),
         "sustained_tokps": n("$WARM_B"),
-        "idle_watts": n("$PWR_B")
+        "idle_watts": n("$PWR_B"),
+        "memory_refault_s": n("$MEM_B")
     },
     "variant": {
         "network_mbps": n("$NET_T"),
         "coldstart_ms": n("$COLD_T"),
         "sustained_tokps": n("$WARM_T"),
-        "idle_watts": n("$PWR_T")
+        "idle_watts": n("$PWR_T"),
+        "memory_refault_s": n("$MEM_T")
     },
     "delta": {
         "network_pct": n("$NET_D"),
         "coldstart_pct": n("$COLD_D"),
         "sustained_pct": n("$WARM_D"),
-        "idle_power_w": n("$PWR_D")
+        "idle_power_w": n("$PWR_D"),
+        "memory_pct": n("$MEM_D")
     },
     "sample_counts": {
         "network": 5,
@@ -980,7 +1031,7 @@ data = {
     "machine_id": "$MACHINE_ID",
     "run_date": "$( date +%Y-%m-%d )",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.4",
+    "wrapper_version": "v1.4.5",
     "network_baseline_mbit": n("$NET_B"),
     "network_tuned_mbit": n("$NET_T"),
     "network_delta_pct": n("$NET_D"),
@@ -993,6 +1044,14 @@ data = {
     "power_idle_baseline_w": n("$PWR_B"),
     "power_idle_tuned_w": n("$PWR_T"),
     "power_delta_w": n("$PWR_D"),
+    "memory_refault_baseline_s": n("$MEM_B"),
+    "memory_refault_tuned_s": n("$MEM_T"),
+    "memory_refault_delta_pct": n("$MEM_D"),
+    "memory_zram_ratio": n("$MEM_RATIO"),
+    "memory_zram_peak_orig_mib": n("$MEM_PEAK"),
+    "memory_sensor_mode": "$MEM_MODE_T" if "$MEM_MODE_T" not in ("none","") else None,
+    "memory_ws_mb": ni("$MEM_WS"),
+    "memory_ceiling_mb": ni("$MEM_HIGH"),
     "notes": "hw:$HW_FINGERPRINT stability:$STAB thermal:${THERM}C kernel:$KERNEL power_median_samples:${PWR_IDLE_COUNT}/${PWR_TUNED_COUNT} power_src:${POWER_SOURCE%%:*}$POWER_NOTE",
     "cpu_microcode_version": "$CPU_MICROCODE" if "$CPU_MICROCODE" not in ("unknown","") else None,
     "cpu_l1_cache_kb": ni("$CPU_L1_CACHE_KB") if "$CPU_L1_CACHE_KB" != "null" else None,
@@ -1127,7 +1186,7 @@ machine["runs"].append({
     "date": datetime.date.today().isoformat(),
     "submission_timestamp": "$SUBMISSION_TIMESTAMP",
     "preset_version": "$PRESET_VERSION",
-    "wrapper_version": "v1.4.4",
+    "wrapper_version": "v1.4.5",
     "hardware_fingerprint_hash": "$HW_FINGERPRINT",
     "fingerprint_version": $FINGERPRINT_VERSION,
     "legacy_fingerprint_v1": "$LEGACY_FINGERPRINT_V1",
