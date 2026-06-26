@@ -154,8 +154,11 @@ python3 - "$WS_MB" "$HIGH_MB" "$MODE" "$ZRAM" "$ZSWAP" "$PK_O" "$PK_C" "$CAPPED"
 import sys, statistics, json
 ws, high, mode, zram, zswap = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 pk_o, pk_c = sys.argv[6], sys.argv[7]
-capped, timeout_s = int(sys.argv[8]), float(sys.argv[9])
+timeout_s = float(sys.argv[9])
 ts = [float(x) for x in sys.argv[10:]]
+# Detect capped reps from the samples themselves: run_once increments its counter
+# inside a $() subshell, so the bash count is unreliable; the elapsed times are not.
+capped = sum(1 for x in ts if x >= timeout_s * 0.97)
 med = statistics.median(ts); mn = min(ts); mx = max(ts)
 cv = (statistics.pstdev(ts) / med) if med and len(ts) > 1 else 0.0
 ratio = None; peak_mib = None
