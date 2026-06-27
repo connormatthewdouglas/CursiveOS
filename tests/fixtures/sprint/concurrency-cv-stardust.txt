@@ -1,0 +1,19 @@
+# H1 Concurrency CV — Stardust (2026-06-27)
+# Preset: v0.12 applied (--apply-temp) for all 3 runs
+# Model: mistral, streams=4
+
+Run 1: aggregate_tok_s=6.66
+Run 2: aggregate_tok_s=6.67
+Run 3: aggregate_tok_s=6.67
+
+H1_VALUES=[6.66, 6.67, 6.67]
+H1_MEAN=6.6667
+H1_STDEV=0.0058
+H1_CV=0.0009
+H1_PASS=yes (criterion CV <= 0.15)
+
+# H2 order stability — Stardust
+H2_NORMAL=6.67
+H2_REVERSED=6.67
+H2_DELTA_PCT=0.00
+H2_PASS=yes (criterion <= 5%)

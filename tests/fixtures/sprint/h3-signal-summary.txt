@@ -1,0 +1,14 @@
+# H3 Signal test — Stardust (2026-06-27)
+# Paired: v0.8 baseline vs v0.12 parent, mistral, streams=4
+
+H3_BASELINE_V08=6.67
+H3_V12=6.67
+H3_DELTA_PCT=0.00
+H3_PASS=no (criterion >= 10% delta on at least one machine)
+
+Verdict: Concurrency aggregate tok/s is highly repeatable (H1 CV 0.0009) but
+does NOT discriminate memory-class preset stack (v0.12) from v0.8 on Stardust.
+Integration decision: keep fitness weight 0 (observe-only).
+
+Next measurement target: scheduler-axis candidate preset vs v0.12 parent, or
+load-time power (per action-plan), before assigning concurrency fitness weight.

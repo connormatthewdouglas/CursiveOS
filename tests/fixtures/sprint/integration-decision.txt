@@ -1,0 +1,18 @@
+# Integration decision — 2026-06-27
+
+Gates:
+  H1 Stardust: PASS (CV 0.0009)
+  H1 Laptop:   PASS (CV 0.0002, tinyllama fallback)
+  H2 Stardust: PASS (0.00% order delta)
+  H3 Stardust: FAIL (0.00% v0.8 vs v0.12)
+
+Decision per acceptance criteria:
+  H1+H3 did NOT both pass → keep concurrency fitness weight 0 (observe-only).
+  seed_organism.py NOT modified.
+
+Verdict:
+  Aggregate parallel tok/s IS selection-grade for repeatability on founder fleet.
+  It is NOT discriminative for the current memory-class parent stack (v0.12).
+
+Next measurement target:
+  Scheduler-axis candidate preset vs v0.12 parent; re-test H3 before any weight.

@@ -1,0 +1,14 @@
+# H1 Concurrency CV — laptop elizabethslaptop (2026-06-27)
+# Preset: v0.12 applied (--apply-temp) for all 3 runs
+# Model: tinyllama (mistral not installed; documented fallback per goal)
+# streams=4
+
+Run 1: aggregate_tok_s=33.22
+Run 2: aggregate_tok_s=33.22
+Run 3: aggregate_tok_s=33.23
+
+H1_VALUES=[33.22, 33.22, 33.23]
+H1_MEAN=33.2233
+H1_STDEV=0.0058
+H1_CV=0.0002
+H1_PASS=yes (criterion CV <= 0.15)
