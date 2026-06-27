@@ -1,0 +1,54 @@
+{
+  "version": "2026-06-27-concurrency-sprint",
+  "description": "Mirrors concurrency-inference-sensor-noise-floor-plan gates and acceptance-scope paths. run-concurrency-sprint-verify.ps1 must pass before writing scratch evidence.",
+  "cursiveos_baseline": "67681ce092bafcb9510d54ac56b16fe392b48b1c",
+  "cursiveresearch_baseline": "0a7e405e9fa893fc026898edf3af5e9f3cfe8887",
+  "cursiveresearch_repo": "../CursiveResearch",
+  "gates": {
+    "h1_cv_max": 0.15,
+    "h2_delta_pct_max": 5.0,
+    "h3_delta_pct_min": 10.0,
+    "h3_must_pass": false,
+    "fitness_weight": 0,
+    "experiment_status_contains": "Failed/Blocked"
+  },
+  "required_modified_cursiveos": [
+    "benchmarks/benchmark-inference-concurrency-v0.1.sh",
+    "tools/concurrency_metrics.py",
+    "tools/concurrency-sprint-contract.json",
+    "tools/run-concurrency-sprint-verify.ps1",
+    "tests/test_benchmark_concurrency.py",
+    "tests/test_concurrency_sprint_verify.py",
+    "HANDOVER.md",
+    "docs/action-plan.md"
+  ],
+  "required_modified_research": [
+    "experiments/concurrency-inference-sensor-noise-floor-plan.md",
+    "VALIDATION.md",
+    "CHANGELOG.md",
+    "RESEARCH_PIPELINE.md",
+    "chapters/01-seed-organism-and-sensor-array.md"
+  ],
+  "required_present_cursiveos": [
+    "cursiveos-full-test-v1.4.sh",
+    "benchmarks/benchmark-inference-concurrency-v0.1.sh",
+    "tools/concurrency_metrics.py"
+  ],
+  "must_not_modify": [
+    "tools/seed_organism.py"
+  ],
+  "gate_evidence_files": {
+    "h1_stardust": "concurrency-cv-stardust.txt",
+    "h1_laptop": "concurrency-cv-laptop.txt",
+    "h3_signal": "h3-signal-summary.txt",
+    "integration": "integration-decision.txt"
+  },
+  "canonical_script": "tools/run-concurrency-sprint-verify.ps1",
+  "scratch_outputs": [
+    "changed-files-evidence.txt",
+    "concurrency-sprint-verify-pass.txt",
+    "dry-run-verify.txt",
+    "unittest-verify.txt",
+    "gate-parse.txt"
+  ]
+}
