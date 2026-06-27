@@ -39,16 +39,16 @@ sc() { sudo bash -c "$1" 2>/dev/null; }
 rd() { sudo cat "$1" 2>/dev/null; }
 
 CPU_E="/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj"
-AMD_E="$(ls /sys/devices/virtual/powercap/*/energy_uj 2>/dev/null | head -1)"
+AMD_E="$(ls /sys/devices/virtual/powercap/*/energy_uj 2>/dev/null | head -1 || true)"
 [[ -f "$CPU_E" ]] || CPU_E="${AMD_E:-}"
-GPU_E="$(ls /sys/class/drm/card*/device/hwmon/hwmon*/energy1_input 2>/dev/null | head -1)"
+GPU_E="$(ls /sys/class/drm/card*/device/hwmon/hwmon*/energy1_input 2>/dev/null | head -1 || true)"
 
 read_pair() {
     local c1 c2 g1 g2 cw="NA" gw="NA"
-    [[ -n "$CPU_E" && -f "$CPU_E" ]] && c1=$(rd "$CPU_E")
+    [[ -n "$CPU_E" && -f "$CPU_E" ]] && c1=$(rd "$CPU_E" || true)
     [[ -n "$GPU_E" ]] && g1=$(cat "$GPU_E" 2>/dev/null || true)
     sleep 1
-    [[ -n "$CPU_E" && -f "$CPU_E" ]] && c2=$(rd "$CPU_E")
+    [[ -n "$CPU_E" && -f "$CPU_E" ]] && c2=$(rd "$CPU_E" || true)
     [[ -n "$GPU_E" ]] && g2=$(cat "$GPU_E" 2>/dev/null || true)
     [[ "${c1:-}" =~ ^[0-9]+$ && "${c2:-}" =~ ^[0-9]+$ ]] && cw=$("$PYTHON" -c "print(f'{($c2-$c1)/1e6:.3f}')")
     [[ "${g1:-}" =~ ^[0-9]+$ && "${g2:-}" =~ ^[0-9]+$ ]] && gw=$("$PYTHON" -c "print(f'{($g2-$g1)/1e6:.3f}')")
@@ -92,10 +92,16 @@ wait
 END_NS=$(date +%s%N)
 WALL_S=$("$PYTHON" -c "print(round(($END_NS - $START_NS) / 1e9, 3))")
 
-TOTAL_TOKENS=0
-for f in "$TMPDIR_WORK"/worker_*.json; do
-    TOTAL_TOKENS=$("$PYTHON" -c "import json; d=json.load(open('$f')); print($TOTAL_TOKENS + int(d.get('eval_count') or 0))")
-done
+TOTAL_TOKENS=$("$PYTHON" -c "
+import glob, json, os
+n = 0
+for f in glob.glob(os.path.join('$TMPDIR_WORK', 'worker_*.json')):
+    try:
+        n += int(json.load(open(f)).get('eval_count') or 0)
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        pass
+print(n)
+")
 
 "$PYTHON" - "$WALL_S" "$TOTAL_TOKENS" "$STREAMS" "$MODEL" "${cpus[@]}" "__SEP__" "${gpus[@]}" "__SEP2__" "${totals[@]}" <<'PY'
 import json, statistics, sys
