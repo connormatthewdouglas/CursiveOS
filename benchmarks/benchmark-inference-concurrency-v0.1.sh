@@ -16,15 +16,22 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+METRICS_PY="$ROOT_DIR/tools/concurrency_metrics.py"
+PYTHON="${PYTHON:-python3}"
+
 PROMPT="${CURSIVEOS_CONC_PROMPT:-Write a short paragraph about Linux kernel scheduling under load.}"
 
 usage() {
     cat <<EOF
-Usage: $0 [--help|--dry-run] [streams] [model]
-  --help    Show this message
-  --dry-run Print planned invocation without calling Ollama
-  streams   Parallel inference workers (default 4)
-  model     Ollama model name (auto-detected if omitted)
+Usage: $0 [--help|--dry-run|--fixture-dir DIR] [streams] [model] [wall_s]
+  --help         Show this message
+  --dry-run      Print planned invocation without calling Ollama
+  --fixture-dir  Aggregate worker_*.json from DIR (no Ollama; for tests)
+  streams        Parallel inference workers (default 4)
+  model          Ollama model name (auto-detected if omitted)
+  wall_s         Wall seconds for --fixture-dir (default 48.0)
 EOF
 }
 
@@ -39,6 +46,18 @@ if [[ "${1:-}" == "--dry-run" ]]; then
     _m="${2:-auto}"
     echo "DRY-RUN: would run ${_s} parallel ollama /api/generate workers on model=${_m}"
     echo "DRY-RUN: prompt length=${#PROMPT} chars; aggregate tok/s = sum(eval_count)/wall_s"
+    exit 0
+fi
+
+if [[ "${1:-}" == "--fixture-dir" ]]; then
+    shift
+    FIXDIR="${1:?--fixture-dir requires directory}"
+    STREAMS="${2:-${CURSIVEOS_CONC_STREAMS:-4}}"
+    MODEL="${3:-fixture}"
+    WALL_S="${4:-48.0}"
+    echo "=== CONCURRENCY INFERENCE SENSOR (v0.1) ==="
+    echo "model=$MODEL streams=$STREAMS time=$(date -Iseconds) fixture_dir=$FIXDIR"
+    "$PYTHON" "$METRICS_PY" --tmpdir "$FIXDIR" --streams "$STREAMS" --wall-s "$WALL_S" --model "$MODEL"
     exit 0
 fi
 
@@ -98,56 +117,13 @@ for i in $(seq 1 "$STREAMS"); do
 done
 wait
 END_NS=$(date +%s%N)
-WALL_S=$(python3 -c "print(round(($END_NS - $START_NS) / 1e9, 3))")
+WALL_S=$("$PYTHON" -c "print(round(($END_NS - $START_NS) / 1e9, 3))")
 
-python3 <<PY
-import json, glob, os, sys
-
-tmpdir = "$TMPDIR_WORK"
-streams = int("$STREAMS")
-wall_s = float("$WALL_S")
-model = "$MODEL"
-
-total_tokens = 0
-per_worker_tps = []
-failures = 0
-for path in sorted(glob.glob(os.path.join(tmpdir, "worker_*.json"))):
-    try:
-        with open(path) as f:
-            d = json.load(f)
-        ec = int(d.get("eval_count") or 0)
-        ed = float(d.get("eval_duration") or 0)
-        total_tokens += ec
-        if ed > 0 and ec > 0:
-            per_worker_tps.append(ec / (ed / 1e9))
-        elif ec == 0:
-            failures += 1
-    except Exception:
-        failures += 1
-
-agg_tps = round(total_tokens / wall_s, 2) if wall_s > 0 else 0.0
-mean_worker = round(sum(per_worker_tps) / len(per_worker_tps), 2) if per_worker_tps else 0.0
-
-print(f"wall_s={wall_s} total_tokens={total_tokens} aggregate_tok_s={agg_tps}")
-print(f"per_worker_mean_tok_s={mean_worker} failures={failures}/{streams}")
-print("note: observe-only channel; not yet wired to fitness weight.")
-print("METRIC_JSON " + json.dumps({
-    "sensor": "inference_concurrency",
-    "version": "v0.1",
-    "model": model,
-    "streams": streams,
-    "wall_s": wall_s,
-    "total_tokens": total_tokens,
-    "aggregate_tok_s": agg_tps,
-    "per_worker_mean_tok_s": mean_worker,
-    "failures": failures,
-}))
-PY
-
-echo "Log: $LOG_FILE"
+"$PYTHON" "$METRICS_PY" --tmpdir "$TMPDIR_WORK" --streams "$STREAMS" --wall-s "$WALL_S" --model "$MODEL"
 }
 
-# Nohup-safe: capture once, emit to stdout and append log (no tee / process substitution).
+# Nohup-safe: capture once, emit stdout, append log; Log line once after METRIC_JSON block.
 _PROBE_OUT="$(_run_probe 2>&1)" || true
 printf '%s\n' "$_PROBE_OUT"
 printf '%s\n' "$_PROBE_OUT" >>"$LOG_FILE"
+echo "Log: $LOG_FILE"
