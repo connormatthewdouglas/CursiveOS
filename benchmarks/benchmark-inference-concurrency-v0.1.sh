@@ -147,4 +147,7 @@ PY
 echo "Log: $LOG_FILE"
 }
 
-_run_probe 2>&1 | tee -a "$LOG_FILE"
+# Nohup-safe: capture once, emit to stdout and append log (no tee / process substitution).
+_PROBE_OUT="$(_run_probe 2>&1)" || true
+printf '%s\n' "$_PROBE_OUT"
+printf '%s\n' "$_PROBE_OUT" >>"$LOG_FILE"
