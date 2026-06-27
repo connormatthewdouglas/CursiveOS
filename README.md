@@ -27,7 +27,7 @@ What it does, in order:
 1. **Recovers** any results still saved locally from earlier installs.
 2. **Genesis baseline** — records this machine's v0.8 baseline under its
    hardware fingerprint (skipped automatically if CursiveRoot already has one).
-3. **Mutation screen** — compares the current parent preset (`v0.9`) against
+3. **Mutation screen** — compares the current parent preset (`v0.12`) against
    the current candidate (`v0.11-zram-swappiness`). A single screen is diagnostic only — one observation
    can never accept a mutation or create a payout.
 4. **Uploads** all artifacts and prints the analyzer verdict.
