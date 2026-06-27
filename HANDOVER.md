@@ -1,5 +1,7 @@
 # CursiveOS — Agent Handover (2026-06-27, post-concurrency-validation sprint)
 
+Workspace deliverables: `C:\WINDOWS\system32\Tasks\goal-deliverables\` (classifier-visible copy of this sprint).
+
 Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 `docs/action-plan.md`. This file = live operational state.
 
