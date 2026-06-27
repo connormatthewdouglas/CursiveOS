@@ -1,7 +1,7 @@
 # CursiveOS Action Plan
 **Last updated:** 2026-06-27
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
-**Current candidate:** none active — next mutation TBD (swappiness tune or scheduler/concurrency-axis tweak vs v0.12)
+**Current candidate:** none active — v0.13-sched screened 2026-06-27 (0% concurrency delta vs v0.12); next: load-time power
 **Current wrapper:** v1.4.5 (memory-pressure 5th channel + observe-only concurrency probe)
 **Board reviewed:** 2026-03-23 05:30 EDT
 
@@ -15,7 +15,7 @@
 - **Lineage promoted:** v0.12 canonical parent (= settled v0.11 stack). Future screens use `CURSIVEOS_PARENT_VARIANT=v0.12` by default.
 
 ### Next steps (measurement frontier)
-1. **Scheduler-axis candidate** — concurrency sensor H1/H2 passed (Stardust CV 0.0009, laptop 0.0002) but H3 blocked: 0% delta v0.8 vs v0.12 on Stardust. Probe stays observe-only (weight 0). Screen a scheduler-class tweak vs v0.12 parent and re-test H3.
+1. **Load-time power** — scheduler-axis v0.13-sched screened: 0% concurrency delta on Stardust (6.66 tok/s both); sched_util_clamp_min=256 only knob that applied. Concurrency probe stays weight 0. Measure load-time power before GPU/governor claims.
 2. **Swappiness tune (optional):** screen v0.12 vs v0.12b (`swappiness=100`) if memory channel still has headroom.
 3. **Load-time power** measurement before any load-power claims about GPU pinning or governors.
 4. **Schema:** add `page_cache_state` to harness telemetry (Ch00 open gap).

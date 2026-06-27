@@ -11,7 +11,8 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **2 accepted bundles** in CursiveRoot (v0.9c cycle 1, v0.11 cycle 3) + 2 payout reports.
 - **Harness v1.4.5:** memory channel integrated (weight 0.10); concurrency probe observe-only (weight 0).
 - **Concurrency sensor:** H1/H2 passed; H3 blocked (0% v0.8 vs v0.12). Weight stays 0.
-- **Next candidate axis:** scheduler-class tweak vs v0.12 parent (re-test H3).
+- **Scheduler H3 (2026-06-27):** v0.13-sched vs v0.12 → **0%** on Stardust (6.66 tok/s both). Concurrency weight stays 0.
+- **Next candidate axis:** load-time power (action-plan); sched_ext deferred.
 
 ## Lineage
 
@@ -64,7 +65,8 @@ Until rotation: passwordless sudo still works for routine preset/benchmark work.
 - **H2 order:** Stardust 0.00% delta (pass)
 - **H3 signal:** Stardust 0.00% (v0.8 6.67 vs v0.12 6.67 tok/s) — **fail**
 - **Verdict:** Repeatable measurement channel; not discriminative for memory-class stack.
-- **Next:** screen scheduler-axis candidate vs v0.12; re-run H3 only if delta ≥10%
+- **Scheduler screen:** v0.13-sched null (0%); granularity sysctl N/A on Stardust kernel
+- **Next:** load-time power axis; sched_ext only after capability audit
 
 Quick test:
 
