@@ -1,4 +1,4 @@
-# CursiveOS — Agent Handover (2026-06-26, post-promotion sprint)
+# CursiveOS — Agent Handover (2026-06-27, post-concurrency-validation sprint)
 
 Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 `docs/action-plan.md`. This file = live operational state.
@@ -8,7 +8,8 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **Canonical parent: v0.12** (= accepted v0.11-zram-swappiness stack).
 - **2 accepted bundles** in CursiveRoot (v0.9c cycle 1, v0.11 cycle 3) + 2 payout reports.
 - **Harness v1.4.5:** memory channel integrated (weight 0.10); concurrency probe observe-only (weight 0).
-- **Next measurement gap:** validate concurrency inference sensor CV before any fitness weight.
+- **Concurrency sensor:** H1/H2 passed; H3 blocked (0% v0.8 vs v0.12). Weight stays 0.
+- **Next candidate axis:** scheduler-class tweak vs v0.12 parent (re-test H3).
 
 ## Lineage
 
@@ -53,17 +54,20 @@ ssh stardust "echo \"\$TAO_SUDO_PASS\" | sudo -S -v && echo sudo-ok"
 
 Until rotation: passwordless sudo still works for routine preset/benchmark work.
 
-## Concurrency sensor (this sprint)
+## Concurrency sensor (validated 2026-06-27)
 
-- **Prototype:** `benchmarks/benchmark-inference-concurrency-v0.1.sh`
-- **Harness:** wired observe-only in `cursiveos-full-test-v1.4.sh` (telemetry only)
-- **Corpus:** `experiments/concurrency-inference-sensor-noise-floor-plan.md`
-- **Next:** run 3× on Stardust + laptop; check CV ≤ 0.15 before fitness weight
+- **Probe:** `benchmarks/benchmark-inference-concurrency-v0.1.sh` (4 streams)
+- **Harness:** observe-only in `cursiveos-full-test-v1.4.sh` (weight **0** — H3 failed)
+- **H1 CV:** Stardust 0.0009 (mistral, 6.66–6.67 tok/s); laptop 0.0002 (tinyllama, 33.22–33.23)
+- **H2 order:** Stardust 0.00% delta (pass)
+- **H3 signal:** Stardust 0.00% (v0.8 6.67 vs v0.12 6.67 tok/s) — **fail**
+- **Verdict:** Repeatable measurement channel; not discriminative for memory-class stack.
+- **Next:** screen scheduler-axis candidate vs v0.12; re-run H3 only if delta ≥10%
 
-Quick test on a rig:
+Quick test:
 
 ```bash
-cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh --dry-run
+cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh --dry-run 4 mistral
 cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh 4 mistral
 ```
 

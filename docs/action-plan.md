@@ -1,5 +1,5 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-06-26
+**Last updated:** 2026-06-27
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
 **Current candidate:** none active — next mutation TBD (swappiness tune or scheduler/concurrency-axis tweak vs v0.12)
 **Current wrapper:** v1.4.5 (memory-pressure 5th channel + observe-only concurrency probe)
@@ -15,7 +15,7 @@
 - **Lineage promoted:** v0.12 canonical parent (= settled v0.11 stack). Future screens use `CURSIVEOS_PARENT_VARIANT=v0.12` by default.
 
 ### Next steps (measurement frontier)
-1. **Concurrency inference sensor** — single-stream sustained remains below noise floor; prototype `benchmark-inference-concurrency-v0.1.sh` wired observe-only in harness (weight 0). Validate CV on Stardust + laptop before any fitness weight.
+1. **Scheduler-axis candidate** — concurrency sensor H1/H2 passed (Stardust CV 0.0009, laptop 0.0002) but H3 blocked: 0% delta v0.8 vs v0.12 on Stardust. Probe stays observe-only (weight 0). Screen a scheduler-class tweak vs v0.12 parent and re-test H3.
 2. **Swappiness tune (optional):** screen v0.12 vs v0.12b (`swappiness=100`) if memory channel still has headroom.
 3. **Load-time power** measurement before any load-power claims about GPU pinning or governors.
 4. **Schema:** add `page_cache_state` to harness telemetry (Ch00 open gap).
@@ -143,7 +143,7 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
 ## Benchmark Limitations (known, documented)
 
 - **Inference delta is small on GPU (~5–15%)** — network is the headline (+400–900%). Inference improvement from GPU freq + THP is real but modest for single-stream workloads.
-- **Concurrent throughput not measured** — this is where scheduler tuning (autogroup, granularity, sched_util_clamp_min) shows its real inference impact. Multiple parallel requests stress the scheduler in ways single-stream doesn't.
+- **Concurrent throughput measured but not yet discriminative** — `benchmark-inference-concurrency-v0.1.sh` reports aggregate tok/s under 4 parallel streams (H1 CV ≤ 0.15 on both founder rigs). v0.12 vs v0.8 shows 0% delta on Stardust; fitness weight stays 0 until a scheduler-axis candidate moves the channel.
 - **VRAM model table incomplete** — inference benchmark covers 4GB+ (phi3) and 8GB+ (mistral). Cards with 2–3GB VRAM have no recommendation yet.
 - **ROCm auto-install Ubuntu/Debian only** — other distros get a manual URL. Covers the majority of mining rigs.
 - **CPU inference correctly suppressed** — cold-start is the honest CPU story; sustained CPU inference delta is unreliable due to thermal variance from C-state changes.
@@ -151,7 +151,7 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
 ## Parking Lot (post-v1.5)
 
 - **Full NVIDIA GPU tuning** — power limits, persistence mode, clock management targeting desktop RTX cards (3080/4090). Dedicated workstream, requires desktop NVIDIA hardware to validate properly.
-- **Concurrent throughput benchmark** — measure requests/sec under parallel load. Scheduler tweaks show here.
+- ~~**Concurrent throughput benchmark**~~ — shipped v0.1 probe; H3 signal blocked for memory-class stack. Re-test with scheduler candidate.
 - **VRAM model table expansion** — add llama3.2:1b (~0.8GB), qwen2:1.5b (~0.9GB) for 2–3GB cards.
 - Intel Arc SYCL backend for llama.cpp (current Vulkan crashes on 3B+)
 - DePIN incentive layer (Hivemapper/Helium style)

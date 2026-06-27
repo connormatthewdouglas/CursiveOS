@@ -34,8 +34,10 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
 fi
 
 if [[ "${1:-}" == "--dry-run" ]]; then
-    _s="${CURSIVEOS_CONC_STREAMS:-4}"
-    echo "DRY-RUN: would run ${_s} parallel ollama /api/generate workers on model=${2:-auto}"
+    shift
+    _s="${1:-${CURSIVEOS_CONC_STREAMS:-4}}"
+    _m="${2:-auto}"
+    echo "DRY-RUN: would run ${_s} parallel ollama /api/generate workers on model=${_m}"
     echo "DRY-RUN: prompt length=${#PROMPT} chars; aggregate tok/s = sum(eval_count)/wall_s"
     exit 0
 fi
