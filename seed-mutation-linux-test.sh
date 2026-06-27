@@ -7,7 +7,7 @@ REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveO
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
 BRANCH="${CURSIVEOS_BRANCH:-main}"
 CYCLE_ID="${CURSIVEOS_CYCLE_ID:-3}"
-PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.9}"
+PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.12}"
 CANDIDATE_VARIANT="${CURSIVEOS_CANDIDATE_VARIANT:-v0.11-zram-swappiness}"
 
 say() { printf '\n[CursiveOS mutation screen] %s\n' "$*"; }

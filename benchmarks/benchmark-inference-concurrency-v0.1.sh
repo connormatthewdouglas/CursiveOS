@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-STREAMS="${1:-${CURSIVEOS_CONC_STREAMS:-4}}"
-MODEL="${2:-}"
 PROMPT="${CURSIVEOS_CONC_PROMPT:-Write a short paragraph about Linux kernel scheduling under load.}"
 
 usage() {
@@ -36,10 +34,14 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
 fi
 
 if [[ "${1:-}" == "--dry-run" ]]; then
-    echo "DRY-RUN: would run $STREAMS parallel ollama /api/generate workers on model=${MODEL:-auto}"
+    _s="${CURSIVEOS_CONC_STREAMS:-4}"
+    echo "DRY-RUN: would run ${_s} parallel ollama /api/generate workers on model=${2:-auto}"
     echo "DRY-RUN: prompt length=${#PROMPT} chars; aggregate tok/s = sum(eval_count)/wall_s"
     exit 0
 fi
+
+STREAMS="${1:-${CURSIVEOS_CONC_STREAMS:-4}}"
+MODEL="${2:-}"
 
 if [[ "$STREAMS" =~ ^[0-9]+$ ]] && [[ "$STREAMS" -lt 1 ]]; then
     echo "streams must be >= 1"; exit 1
@@ -66,8 +68,8 @@ fi
 LOG_DIR="${HOME}/CursiveOS/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/concurrency-$(date +%Y%m%d-%H%M%S).log"
-exec > >(tee -a "$LOG_FILE") 2>&1
 
+_run_probe() {
 echo "=== CONCURRENCY INFERENCE SENSOR (v0.1) ==="
 echo "model=$MODEL streams=$STREAMS time=$(date -Iseconds)"
 
@@ -141,3 +143,6 @@ print("METRIC_JSON " + json.dumps({
 PY
 
 echo "Log: $LOG_FILE"
+}
+
+_run_probe 2>&1 | tee -a "$LOG_FILE"

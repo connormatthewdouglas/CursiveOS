@@ -59,7 +59,7 @@ compressed RAM. On any Linux box (a live-USB Linux Mint session on a Windows
 machine works — no install needed), paste:
 
 ```bash
-command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh | CURSIVEOS_CYCLE_ID=3 CURSIVEOS_PARENT_VARIANT=v0.9 CURSIVEOS_SCREENS="normal:v0.11-zram-swappiness" bash
+command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh | CURSIVEOS_PARENT_VARIANT=v0.12 bash
 ```
 
 Cycle 3 result (accepted 2026-06-26): v0.11-zram-swappiness vs v0.9 parent,
