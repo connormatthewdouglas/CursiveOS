@@ -12,7 +12,8 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **Harness v1.4.5:** memory channel integrated (weight 0.10); concurrency probe observe-only (weight 0).
 - **Concurrency sensor:** H1/H2 passed; H3 blocked (0% v0.8 vs v0.12). Weight stays 0.
 - **Scheduler H3 (2026-06-27):** v0.13-sched vs v0.12 → **0%** on Stardust (6.66 tok/s both). Concurrency weight stays 0.
-- **Next candidate axis:** load-time power (action-plan); sched_ext deferred.
+- **Load-time power (2026-06-27):** `benchmark-inference-load-power-v0.1.sh` works on Stardust (RAPL+GPU ~83W under 4× mistral). v0.13 vs v0.12: **discriminative** (27% J/token delta) but v0.13 regresses (worse perf/watt).
+- **Next:** idle-power CV validation on production harness path; no fitness weight yet.
 
 ## Lineage
 
