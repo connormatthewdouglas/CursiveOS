@@ -55,7 +55,7 @@ d = json.load(open(sys.argv[1]))
 keys = ["schema_version", "wrapper_version", "baseline", "telemetry"]
 ok = all(k in d for k in keys)
 idle = d.get("baseline", {}).get("idle_watts")
-print(f"JSON_VALID={ok} schema={d.get('schema_version')} idle_w={idle}")
+print(f"JSON_VALID={'true' if ok else 'false'} schema={d.get('schema_version')} idle_w={idle}")
 sys.exit(0 if ok and idle is not None else 1)
 PY
   else

@@ -37,10 +37,13 @@ rig_launch() {
   local host="$1"
   local mode="$2"
   local out="/tmp/rig-smoke-${mode}-${host}-${STAMP}.out"
+  local launcher="/tmp/rig-smoke-launcher-${host}-${STAMP}.out"
   rig_scp "$host"
+  # stdout must be ONLY the remote log path (for out=$(rig_launch)); status → stderr
   ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=10 "$(rig_host "$host")" \
-    "chmod +x /tmp/rig-smoke-remote.sh; export TAO_SUDO_PASS=; nohup bash /tmp/rig-smoke-remote.sh $mode $out > /tmp/rig-smoke-launcher-${host}.out 2>&1 & echo LAUNCHED out=$out"
-  echo "$out"
+    "chmod +x /tmp/rig-smoke-remote.sh; export TAO_SUDO_PASS=; nohup bash /tmp/rig-smoke-remote.sh $mode $out > $launcher 2>&1 & printf '%s' $out" \
+    | tr -d '\r\n'
+  log "launched host=$host mode=$mode out=$out launcher=$launcher" >&2
 }
 
 rig_poll() {
@@ -53,7 +56,7 @@ rig_poll() {
     if ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=10 "$(rig_host "$host")" \
       "grep -E 'SYNC_HEAD=|JSON_VALID=|SCREEN_V012B_DONE|JSON_SMOKE_RC=' $out 2>/dev/null | tail -3"; then
       if ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=10 "$(rig_host "$host")" \
-        "grep -qE 'SYNC_HEAD=|JSON_VALID=true|SCREEN_V012B_DONE' $out 2>/dev/null"; then
+        "grep -qE 'SYNC_HEAD=|JSON_VALID=(true|True)|SCREEN_V012B_DONE' $out 2>/dev/null"; then
         ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=10 "$(rig_host "$host")" "tail -30 $out"
         return 0
       fi
@@ -69,6 +72,7 @@ rig_fetch() {
   local host="$1" remote_out="$2" local_dir="$3"
   mkdir -p "$local_dir"
   scp -i "$KEY" -o BatchMode=yes "$(rig_host "$host"):$remote_out" "$local_dir/" 2>/dev/null || true
+  scp -i "$KEY" -o BatchMode=yes "$(rig_host "$host"):/tmp/rig-smoke-launcher-${host}-${STAMP}.out" "$local_dir/rig-smoke-launcher-${host}-${STAMP}.out" 2>/dev/null || \
   scp -i "$KEY" -o BatchMode=yes "$(rig_host "$host"):/tmp/rig-smoke-launcher-${host}.out" "$local_dir/" 2>/dev/null || true
 }
 
@@ -79,6 +83,7 @@ dispatch() {
   for h in "${hosts[@]}"; do
     log "dispatch mode=$mode host=$h (TAO_SUDO_PASS= scp/nohup/poll)"
     out=$(rig_launch "$h" "$mode")
+    [[ "$out" == /tmp/rig-smoke-* ]] || { log "error: rig_launch returned invalid path: $out"; continue; }
     log "poll host=$h out=$out"
     rig_poll "$h" "$out" "" "$mode" || true
     rig_fetch "$h" "$out" "${RIG_SCRATCH:-/tmp}"
