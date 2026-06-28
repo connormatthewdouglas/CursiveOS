@@ -1,7 +1,7 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-06-27
+**Last updated:** 2026-06-28
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
-**Current candidate:** none active — v0.13-sched screened 2026-06-27 (0% concurrency delta vs v0.12); next: load-time power
+**Current candidate:** v0.12b-swappiness (screen only) — v0.13-sched **rejected** 2026-06-27
 **Current wrapper:** v1.4.5 (memory-pressure 5th channel + observe-only concurrency probe)
 **Board reviewed:** 2026-03-23 05:30 EDT
 
@@ -14,11 +14,14 @@
 - **5th channel integrated:** `benchmark-memory-pressure-v0.2.sh` in harness v1.4.5; `runs` memory columns; fitness weight 0.10 (provisional).
 - **Lineage promoted:** v0.12 canonical parent (= settled v0.11 stack). Future screens use `CURSIVEOS_PARENT_VARIANT=v0.12` by default.
 
-### Next steps (measurement frontier)
-1. **Load-time power** — scheduler-axis v0.13-sched screened: 0% concurrency delta on Stardust (6.66 tok/s both); sched_util_clamp_min=256 only knob that applied. Concurrency probe stays weight 0. Measure load-time power before GPU/governor claims.
-2. **Swappiness tune (optional):** screen v0.12 vs v0.12b (`swappiness=100`) if memory channel still has headroom.
-3. **Load-time power** measurement before any load-power claims about GPU pinning or governors.
-4. **Schema:** add `page_cache_state` to harness telemetry (Ch00 open gap).
+### Measurement frontier (2026-06-28 status)
+1. **Concurrency** — H1/H2 pass; H3 fail (0% v0.8 vs v0.12). **Weight 0** (observe-only).
+2. **v0.13-sched** — **rejected**: 0% tok/s delta + worse load-power (27% higher J/token).
+3. **Load-time power** — observe-only; channel discriminates but no promotable candidate yet.
+4. **Idle-power** — Stardust production-path CV **0.016** (selection-usable on desktop); laptop AC scoped (cold run-1 fails N=10); **no cross-machine pooling** (H3). Weight **0** until laptop battery + drop-first rule tested.
+5. **v0.12b swappiness** — screen v0.12 vs v0.12b (`swappiness=100`) on Stardust (memory + load-power gates).
+6. **Rig automation** — `tools/rig-smoke.sh` (SCP/nohup/poll pattern).
+7. **Schema:** add `page_cache_state` to harness telemetry (Ch00 open gap).
 
 ---
 

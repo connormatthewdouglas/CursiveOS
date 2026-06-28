@@ -1,4 +1,4 @@
-# CursiveOS — Agent Handover (2026-06-27, post-concurrency-validation sprint)
+# CursiveOS — Agent Handover (2026-06-28, post-measurement-frontier sprint)
 
 Workspace deliverables: `C:\WINDOWS\system32\Tasks\goal-deliverables\` (classifier-visible copy of this sprint).
 
@@ -12,8 +12,10 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **Harness v1.4.5:** memory channel integrated (weight 0.10); concurrency probe observe-only (weight 0).
 - **Concurrency sensor:** H1/H2 passed; H3 blocked (0% v0.8 vs v0.12). Weight stays 0.
 - **Scheduler H3 (2026-06-27):** v0.13-sched vs v0.12 → **0%** on Stardust (6.66 tok/s both). Concurrency weight stays 0.
-- **Load-time power (2026-06-27):** `benchmark-inference-load-power-v0.1.sh` works on Stardust (RAPL+GPU ~83W under 4× mistral). v0.13 vs v0.12: **discriminative** (27% J/token delta) but v0.13 regresses (worse perf/watt).
-- **Next:** idle-power CV validation on production harness path; no fitness weight yet.
+- **Load-time power (2026-06-27):** observe-only channel; v0.13 vs v0.12 **discriminative** (27% J/token) but v0.13 **regresses** (worse perf/watt). Do not promote v0.13.
+- **Idle-power CV (2026-06-28):** Stardust **PASS** (CV 0.016); laptop AC **FAIL** (cold run-1 outlier, CV 1.60); H3 **PASS** (no cross-machine pooling). Idle weight stays **0** fleet-wide until laptop scoped.
+- **Rig automation:** `tools/rig-smoke.sh` — `TAO_SUDO_PASS=`, SCP → `nohup &` → poll `/tmp/rig-smoke-*.out` only (no long SSH one-liners).
+- **Next:** v0.12b swappiness screen; optional laptop battery idle-power cohort.
 
 ## Lineage
 
@@ -83,6 +85,19 @@ cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh 4 mist
 - CursiveRoot auth hardening before external rollout
 - Daemon MVP + NL shell spec (Transition 1)
 - Sandbox selector (Ch05 Open Gap #4)
+
+## Rig smoke (SSH-safe)
+
+```bash
+# From dev machine (Git Bash or WSL):
+export TAO_SUDO_PASS=
+bash tools/rig-smoke.sh --dry-run
+bash tools/rig-smoke.sh sync all
+bash tools/rig-smoke.sh json-smoke all
+bash tools/rig-smoke.sh screen-v012b stardust
+```
+
+Poll `/tmp/rig-smoke-*.out` on rigs; never block SSH on `nohup` without `&` or compound `git pull && preset && benchmark` chains.
 
 ## Gotchas
 
