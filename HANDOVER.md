@@ -15,7 +15,8 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **Load-time power (2026-06-27):** observe-only channel; v0.13 vs v0.12 **discriminative** (27% J/token) but v0.13 **regresses** (worse perf/watt). Do not promote v0.13.
 - **Idle-power CV (2026-06-28):** Stardust **PASS** (CV 0.016); laptop AC **FAIL** (cold run-1 outlier, CV 1.60); H3 **PASS** (no cross-machine pooling). Idle weight stays **0** fleet-wide until laptop scoped.
 - **Rig automation:** `tools/rig-smoke.sh` — `TAO_SUDO_PASS=`, SCP → `nohup &` → poll `/tmp/rig-smoke-*.out` only (no long SSH one-liners).
-- **Next:** v0.12b swappiness screen; optional laptop battery idle-power cohort.
+- **v0.12b screen (2026-06-28):** **rejected** on Stardust (mem +0.7% worse, J/token +3.0%).
+- **Next:** new candidate axis (governor/load-power); optional laptop battery idle-power cohort.
 
 ## Lineage
 

@@ -1,7 +1,7 @@
 # CursiveOS Action Plan
 **Last updated:** 2026-06-28
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
-**Current candidate:** v0.12b-swappiness (screen only) — v0.13-sched **rejected** 2026-06-27
+**Current candidate:** none — v0.12b-swappiness **rejected** 2026-06-28; v0.13-sched **rejected** 2026-06-27
 **Current wrapper:** v1.4.5 (memory-pressure 5th channel + observe-only concurrency probe)
 **Board reviewed:** 2026-03-23 05:30 EDT
 
@@ -19,7 +19,7 @@
 2. **v0.13-sched** — **rejected**: 0% tok/s delta + worse load-power (27% higher J/token).
 3. **Load-time power** — observe-only; channel discriminates but no promotable candidate yet.
 4. **Idle-power** — Stardust production-path CV **0.016** (selection-usable on desktop); laptop AC scoped (cold run-1 fails N=10); **no cross-machine pooling** (H3). Weight **0** until laptop battery + drop-first rule tested.
-5. **v0.12b swappiness** — screen v0.12 vs v0.12b (`swappiness=100`) on Stardust (memory + load-power gates).
+5. **v0.12b swappiness** — **rejected** on Stardust (mem +0.7% worse, J/token +3.0%); see `experiments/v0.12b-swappiness-screen-plan.md`.
 6. **Rig automation** — `tools/rig-smoke.sh` (SCP/nohup/poll pattern).
 7. **Schema:** add `page_cache_state` to harness telemetry (Ch00 open gap).
 
