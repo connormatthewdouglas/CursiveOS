@@ -957,7 +957,7 @@ data = {
             "aggregate_tok_s": n("$CONC_AGG"),
             "streams": ni("$CONC_STREAMS_REPORT"),
             "weight": 0,
-            "observe_only": true
+            "observe_only": True
         }
     },
     "regression": {
