@@ -1,19 +1,19 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 # CursiveOS Full Test v1.4
 # Single command for Bittensor miners to measure their system's baseline
 # and the impact of CursiveOS performance presets.
 #
-# Runs three paired benchmarks (baseline → presets → baseline restored):
-#   1. Network throughput  — BBR vs CUBIC on simulated WAN (50ms RTT, 0.5% loss)
-#   2. Inference cold-start — model load + TTFT with GPU freq pinned vs idle
-#   3. Inference sustained  — steady-state tok/s (GPU-bound baseline)
+# Runs three paired benchmarks (baseline â†’ presets â†’ baseline restored):
+#   1. Network throughput  â€” BBR vs CUBIC on simulated WAN (50ms RTT, 0.5% loss)
+#   2. Inference cold-start â€” model load + TTFT with GPU freq pinned vs idle
+#   3. Inference sustained  â€” steady-state tok/s (GPU-bound baseline)
 #
 # Changes from v1.3:
 #   - Fix power bug: read_watts() now robust against C-state-altered turbostat output
 #     (tries numeric-grep fallback + interval-based fallback; logs reason on failure)
 #   - v1.4 schema fields: hardware_fingerprint_hash, stability_flag, thermal_headroom_c,
 #     kernel_version, distro, submission_timestamp + split power fields
-#   - wrapper_version → v1.4
+#   - wrapper_version â†’ v1.4
 #
 # Requirements: ollama installed, tinyllama pulled (ollama pull tinyllama)
 # Usage: ./cursiveos-full-test-v1.4.sh
@@ -29,7 +29,7 @@ PRESET="${1:-$SCRIPT_DIR/presets/cursiveos-presets-v0.8.sh}"
 PRESET_FILENAME="$(basename "$PRESET")"
 PRESET_VERSION="${CURSIVEOS_PRESET_VERSION:-${PRESET_FILENAME#cursiveos-presets-}}"
 PRESET_VERSION="${PRESET_VERSION%.sh}"
-# Auto-select best available model — same preference order as benchmark-inference-v0.1.sh
+# Auto-select best available model â€” same preference order as benchmark-inference-v0.1.sh
 MODEL=""
 for _m in llama3 mistral llama3.2 phi3 qwen2 tinyllama; do
     if ollama list 2>/dev/null | grep -q "^${_m}:"; then
@@ -37,7 +37,7 @@ for _m in llama3 mistral llama3.2 phi3 qwen2 tinyllama; do
         break
     fi
 done
-MODEL="${MODEL:-tinyllama}"  # fallback if ollama not running yet — preflight will pull it
+MODEL="${MODEL:-tinyllama}"  # fallback if ollama not running yet â€” preflight will pull it
 
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
@@ -45,21 +45,21 @@ SUMMARY_LOG="$LOG_DIR/cursiveos-full-test-$(date +%Y%m%d-%H%M%S).log"
 RESULT_JSON="${SUMMARY_LOG%.log}.json"
 HW_DB="$SCRIPT_DIR/hardware-profiles.json"
 
-# ── CursiveRoot (Supabase) ──────────────────────────────────────────────────────
+# â”€â”€ CursiveRoot (Supabase) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SUPABASE_URL="https://iovvktpuoinmjdgfxgvm.supabase.co"
 SUPABASE_KEY="sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
 
-# ── Sudo prompt (once — exported so child scripts skip re-prompting) ──────────
+# â”€â”€ Sudo prompt (once â€” exported so child scripts skip re-prompting) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
 export TAO_SUDO_PASS
 
-# ── Self-update — always run latest version from repo ─────────────────────────
-echo "Checking for updates…"
-git -C "$SCRIPT_DIR" pull --quiet 2>/dev/null && echo "  → Up to date." || echo "  → git pull skipped (no remote or offline)."
+# â”€â”€ Self-update â€” always run latest version from repo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+echo "Checking for updatesâ€¦"
+git -C "$SCRIPT_DIR" pull --quiet 2>/dev/null && echo "  â†’ Up to date." || echo "  â†’ git pull skipped (no remote or offline)."
 
-# ── Preflight checks ──────────────────────────────────────────────────────────
+# â”€â”€ Preflight checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
 echo "CursiveOS Full Test v1.4"
 echo "======================================"
@@ -99,16 +99,16 @@ ensure_ollama_ready() {
     fi
 
     if ! ollama list >/dev/null 2>&1; then
-        echo "  → system service unavailable; trying local ollama serve..."
+        echo "  â†’ system service unavailable; trying local ollama serve..."
         nohup ollama serve > "$LOG_DIR/ollama-serve-$(date +%Y%m%d-%H%M%S).log" 2>&1 &
         sleep 5
     fi
 
     if ! ollama list >/dev/null 2>&1; then
-        echo "  → Ollama did not become ready; inference benchmarks will be skipped."
+        echo "  â†’ Ollama did not become ready; inference benchmarks will be skipped."
         SKIP_INFERENCE=1
     else
-        echo "  → Ollama is ready."
+        echo "  â†’ Ollama is ready."
     fi
 }
 
@@ -140,13 +140,13 @@ ensure_ollama_ready
 if [[ "$SKIP_INFERENCE" != "1" ]] && ! ollama list 2>/dev/null | grep -q "$MODEL"; then
     echo "Pulling $MODEL..."
     if ! ollama pull "$MODEL"; then
-        echo "  → Could not pull $MODEL; inference benchmarks will be skipped."
+        echo "  â†’ Could not pull $MODEL; inference benchmarks will be skipped."
         SKIP_INFERENCE=1
     fi
 fi
 
-# ── Model validation ──────────────────────────────────────────────────────────
-# Validate before running any benchmark — catches Arc A750 Vulkan bug where
+# â”€â”€ Model validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Validate before running any benchmark â€” catches Arc A750 Vulkan bug where
 # models 3B+ silently return 0 tokens. Uses num_predict:100 to match the actual
 # benchmark load (50-token tests pass but 100-token runs crash).
 # Validated MODEL is exported so both coldstart and sustained benchmarks use it.
@@ -160,7 +160,7 @@ if [[ "$SKIP_INFERENCE" != "1" ]]; then
     }
 
     # If only tinyllama is installed but a discrete GPU is present, auto-pull a
-    # better model before validating — same logic as benchmark-inference-v0.1.sh.
+    # better model before validating â€” same logic as benchmark-inference-v0.1.sh.
     if [[ "$MODEL" == "tinyllama" ]]; then
         _has_dgpu=false
         lspci 2>/dev/null | grep -iE 'VGA|3D|Display' | grep -ivE 'Intel.*(HD|UHD|Iris|Core)' \
@@ -179,7 +179,7 @@ if [[ "$SKIP_INFERENCE" != "1" ]]; then
             else                           _rec_model=""
             fi
             if [[ -n "$_rec_model" ]] && ! ollama list 2>/dev/null | grep -q "^${_rec_model}:"; then
-                echo "  Discrete GPU detected — auto-installing ${_rec_model} for meaningful benchmark..."
+                echo "  Discrete GPU detected â€” auto-installing ${_rec_model} for meaningful benchmark..."
                 ollama pull "$_rec_model" && MODEL="$_rec_model" || true
             elif [[ -n "$_rec_model" ]]; then
                 MODEL="$_rec_model"
@@ -187,36 +187,36 @@ if [[ "$SKIP_INFERENCE" != "1" ]]; then
         fi
     fi
 
-    # Validate selected model — step down on failure (fixes Arc A750 Vulkan bug)
+    # Validate selected model â€” step down on failure (fixes Arc A750 Vulkan bug)
     if [[ "$MODEL" != "tinyllama" ]]; then
         echo "  Validating $MODEL (100-token test)..."
         _vtok=$(_val_model "$MODEL")
         if [[ "$_vtok" == "0" ]]; then
-            echo "  ✗ $MODEL returned 0 tokens — not compatible with this GPU/driver."
+            echo "  âœ— $MODEL returned 0 tokens â€” not compatible with this GPU/driver."
             _vpast=false
             for _vfb in "${_VAL_PREF_CHAIN[@]}"; do
                 if [[ "$_vfb" == "$MODEL" ]]; then _vpast=true; continue; fi
                 if [[ "$_vpast" == false ]]; then continue; fi
                 echo "  Trying $_vfb..."
                 if ! ollama list 2>/dev/null | grep -q "^${_vfb}:"; then
-                    ollama pull "$_vfb" || { echo "  Pull failed — skipping."; continue; }
+                    ollama pull "$_vfb" || { echo "  Pull failed â€” skipping."; continue; }
                 fi
                 _vtok=$(_val_model "$_vfb")
                 if [[ "$_vtok" != "0" ]]; then
                     MODEL="$_vfb"
-                    echo "  ✓ $_vfb works on this hardware (${_vtok} tokens)."
+                    echo "  âœ“ $_vfb works on this hardware (${_vtok} tokens)."
                     break
                 else
-                    echo "  ✗ $_vfb also failed."
+                    echo "  âœ— $_vfb also failed."
                 fi
             done
             # If we exhausted the chain, _vtok is still "0"
             if [[ "$_vtok" == "0" ]]; then
                 MODEL="tinyllama"
-                echo "  → All models failed — using tinyllama."
+                echo "  â†’ All models failed â€” using tinyllama."
             fi
         else
-            echo "  ✓ $MODEL validated (${_vtok} tokens)."
+            echo "  âœ“ $MODEL validated (${_vtok} tokens)."
         fi
     fi
 fi
@@ -225,7 +225,7 @@ export MODEL
 CPU_MODEL=$(lscpu | grep 'Model name:' | cut -d':' -f2 | xargs)
 GPU_MODEL=$(lspci 2>/dev/null | grep -i 'VGA\|3D\|Display' | cut -d: -f3 | xargs || echo 'N/A')
 
-# ── GPU vendor detection ──────────────────────────────────────────────────────
+# â”€â”€ GPU vendor detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Determines which GPU-specific tweaks apply. System-level tweaks (network,
 # CPU governor, scheduler, swappiness) run on ALL hardware regardless of GPU.
 GPU_VENDOR="unknown"
@@ -243,11 +243,11 @@ OS_NAME=$(lsb_release -ds 2>/dev/null || echo "unknown")
 CPU_CORES=$(nproc)
 SUBMISSION_TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-# ── Hardware fingerprint hash ────────────────────────────────────────────────
+# â”€â”€ Hardware fingerprint hash â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # v2 (canonical): built only from stable hardware identity, so the machine
 # keeps the same CursiveRoot identity across kernel updates, microcode
 # updates, and driver/vBIOS changes. It changes only when the actual hardware
-# (CPU, motherboard, GPU) changes — which correctly registers as a new machine.
+# (CPU, motherboard, GPU) changes â€” which correctly registers as a new machine.
 CPU_MICROCODE=$(grep -m1 'microcode' /proc/cpuinfo | awk '{print $3}' 2>/dev/null || echo "unknown")
 GPU_VBIOS=$(cat /sys/class/drm/card*/device/vbios_version 2>/dev/null | head -1 || echo "unknown")
 BOARD_VENDOR=$(cat /sys/class/dmi/id/board_vendor 2>/dev/null | xargs || echo "unknown")
@@ -268,7 +268,7 @@ LEGACY_FINGERPRINT_V1=$(echo "${CPU_MICROCODE}-${GPU_VBIOS}-${KERNEL}" | sha256s
 # with seed-organism bundles across host renames and repeated cycles.
 MACHINE_ID="$HW_FINGERPRINT"
 
-# ── v1.5: Extended hardware fingerprint ───────────────────────────────────────
+# â”€â”€ v1.5: Extended hardware fingerprint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # CPU cache sizes (L1/L2/L3)
 CPU_L1_CACHE_KB="null"
 CPU_L2_CACHE_KB="null"
@@ -287,7 +287,7 @@ for idx in 0 1 2 3; do
     esac
 done
 
-# GPU VRAM — try sysfs (amdgpu), then lspci prefetchable region (xe/Intel Arc), then clinfo
+# GPU VRAM â€” try sysfs (amdgpu), then lspci prefetchable region (xe/Intel Arc), then clinfo
 GPU_VRAM_MB="null"
 for vram_file in /sys/class/drm/card*/device/mem_info_vram_total; do
     [[ -f "$vram_file" ]] || continue
@@ -298,7 +298,7 @@ for vram_file in /sys/class/drm/card*/device/mem_info_vram_total; do
     fi
 done
 if [[ "$GPU_VRAM_MB" == "null" ]]; then
-    # Intel Arc (xe driver) — read from lspci prefetchable region
+    # Intel Arc (xe driver) â€” read from lspci prefetchable region
     gpu_pci=$(lspci 2>/dev/null | grep -i 'VGA\|3D\|Display' | awk '{print $1}' | head -1)
     if [[ -n "$gpu_pci" ]]; then
         pref_size=$(lspci -v -s "$gpu_pci" 2>/dev/null | grep -i "prefetchable" | grep -iv "non-prefetchable" | grep -oP 'size=\K[0-9]+[MG]' | head -1)
@@ -319,7 +319,7 @@ for mod in amdgpu i915 nouveau; do
         break
     fi
 done
-# xe (Intel Arc) doesn't expose /sys/module/xe/version — use kernel version
+# xe (Intel Arc) doesn't expose /sys/module/xe/version â€” use kernel version
 if [[ "$GPU_DRIVER_VERSION" == "null" ]] && lsmod | grep -q '^xe '; then
     GPU_DRIVER_VERSION="xe: $(uname -r)"
 fi
@@ -339,7 +339,7 @@ if command -v dmidecode &>/dev/null; then
     fi
 fi
 
-# ── v1.4: Thermal headroom ────────────────────────────────────────────────────
+# â”€â”€ v1.4: Thermal headroom â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 CURR_TEMP=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null | awk '{printf "%.0f", $1/1000}' || echo "null")
 TJMAX=$(echo "$TAO_SUDO_PASS" | sudo -S turbostat --quiet --num_iterations 1 --show Tj_max 2>/dev/null \
     | grep -E '^[0-9]+' | head -1 | awk '{print int($1)}' || echo "")
@@ -356,19 +356,19 @@ echo "  GPU: $GPU_MODEL (vendor: $GPU_VENDOR)"
 echo "  Kernel: $KERNEL"
 echo "  Date: $(date)"
 echo "  Fingerprint: $HW_FINGERPRINT"
-echo "  Thermal headroom: ${THERMAL_HEADROOM}°C (Tjmax=${TJMAX}°C, current=${CURR_TEMP}°C)"
+echo "  Thermal headroom: ${THERMAL_HEADROOM}Â°C (Tjmax=${TJMAX}Â°C, current=${CURR_TEMP}Â°C)"
 if [[ "$GPU_VENDOR" == "nvidia" ]]; then
     echo ""
-    echo "  ℹ NVIDIA GPU detected."
+    echo "  â„¹ NVIDIA GPU detected."
     echo "    All system-level tweaks apply (network, CPU, scheduler, swappiness)."
-    echo "    Intel Arc GPU tweaks skipped — not applicable to this hardware."
+    echo "    Intel Arc GPU tweaks skipped â€” not applicable to this hardware."
 fi
 echo ""
 echo "Running 3 benchmarks. Total time: ~10 minutes."
-echo "All presets are TEMPORARY — reverted after each test."
+echo "All presets are TEMPORARY â€” reverted after each test."
 echo "======================================"
 
-# ── Result variables ──────────────────────────────────────────────────────────
+# â”€â”€ Result variables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 NET_BASELINE="" NET_TUNED="" NET_DELTA=""
 COLD_BASELINE="" COLD_TUNED="" COLD_DELTA=""
 WARM_BASELINE="" WARM_TUNED="" WARM_DELTA=""
@@ -379,15 +379,15 @@ PWR_IDLE_COUNT=0 PWR_TUNED_COUNT=0
 NET_LOG="" COLD_LOG="" WARM_LOG=""
 STABILITY_FLAG="true"
 
-# ── Power draw snapshot (v1.4: robust multi-fallback) ────────────────────────
+# â”€â”€ Power draw snapshot (v1.4: robust multi-fallback) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Root cause of v1.3 bug: after C-state disable, turbostat output row structure
-# changes — blank lines or reordered rows break 'awk NR==2'. Fix: grep for any
+# changes â€” blank lines or reordered rows break 'awk NR==2'. Fix: grep for any
 # read_watts: use RAPL energy counters (works even with C-states disabled).
-# Turbostat fails with "Insanely slow TSC rate" when C-states are off — RAPL is immune.
+# Turbostat fails with "Insanely slow TSC rate" when C-states are off â€” RAPL is immune.
 # AMD: uses amd_energy powercap path (same sysfs interface, same units as Intel RAPL).
 
 # read_gpu_watts: discrete-GPU power, measured SEPARATELY from read_watts (which
-# on these hosts reports CPU package power only — so a pinned dGPU's draw was
+# on these hosts reports CPU package power only â€” so a pinned dGPU's draw was
 # invisible). energy1_input is microjoules; delta over 1s -> watts. Falls back
 # to an instantaneous power sensor, else N/A. Records the source it used.
 read_gpu_watts() {
@@ -544,7 +544,7 @@ sample_idle_power() {
     local readings=()
     local i watts
     # Phase D finding: the high idle-power variance (CV 0.83) was a sampling
-    # artifact — sampling during the post-benchmark thermal/activity tail.
+    # artifact â€” sampling during the post-benchmark thermal/activity tail.
     # Settle first, then space samples, for stable readings (CV ~0.01).
     sleep "${IDLE_SETTLE:-6}"
     for ((i=1; i<=requested; i++)); do
@@ -607,7 +607,7 @@ extract_sustained() {
     fi
 }
 
-# ── Memory-pressure sensor (5th channel) ─────────────────────────────────────
+# â”€â”€ Memory-pressure sensor (5th channel) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cgroup-memory.high refault-time probe; lower is better. Validated 2026-06-25
 # on two machines (zram ~2x faster than disk swap, CV 0.003-0.019). Defensive:
 # any failure yields N/A and never aborts the run.
@@ -617,7 +617,7 @@ MEM_PASSES="${CURSIVEOS_MEM_PASSES:-3}"; MEM_REPS="${CURSIVEOS_MEM_REPS:-5}"
 MEM_BASELINE="N/A"; MEM_TUNED="N/A"; MEM_DELTA="N/A"
 MEM_MODE_B="none"; MEM_MODE_T="none"; MEM_RATIO_T="N/A"; MEM_PEAK_T="N/A"
 
-# ── Concurrency inference sensor (observe-only, weight 0) ───────────────────
+# â”€â”€ Concurrency inference sensor (observe-only, weight 0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Parallel-stream aggregate tok/s; not yet a fitness channel.
 CONC_PROBE="$SCRIPT_DIR/benchmarks/benchmark-inference-concurrency-v0.1.sh"
 CONC_STREAMS="${CURSIVEOS_CONC_STREAMS:-4}"
@@ -657,90 +657,90 @@ except Exception:
 " 2>/dev/null || echo "N/A|none|N/A|N/A"
 }
 
-# ── Idle power — baseline ─────────────────────────────────────────────────────
+# â”€â”€ Idle power â€” baseline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
 echo "Reading idle power (no presets; median of up to 5 samples)..."
 PHASE_CTX_BASELINE=$(phase_context)
 IFS='|' read -r PWR_IDLE PWR_IDLE_SAMPLES_JSON PWR_IDLE_MIN PWR_IDLE_MAX PWR_IDLE_COUNT <<< "$(sample_idle_power 8)"
 GPU_PWR_IDLE=$(sample_gpu_idle 5)
-echo "  → Idle power (baseline median): ${PWR_IDLE}W (${PWR_IDLE_COUNT} samples, range ${PWR_IDLE_MIN:-N/A}-${PWR_IDLE_MAX:-N/A}W)"
+echo "  â†’ Idle power (baseline median): ${PWR_IDLE}W (${PWR_IDLE_COUNT} samples, range ${PWR_IDLE_MIN:-N/A}-${PWR_IDLE_MAX:-N/A}W)"
 
 echo ""
 echo "Reading memory-pressure refault (baseline; no presets)..."
 IFS='|' read -r MEM_BASELINE MEM_MODE_B _ _ <<< "$(run_memory_probe)"
-echo "  → Memory refault (baseline median): ${MEM_BASELINE}s (mode ${MEM_MODE_B})"
+echo "  â†’ Memory refault (baseline median): ${MEM_BASELINE}s (mode ${MEM_MODE_B})"
 
-# ── Benchmark 1: Network ──────────────────────────────────────────────────────
+# â”€â”€ Benchmark 1: Network â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
 echo "[1/3] Network throughput benchmark (BBR vs CUBIC, WAN simulation)..."
 bash "$SCRIPT_DIR/benchmarks/benchmark-network-v0.1.sh" "$PRESET" 2>&1
 NET_LOG=$(ls -t "$LOG_DIR"/*network-*.log 2>/dev/null | head -1 || true)
 extract_network "$NET_LOG"
-echo "  → Network done."
+echo "  â†’ Network done."
 
-# ── Benchmark 2: Cold-start latency ──────────────────────────────────────────
+# â”€â”€ Benchmark 2: Cold-start latency â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
 if [[ "$SKIP_INFERENCE" == "1" ]]; then
-    echo "[2/3] Cold-start latency — SKIPPED (ollama unavailable)"
+    echo "[2/3] Cold-start latency â€” SKIPPED (ollama unavailable)"
 else
     echo "[2/3] Cold-start latency benchmark (GPU freq: idle vs pinned)..."
     if bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.3.sh" "$PRESET" "$MODEL" 2>&1; then
         COLD_LOG=$(ls -t "$LOG_DIR"/*coldstart-*.log 2>/dev/null | head -1 || true)
         extract_coldstart "$COLD_LOG"
-        echo "  → Cold-start done."
+        echo "  â†’ Cold-start done."
     else
-        echo "  → Cold-start benchmark failed; continuing with cold-start marked N/A."
+        echo "  â†’ Cold-start benchmark failed; continuing with cold-start marked N/A."
         COLD_BASELINE="N/A"
         COLD_TUNED="N/A"
         COLD_DELTA="N/A"
     fi
 fi
 
-# ── Benchmark 3: Sustained inference ─────────────────────────────────────────
+# â”€â”€ Benchmark 3: Sustained inference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
 if [[ "$SKIP_INFERENCE" == "1" ]]; then
-    echo "[3/3] Sustained inference — SKIPPED (ollama unavailable)"
+    echo "[3/3] Sustained inference â€” SKIPPED (ollama unavailable)"
 else
     echo "[3/3] Sustained inference benchmark (steady-state tok/s)..."
     if bash "$SCRIPT_DIR/benchmarks/benchmark-inference-v0.1.sh" "$PRESET" "$MODEL" 2>&1; then
         WARM_LOG=$(ls -t "$LOG_DIR"/*inference-*.log 2>/dev/null | head -1 || true)
         extract_sustained "$WARM_LOG"
-        echo "  → Sustained inference done."
+        echo "  â†’ Sustained inference done."
     else
-        echo "  → Sustained benchmark failed; continuing with sustained inference marked N/A."
+        echo "  â†’ Sustained benchmark failed; continuing with sustained inference marked N/A."
         WARM_BASELINE="N/A"
         WARM_TUNED="N/A"
         WARM_DELTA="N/A"
     fi
 fi
 
-# ── Concurrency inference (observe-only) ─────────────────────────────────────
+# â”€â”€ Concurrency inference (observe-only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if [[ "$SKIP_INFERENCE" == "1" ]]; then
     echo ""
-    echo "[observe] Concurrency inference — SKIPPED (ollama unavailable)"
+    echo "[observe] Concurrency inference â€” SKIPPED (ollama unavailable)"
 else
     echo ""
     echo "[observe] Concurrency inference ($CONC_STREAMS parallel streams, weight 0)..."
     IFS='|' read -r CONC_AGG CONC_STREAMS_REPORT <<< "$(run_concurrency_probe)"
-    echo "  → Concurrency aggregate tok/s: ${CONC_AGG} (${CONC_STREAMS_REPORT} streams)"
+    echo "  â†’ Concurrency aggregate tok/s: ${CONC_AGG} (${CONC_STREAMS_REPORT} streams)"
 fi
 
-# ── Idle power — tuned + stability check ─────────────────────────────────────
+# â”€â”€ Idle power â€” tuned + stability check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
 echo "Reading idle power with presets active (median of up to 5 samples)..."
-bash "$PRESET" --apply-temp 2>&1 | grep "✓" | sed 's/^/  /' || true
+bash "$PRESET" --apply-temp 2>&1 | grep "âœ“" | sed 's/^/  /' || true
 sleep 3
 PHASE_CTX_TUNED=$(phase_context)
 IFS='|' read -r PWR_TUNED_IDLE PWR_TUNED_SAMPLES_JSON PWR_TUNED_MIN PWR_TUNED_MAX PWR_TUNED_COUNT <<< "$(sample_idle_power 8)"
 GPU_PWR_TUNED=$(sample_gpu_idle 5)
-echo "  → Idle power (tuned median): ${PWR_TUNED_IDLE}W (${PWR_TUNED_COUNT} samples, range ${PWR_TUNED_MIN:-N/A}-${PWR_TUNED_MAX:-N/A}W)"
+echo "  â†’ Idle power (tuned median): ${PWR_TUNED_IDLE}W (${PWR_TUNED_COUNT} samples, range ${PWR_TUNED_MIN:-N/A}-${PWR_TUNED_MAX:-N/A}W)"
 
 echo ""
 echo "Reading memory-pressure refault (tuned; preset active)..."
 IFS='|' read -r MEM_TUNED MEM_MODE_T MEM_RATIO_T MEM_PEAK_T <<< "$(run_memory_probe)"
-echo "  → Memory refault (tuned median): ${MEM_TUNED}s (mode ${MEM_MODE_T}, zram ratio ${MEM_RATIO_T})"
+echo "  â†’ Memory refault (tuned median): ${MEM_TUNED}s (mode ${MEM_MODE_T}, zram ratio ${MEM_RATIO_T})"
 
-# v1.4: Stability check — dmesg errors since presets were applied
+# v1.4: Stability check â€” dmesg errors since presets were applied
 STABILITY_ERRORS=$(dmesg --since "1 minute ago" 2>/dev/null | grep -ci "error\|panic\|oops\|BUG" 2>/dev/null || true)
 STABILITY_ERRORS="${STABILITY_ERRORS:-0}"
 STABILITY_ERRORS=$(echo "$STABILITY_ERRORS" | tr -d '[:space:]')
@@ -749,10 +749,10 @@ if [[ "$STABILITY_ERRORS" =~ ^[0-9]+$ ]] && [[ "$STABILITY_ERRORS" -eq 0 ]]; the
 else
     STABILITY_FLAG="false"
 fi
-echo "  → Stability flag: $STABILITY_FLAG (dmesg errors in last minute: $STABILITY_ERRORS)"
+echo "  â†’ Stability flag: $STABILITY_FLAG (dmesg errors in last minute: $STABILITY_ERRORS)"
 
 # Revert presets (must happen after stability check)
-bash "$PRESET" --undo 2>&1 | grep -E "✓|Revert" | sed 's/^/  /' || true
+bash "$PRESET" --undo 2>&1 | grep -E "âœ“|Revert" | sed 's/^/  /' || true
 
 if [[ "$PWR_IDLE" != "N/A" && "$PWR_TUNED_IDLE" != "N/A" ]]; then
     PWR_DELTA=$(python3 -c "print(f'{(float(\"$PWR_TUNED_IDLE\") - float(\"$PWR_IDLE\")):.1f}')" 2>/dev/null || echo "?")
@@ -772,16 +772,16 @@ else
     MEM_DELTA_SUMMARY="${MEM_DELTA}% faster"
 fi
 
-# ── Summary table ─────────────────────────────────────────────────────────────
+# â”€â”€ Summary table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SUMMARY=$(cat <<EOF
 
 ======================================================
-CursiveOS FULL TEST RESULTS — $(date +%Y-%m-%d)
+CursiveOS FULL TEST RESULTS â€” $(date +%Y-%m-%d)
 ======================================================
 Hardware: $CPU_MODEL
           $GPU_MODEL
 Fingerprint: $HW_FINGERPRINT
-Thermal headroom: ${THERMAL_HEADROOM}°C
+Thermal headroom: ${THERMAL_HEADROOM}Â°C
 
 Benchmark              Baseline          Tuned             Delta
 ------------------------------------------------------
@@ -796,7 +796,7 @@ Stability              ${STABILITY_FLAG} (dmesg errors: ${STABILITY_ERRORS})
 * Idle power values are medians of ${PWR_IDLE_COUNT}/${PWR_TUNED_COUNT} readable baseline/tuned samples.
 * Memory refault is the validated cgroup memory-pressure channel; lower is better.
   Tuned zram ratio: ${MEM_RATIO_T:-N/A}x; tuned zram peak_orig: ${MEM_PEAK_T:-N/A} MiB.
-Note: Presets reverted — captured pre-test controls have been restored.
+Note: Presets reverted â€” captured pre-test controls have been restored.
 Logs: $LOG_DIR/
 ======================================================
 EOF
@@ -807,7 +807,7 @@ echo "$SUMMARY" >> "$SUMMARY_LOG"
 echo ""
 echo "Full summary saved: $SUMMARY_LOG"
 
-# ── Submit to CursiveRoot (Supabase) ────────────────────────────────────────────
+# â”€â”€ Submit to CursiveRoot (Supabase) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
 echo "Submitting results to CursiveRoot..."
 
@@ -979,7 +979,7 @@ SUPABASE_HEADERS=(
     -H "Content-Type: application/json"
 )
 
-# Upsert machine — check first, insert only if not exists
+# Upsert machine â€” check first, insert only if not exists
 MACHINE_EXISTS=$(curl -s \
     -H "apikey: $SUPABASE_KEY" \
     -H "Authorization: Bearer $SUPABASE_KEY" \
@@ -1060,7 +1060,7 @@ fi
 # Insert run (columns matching current DB schema + v1.5 extended fields)
 # v1.5 adds hardware_extended (cpu_microcode_version, cache sizes, GPU VRAM, RAM speed)
 # and stability_extended (dmesg errors, throttle events, temp throttle counts)
-# Build JSON via python3 — bash vars interpolated before python sees the heredoc
+# Build JSON via python3 â€” bash vars interpolated before python sees the heredoc
 POWER_NOTE=""
 if [[ "$PWR_IDLE" == "N/A" || "$PWR_TUNED_IDLE" == "N/A" || "$PWR_DELTA" == "N/A" || -z "$PWR_IDLE" || -z "$PWR_TUNED_IDLE" || -z "$PWR_DELTA" ]]; then
     POWER_NOTE=" power:no_sensor"
@@ -1132,12 +1132,12 @@ RUN_RESP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
     -d "$RUN_JSON" 2>/dev/null || echo "000")
 
 if [[ "$RUN_RESP" == "201" ]]; then
-    echo "  → Results submitted to CursiveRoot. (machine: $MACHINE_ID)"
+    echo "  â†’ Results submitted to CursiveRoot. (machine: $MACHINE_ID)"
 else
-    echo "  → CursiveRoot submit failed (HTTP $RUN_RESP) — results saved locally only."
+    echo "  â†’ CursiveRoot submit failed (HTTP $RUN_RESP) â€” results saved locally only."
 fi
 
-# ── Detail bundle upload (every run, not just the seed path) ──────────────────
+# â”€â”€ Detail bundle upload (every run, not just the seed path) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Per-pass telemetry, power source, and phase context go to run_detail_bundles
 # so within-session variance reaches CursiveRoot. Idempotent by source hash.
 python3 - "$RESULT_JSON" <<'PYDETAIL' || echo "  [guard] detail bundle upload skipped"
@@ -1185,12 +1185,12 @@ req = urllib.request.Request(
 )
 try:
     with urllib.request.urlopen(req, timeout=30) as res:
-        print(f"  → Detail bundle uploaded (hash {source_hash[:12]}…)")
+        print(f"  â†’ Detail bundle uploaded (hash {source_hash[:12]}â€¦)")
 except Exception as exc:
     print(f"  [guard] detail bundle upload failed: {exc}")
 PYDETAIL
 
-# ── Append to local hardware-profiles.json (backup) ──────────────────────────
+# â”€â”€ Append to local hardware-profiles.json (backup) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if [[ -f "$HW_DB" ]] && command -v python3 &>/dev/null; then
     python3 - <<PYEOF 2>/dev/null || true
 import json, datetime, os
@@ -1267,7 +1267,7 @@ echo ""
 echo "https://github.com/connormatthewdouglas/CursiveOS"
 echo ""
 
-# ── Notify CopperClaw that the run is complete ────────────────────────────────
+# â”€â”€ Notify CopperClaw that the run is complete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SENTINEL_DIR="$SCRIPT_DIR/dashboard"
 SENTINEL_FILE="$SENTINEL_DIR/run_complete.json"
 python3 - <<PYEOF 2>/dev/null || true
@@ -1291,7 +1291,7 @@ comms = {
     "from": "Vega",
     "to": "CopperClaw",
     "type": "result",
-    "msg": f"Benchmark complete. Network: $NET_DELTA%, Cold-start: $COLD_DELTA%, Power: $PWR_IDLE → $PWR_TUNED_IDLE W, Stability: $STABILITY_FLAG"
+    "msg": f"Benchmark complete. Network: $NET_DELTA%, Cold-start: $COLD_DELTA%, Power: $PWR_IDLE â†’ $PWR_TUNED_IDLE W, Stability: $STABILITY_FLAG"
 }
 comms_file = pathlib.Path("$SENTINEL_DIR/comms.jsonl")
 with open(comms_file, "a") as f:
