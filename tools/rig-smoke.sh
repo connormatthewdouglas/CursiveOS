@@ -34,7 +34,9 @@ rig_scp() {
 }
 
 rig_launch() {
-  local host="$1" mode="$2" out="/tmp/rig-smoke-${mode}-${host}-${STAMP}.out"
+  local host="$1"
+  local mode="$2"
+  local out="/tmp/rig-smoke-${mode}-${host}-${STAMP}.out"
   rig_scp "$host"
   ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=10 "$(rig_host "$host")" \
     "chmod +x /tmp/rig-smoke-remote.sh; export TAO_SUDO_PASS=; nohup bash /tmp/rig-smoke-remote.sh $mode $out > /tmp/rig-smoke-launcher-${host}.out 2>&1 & echo LAUNCHED out=$out"
