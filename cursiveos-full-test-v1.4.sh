@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # CursiveOS Full Test v1.4
 # Single command for Bittensor miners to measure their system's baseline
 # and the impact of CursiveOS performance presets.

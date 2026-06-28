@@ -10,29 +10,37 @@ export TAO_SUDO_PASS="${TAO_SUDO_PASS:-}"
 : >"$OUT"
 log() { echo "$*" | tee -a "$OUT"; }
 
-strip_crlf() {
+normalize_scripts() {
   local f
   for f in "$ROOT/cursiveos-full-test-v1.4.sh" "$ROOT/tools/rig-smoke-remote.sh"; do
-    [[ -f "$f" ]] && sed -i 's/\r$//' "$f" 2>/dev/null || true
+    [[ -f "$f" ]] || continue
+    sed -i 's/\r$//' "$f" 2>/dev/null || true
+    python3 - "$f" <<'PY' 2>/dev/null || true
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+b = p.read_bytes()
+if b.startswith(b"\xef\xbb\xbf"):
+    p.write_bytes(b[3:])
+PY
   done
 }
 
 sync_repo() {
   cd "$ROOT"
-  strip_crlf
+  normalize_scripts
   git stash push -m "rig-smoke-$(date +%Y%m%d)" -- cursiveos-full-test-v1.4.sh 2>/dev/null || true
   git fetch origin main 2>&1 | tee -a "$OUT"
   git reset --hard origin/main 2>&1 | tee -a "$OUT"
-  strip_crlf
+  normalize_scripts
   log "SYNC_HEAD=$(git rev-parse --short HEAD)"
   bash -n "$ROOT/cursiveos-full-test-v1.4.sh" && log "SYNTAX_OK full-test"
 }
 
 json_smoke() {
   cd "$ROOT"
-  strip_crlf
+  normalize_scripts
   export TAO_SUDO_PASS=
-  PRESET="presets/cursiveos-presets-v0.9.sh"
+  PRESET="presets/cursiveos-presets-v0.12.sh"
   log "JSON_SMOKE_START $(date -Iseconds) preset=$PRESET"
   set +e
   bash ./cursiveos-full-test-v1.4.sh "$PRESET" >>"$OUT" 2>&1
@@ -87,7 +95,7 @@ PY
 
 screen_v012b() {
   cd "$ROOT"
-  strip_crlf
+  normalize_scripts
   export TAO_SUDO_PASS=
   log "SCREEN_V012B_START $(date -Iseconds) HOST=$(hostname)"
   run_arm "v0.12-parent" "presets/cursiveos-presets-v0.12.sh"
