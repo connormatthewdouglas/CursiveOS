@@ -73,6 +73,28 @@ def metrics_from_variant(
     }
 
 
+def acceptance_grade_metrics(**kwargs) -> dict:
+    metrics = metrics_from_variant(**kwargs)
+    metrics.update(
+        {
+            "source_provenance": "native_full_test_json",
+            "source_result_json": "logs/fixture-full-test.json",
+            "measurement_quality": {
+                "schema_version": "cursiveos.measurement-quality.fixture.v0.1",
+                "flags": [],
+                "decision_grade": True,
+            },
+            "structured_telemetry": {
+                "network": {"available": True},
+                "coldstart": {"available": True},
+                "sustained": {"available": True},
+                "idle_power": {},
+            },
+        }
+    )
+    return metrics
+
+
 class CoreEvaluationTest(unittest.TestCase):
     def test_score_performance_positive_coldstart(self) -> None:
         metrics = metrics_from_variant(coldstart_pct=10.0, sustained_pct=2.0, idle_power_pct=1.0)
@@ -110,38 +132,49 @@ class CoreEvaluationTest(unittest.TestCase):
 
     def test_verdict_paths(self) -> None:
         config = seed_organism.DEFAULT_CONFIG
-        good_metrics = metrics_from_variant(coldstart_pct=8.0, sustained_pct=1.0)
+        good_metrics = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0)
         sensor = seed_organism.score_performance(
             variant=FIXTURE_VARIANT, metrics=good_metrics, config=config
         )
         regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, good_metrics)
-        decision, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor, regression, config)
+        decision, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor, regression, config, good_metrics)
         self.assertEqual(decision, "accepted")
 
-        bad_metrics = metrics_from_variant(
+        unverified_metrics = metrics_from_variant(coldstart_pct=8.0, sustained_pct=1.0)
+        sensor_unverified = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=unverified_metrics, config=config
+        )
+        regression_unverified = seed_organism.evaluate_regression(FIXTURE_VARIANT, unverified_metrics)
+        decision_unverified, reason_unverified = seed_organism.verdict(
+            FIXTURE_VARIANT, sensor_unverified, regression_unverified, config, unverified_metrics
+        )
+        self.assertEqual(decision_unverified, "rejected_unverified_evidence")
+        self.assertIn("evidence gate", reason_unverified)
+
+        bad_metrics = acceptance_grade_metrics(
             regression={"full_test_passed": False, "reverted_cleanly": True, "host_safety_passed": True, "failures": []}
         )
         sensor_bad = seed_organism.score_performance(
             variant=FIXTURE_VARIANT, metrics=bad_metrics, config=config
         )
         regression_bad = seed_organism.evaluate_regression(FIXTURE_VARIANT, bad_metrics)
-        decision_bad, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_bad, regression_bad, config)
+        decision_bad, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_bad, regression_bad, config, bad_metrics)
         self.assertEqual(decision_bad, "rejected_regression")
 
-        low_conf_metrics = metrics_from_variant(coldstart_pct=8.0, sample_counts={"network": 1, "coldstart": 1, "sustained": 1})
+        low_conf_metrics = acceptance_grade_metrics(coldstart_pct=8.0, sample_counts={"network": 1, "coldstart": 1, "sustained": 1})
         sensor_low = seed_organism.score_performance(
             variant=FIXTURE_VARIANT, metrics=low_conf_metrics, config=config
         )
         regression_low = seed_organism.evaluate_regression(FIXTURE_VARIANT, low_conf_metrics)
-        decision_low, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_low, regression_low, config)
+        decision_low, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_low, regression_low, config, low_conf_metrics)
         self.assertEqual(decision_low, "inconclusive")
 
-        negative_metrics = metrics_from_variant(coldstart_pct=-15.0)
+        negative_metrics = acceptance_grade_metrics(coldstart_pct=-15.0)
         sensor_neg = seed_organism.score_performance(
             variant=FIXTURE_VARIANT, metrics=negative_metrics, config=config
         )
         regression_neg = seed_organism.evaluate_regression(FIXTURE_VARIANT, negative_metrics)
-        decision_neg, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_neg, regression_neg, config)
+        decision_neg, _ = seed_organism.verdict(FIXTURE_VARIANT, sensor_neg, regression_neg, config, negative_metrics)
         self.assertEqual(decision_neg, "rejected_negative_fitness")
 
     def test_memory_channel_scores_rewards_gates_and_optional(self) -> None:
@@ -165,10 +198,38 @@ class CoreEvaluationTest(unittest.TestCase):
         neutral = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=m, config=cfg)
         self.assertIsNone(neutral["delta"]["memory_pct"])
 
+    def test_idle_power_is_gate_only_until_fleet_validation(self) -> None:
+        cfg = seed_organism.DEFAULT_CONFIG
+        self.assertEqual(cfg["weights"]["idle_power"], 0.0)
+
+        # A non-severe idle-power cost is observed but does not score fitness
+        # while cross-machine pooling/laptop sampling remain unresolved.
+        observed_only = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT,
+            metrics=metrics_from_variant(idle_power_pct=20.0),
+            config=cfg,
+        )
+        self.assertEqual(observed_only["base_fitness"], 0.0)
+        self.assertEqual(observed_only["severe_regressions"], [])
+
+        # The safety gate still rejects a real idle-power regression.
+        severe = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT,
+            metrics=metrics_from_variant(idle_power_pct=30.0),
+            config=cfg,
+        )
+        self.assertTrue(any("idle power cost" in s for s in severe["severe_regressions"]))
+
     def test_parsimony_bonus_only_when_non_regressing(self) -> None:
         metrics = metrics_from_variant(coldstart_pct=0.5, sustained_pct=0.5)
         variant = dict(FIXTURE_VARIANT)
-        variant["knobs_removed_vs_parent"] = 2
+        variant.update(
+            {
+                "parent_genome_knobs": {"cpu_governor_boost": 0.4, "gpu_idle_pin_mhz": 0.2},
+                "genome_knobs": {"cpu_governor_boost": 0.0, "gpu_idle_pin_mhz": 0.2},
+                "knobs_removed_vs_parent": 1,
+            }
+        )
         sensor = seed_organism.score_performance(variant=variant, metrics=metrics, config=seed_organism.DEFAULT_CONFIG)
         self.assertGreater(sensor["parsimony_bonus"], 0.0)
 
@@ -188,6 +249,57 @@ class CoreEvaluationTest(unittest.TestCase):
         sensor, _, _, _ = qd_organism.evaluate_variant(child, metrics, seed_organism.DEFAULT_CONFIG)
         self.assertEqual(child["knobs_removed_vs_parent"], 0)
         self.assertEqual(sensor["parsimony_bonus"], 0.0)
+
+    def test_direct_seed_parsimony_overclaim_rejected_at_shared_boundary(self) -> None:
+        variant = dict(FIXTURE_VARIANT)
+        knobs = {"cpu_governor_boost": 0.4, "gpu_idle_pin_mhz": 0.2, "scheduler_aggressive": 0.1}
+        variant.update({
+            "parent_genome_knobs": dict(knobs),
+            "genome_knobs": dict(knobs),
+            "knobs_removed_vs_parent": 5,
+        })
+        metrics = acceptance_grade_metrics(coldstart_pct=0.5, sustained_pct=0.5)
+        sensor = seed_organism.score_performance(variant=variant, metrics=metrics, config=seed_organism.DEFAULT_CONFIG)
+        regression = seed_organism.evaluate_regression(variant, metrics)
+        decision, reason = seed_organism.verdict(variant, sensor, regression, seed_organism.DEFAULT_CONFIG, metrics)
+        self.assertEqual(sensor["knobs_removed_vs_parent"], 0)
+        self.assertEqual(sensor["parsimony_bonus"], 0.0)
+        self.assertEqual(decision, "rejected_invariant")
+        self.assertIn("parsimony invariant failed", reason)
+
+    def test_replay_gate_rejects_duplicate_accepted_measurement_fingerprint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            state = Path(tmp)
+            seed_organism.ensure_state(state)
+            first_variant = dict(FIXTURE_VARIANT)
+            first_variant["variant_id"] = "first-accepted"
+            first_metrics = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0)
+            with redirect_stdout(io.StringIO()):
+                first_decision, _ = seed_organism.record_evaluation(
+                    state, seed_organism.DEFAULT_CONFIG, first_variant, first_metrics, 1
+                )
+            self.assertEqual(first_decision, "accepted")
+
+            replay_variant = dict(FIXTURE_VARIANT)
+            replay_variant["variant_id"] = "replay-accepted"
+            replay_metrics = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0)
+            replay_metrics["machine_id"] = "fake-independent-rig"
+            with redirect_stdout(io.StringIO()):
+                replay_decision, _ = seed_organism.record_evaluation(
+                    state, seed_organism.DEFAULT_CONFIG, replay_variant, replay_metrics, 1
+                )
+            self.assertEqual(replay_decision, "rejected_replay")
+
+    def test_caller_asserted_confirmation_count_cannot_raise_acceptance_confidence(self) -> None:
+        metrics = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0)
+        metrics["confirmation_count"] = 3
+        metrics["confidence"] = 0.875
+        metrics["confirmation_source"] = "caller_asserted_cli"
+        sensor = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=metrics, config=seed_organism.DEFAULT_CONFIG)
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, metrics)
+        decision, reason = seed_organism.verdict(FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, metrics)
+        self.assertEqual(decision, "inconclusive")
+        self.assertIn("confirmation independence gate", reason)
 
 
 class FullTestTelemetryExtractionTest(unittest.TestCase):

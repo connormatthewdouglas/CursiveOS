@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """H2 adversarial/dishonest tester experiment runner.
 
-This intentionally does *not* harden acceptance logic. It generates malicious
-seed-organism submissions and routes them through the current real code paths so
-we can see which fabricated bundles are rejected, accepted, and payout-eligible.
+Generates malicious seed-organism submissions and routes them through the
+current real code paths so we can see which fabricated bundles are rejected,
+accepted, and payout-eligible. The runner itself does not change acceptance
+logic; remediation belongs in the production seed/QD boundary.
 """
 
 from __future__ import annotations
@@ -147,7 +148,7 @@ def base_metrics(machine_id: str = "h2-honest-source-rig") -> dict[str, Any]:
 def inflated_metrics(machine_id: str = "h2-malicious-rig") -> dict[str, Any]:
     metrics = base_metrics(machine_id)
     # Fabricated candidate improvement: no corresponding measurement/provenance is
-    # supplied, but current scoring trusts the submitted numbers.
+    # supplied, so the hardened boundary should reject it before scoring/payout.
     metrics["variant"] = {
         "network_mbps": 930.0,
         "coldstart_ms": 1638.0,  # claimed +10% lower-is-better
@@ -156,6 +157,29 @@ def inflated_metrics(machine_id: str = "h2-malicious-rig") -> dict[str, Any]:
         "memory_refault_s": 10.0,
     }
     metrics["adversarial_claim"] = "candidate metrics are inflated/fabricated from a real baseline"
+    return metrics
+
+
+def acceptance_grade_metrics(machine_id: str = "h2-honest-source-rig") -> dict[str, Any]:
+    """A minimal decision-grade fixture used to seed replay tests."""
+    metrics = inflated_metrics(machine_id)
+    metrics.update(
+        {
+            "source_provenance": "native_full_test_json",
+            "source_result_json": f".cursiveos/h2-adversarial-tester/fixtures/{machine_id}.json",
+            "measurement_quality": {
+                "schema_version": "cursiveos.measurement-quality.h2-fixture.v0.1",
+                "flags": [],
+                "decision_grade": True,
+            },
+            "structured_telemetry": {
+                "network": {"available": True},
+                "coldstart": {"available": True},
+                "sustained": {"available": True},
+                "idle_power": {},
+            },
+        }
+    )
     return metrics
 
 
@@ -231,11 +255,19 @@ def classify_gate(bundle: dict[str, Any], *, extra_gate: str | None = None) -> s
     if decision == "rejected_regression":
         return "regression gate"
     if decision == "inconclusive":
+        if "confirmation independence" in reason:
+            return "confirmation independence gate"
         return "confidence gate"
     if decision == "rejected_negative_fitness":
         if "regression" in reason or "cost" in reason:
             return "severe-regression gate"
         return "minimum_accept_fitness gate"
+    if decision == "rejected_unverified_evidence":
+        return "evidence/provenance gate"
+    if decision == "rejected_replay":
+        return "measurement replay gate"
+    if decision == "rejected_invariant":
+        return "shared invariant gate"
     if decision == "accepted":
         return None
     return decision
@@ -259,6 +291,17 @@ def result_record(
 ) -> dict[str, Any]:
     payout = close_cycle(state, cycle_id)
     accepted = bundle.get("decision") == "accepted"
+    submitted_contributor = None
+    submitted_variant = bundle.get("variant")
+    if isinstance(submitted_variant, dict):
+        submitted_contributor = submitted_variant.get("contributor_id")
+    payout_rows = payout.get("contributors", [])
+    attack_payout_triggered = any(
+        isinstance(c, dict)
+        and c.get("contributor_id") == submitted_contributor
+        and float(c.get("total_payout_sats", 0) or 0) > 0
+        for c in payout_rows
+    )
     record = {
         "mode": mode,
         "name": name,
@@ -274,7 +317,7 @@ def result_record(
         "reason": bundle.get("reason"),
         "gate_triggered": classify_gate(bundle, extra_gate=extra_gate),
         "accepted": accepted,
-        "payout_triggered": bool(payout["payout_triggered"]),
+        "payout_triggered": bool(attack_payout_triggered),
         "payout_report": payout,
         "deferred_to_trust_layer": deferred_to_trust_layer,
     }
@@ -311,19 +354,18 @@ def mode_a() -> dict[str, Any]:
 
 
 def mode_b() -> dict[str, Any]:
-    source_state = clean_state("mode-b-source-genuine")
-    attack_state = clean_state("mode-b-replay")
+    state = clean_state("mode-b-replay")
     source_cycle = 210
     attack_cycle = 211
-    source_inputs = source_state / "inputs"
+    source_inputs = state / "inputs" / "source"
     source_variant_path = source_inputs / "variant-mode-b-source.json"
     source_metrics_path = source_inputs / "metrics-mode-b-source.json"
-    source_metrics = inflated_metrics("h2-b-source-stardust")
-    source_metrics["source_provenance"] = "treated_as_genuine_winning_measurement_for_replay_source"
+    source_metrics = acceptance_grade_metrics("h2-b-source-stardust")
+    source_metrics["adversarial_claim"] = "treated as accepted source measurement for replay duplicate test"
     write_json(source_variant_path, attack_variant("h2-b-genuine-winning-source", "h2-honest-contributor"))
     write_json(source_metrics_path, source_metrics)
     source_cli = run_seed_cli(
-        source_state,
+        state,
         [
             "run-variant",
             "--variant",
@@ -336,7 +378,7 @@ def mode_b() -> dict[str, Any]:
     )
     source_bundle = bundle_from_cli_result(source_cli)
 
-    attack_inputs = attack_state / "inputs"
+    attack_inputs = state / "inputs" / "attack"
     attack_variant_path = attack_inputs / "variant-mode-b-replay.json"
     attack_metrics_path = attack_inputs / "metrics-mode-b-replay.json"
     replayed = copy.deepcopy(source_metrics)
@@ -349,7 +391,7 @@ def mode_b() -> dict[str, Any]:
     write_json(attack_variant_path, attack_variant("h2-b-replay-as-independent"))
     write_json(attack_metrics_path, replayed)
     attack_cli = run_seed_cli(
-        attack_state,
+        state,
         [
             "run-variant",
             "--variant",
@@ -365,15 +407,16 @@ def mode_b() -> dict[str, Any]:
         mode="B",
         name="replay as independent machine/session",
         attack="Copied a winning measurement and resubmitted it under a different machine/session identity.",
-        pipeline="seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> bundle/ledger",
-        state=attack_state,
+        pipeline="seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> replay_gate -> bundle/ledger",
+        state=state,
         cycle_id=attack_cycle,
         variant_path=attack_variant_path,
         metrics_path=attack_metrics_path,
         cli=attack_cli,
         bundle=attack_bundle,
         extra={
-            "source_state_dir": rel(source_state),
+            "source_state_dir": rel(state),
+            "source_cycle_id": source_cycle,
             "source_bundle": source_bundle,
             "source_cli": source_cli,
         },
@@ -499,17 +542,13 @@ def mode_c() -> dict[str, Any]:
         "name": "parsimony gaming",
         "attack": "Claimed knob removals that the genome does not actually reflect.",
         "pipeline": "QD guarded path plus direct seed CLI path probe",
-        "pipeline_verdict": "accepted" if accepted else qd["bundle"].get("decision"),
-        "reason": (
-            "QD path caught overclaim, but direct seed run-variant accepted it"
-            if accepted
-            else qd["bundle"].get("reason")
-        ),
-        "gate_triggered": None if accepted else "QD genome-derived parsimony guard -> minimum_accept_fitness gate",
+        "pipeline_verdict": direct_record.get("pipeline_verdict"),
+        "reason": direct_record.get("reason"),
+        "gate_triggered": direct_record.get("gate_triggered"),
         "accepted": accepted,
         "payout_triggered": bool(direct_record["payout_triggered"]),
         "deferred_to_trust_layer": False,
-        "submitted_bundle": direct_bundle if accepted else qd["bundle"],
+        "submitted_bundle": direct_bundle,
         "subtests": {
             "qd_guarded_submission": {
                 "state_dir": rel(qd_state),
@@ -603,7 +642,8 @@ def mode_d() -> dict[str, Any]:
             "parent_result_json": rel(parent_result_path),
             "candidate_result_json": rel(candidate_result_path),
             "asserted_confirmations": 3,
-            "current_code_limitation": "confirmation_count is an asserted integer; current code does not auto-count independent machine/session bundles",
+            "current_code_limitation": "caller-asserted confirmation_count is now rejected/inconclusive; real confidence aggregation still requires CursiveRoot-derived independent machine/session evidence",
+            "remaining_trust_layer_gap": "system-owned independent confirmation aggregation is not implemented in this local runner",
         },
     )
 

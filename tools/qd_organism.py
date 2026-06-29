@@ -353,7 +353,7 @@ def evaluate_variant(
     sync_parsimony_from_genome(variant)
     sensor = seed_organism.score_performance(variant=variant, metrics=metrics, config=config)
     regression = seed_organism.evaluate_regression(variant, metrics)
-    decision, reason = seed_organism.verdict(variant, sensor, regression, config)
+    decision, reason = seed_organism.verdict(variant, sensor, regression, config, metrics)
     return sensor, regression, decision, reason
 
 

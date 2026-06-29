@@ -1,10 +1,10 @@
 {
   "experiment": "H2 adversarial/dishonest tester",
-  "overall_h2_status": "FAILED",
+  "overall_h2_status": "PASSED_EXCEPT_MODE_D_DEFERRED_TO_TRUST_LAYER",
   "pre_registered_doc": "docs/experiments/H2-adversarial-tester-results.md",
   "results": [
     {
-      "accepted": true,
+      "accepted": false,
       "attack": "Real baseline values with fabricated candidate improvement that clears minimum_accept_fitness.",
       "cli": {
         "cmd": [
@@ -21,21 +21,21 @@
           "201"
         ],
         "parsed_stdout": {
-          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T183300Z-4587b47e",
-          "bundle_hash": "02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd",
+          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T185720Z-92e4889b",
+          "bundle_hash": "2931363b6d056f555e24da7192af2c3d25c7e6b908880e9f51c72699fac0688c",
           "confidence": "0.70",
-          "decision": "accepted",
+          "decision": "rejected_unverified_evidence",
           "fitness_score": "0.104878",
-          "reason": "fitness positive and gates passed",
+          "reason": "metrics evidence gate: missing native full-test provenance/source_result_json; metrics evidence gate: missing measurement_quality; metrics evidence gate: missing structured_telemetry",
           "variant": "h2-a-inflated-delta"
         },
         "returncode": 0,
         "stderr": "",
-        "stdout": "variant: h2-a-inflated-delta\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd\nbundle: .cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T183300Z-4587b47e\n"
+        "stdout": "variant: h2-a-inflated-delta\ndecision: rejected_unverified_evidence\nreason: metrics evidence gate: missing native full-test provenance/source_result_json; metrics evidence gate: missing measurement_quality; metrics evidence gate: missing structured_telemetry\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 2931363b6d056f555e24da7192af2c3d25c7e6b908880e9f51c72699fac0688c\nbundle: .cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T185720Z-92e4889b\n"
       },
       "cycle_id": 201,
       "deferred_to_trust_layer": false,
-      "gate_triggered": null,
+      "gate_triggered": "evidence/provenance gate",
       "mode": "A",
       "name": "inflated delta",
       "payout_report": {
@@ -52,52 +52,43 @@
             "100000"
           ],
           "parsed_stdout": {
-            "contributors": "1",
+            "contributors": "0",
             "cycle": "201",
             "report": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json",
-            "report_hash": "19624a124776c0930b7eeb317208fe554521f2ad9d809498cb22e007baf5b8c2"
+            "report_hash": "480fcb8abc8d0cb2983911285a4872a19cbccd8da8d1132fea5d0a0c9eded3b2"
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "cycle: 201\ncontributors: 1\nreport_hash: 19624a124776c0930b7eeb317208fe554521f2ad9d809498cb22e007baf5b8c2\nreport: .cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json\n"
+          "stdout": "cycle: 201\ncontributors: 0\nreport_hash: 480fcb8abc8d0cb2983911285a4872a19cbccd8da8d1132fea5d0a0c9eded3b2\nreport: .cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json\n"
         },
-        "contributors": [
-          {
-            "contributor_id": "h2-malicious-contributor",
-            "current_cycle_payout_sats": 20000,
-            "cycle_fitness": 0.10487805,
-            "lifetime_fitness": 0.10487805,
-            "lifetime_payout_sats": 80000,
-            "total_payout_sats": 100000
-          }
-        ],
-        "payout_triggered": true,
-        "report_hash": "19624a124776c0930b7eeb317208fe554521f2ad9d809498cb22e007baf5b8c2",
+        "contributors": [],
+        "payout_triggered": false,
+        "report_hash": "480fcb8abc8d0cb2983911285a4872a19cbccd8da8d1132fea5d0a0c9eded3b2",
         "report_path": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json"
       },
-      "payout_triggered": true,
+      "payout_triggered": false,
       "pipeline": "seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> bundle/ledger",
-      "pipeline_verdict": "accepted",
-      "reason": "fitness positive and gates passed",
+      "pipeline_verdict": "rejected_unverified_evidence",
+      "reason": "metrics evidence gate: missing native full-test provenance/source_result_json; metrics evidence gate: missing measurement_quality; metrics evidence gate: missing structured_telemetry",
       "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta",
       "submitted_bundle": {
-        "bundle_hash": "02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd",
+        "bundle_hash": "2931363b6d056f555e24da7192af2c3d25c7e6b908880e9f51c72699fac0688c",
         "confidence": 0.7,
-        "decision": "accepted",
+        "decision": "rejected_unverified_evidence",
         "fitness_score": 0.104878,
         "manifest": {
-          "bundle_hash": "02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd",
-          "created_at": "2026-06-29T18:33:00+00:00",
+          "bundle_hash": "2931363b6d056f555e24da7192af2c3d25c7e6b908880e9f51c72699fac0688c",
+          "created_at": "2026-06-29T18:57:20+00:00",
           "cycle_id": "201",
-          "decision": "accepted",
+          "decision": "rejected_unverified_evidence",
           "files": {
             "metrics.json": "62073ad7a53fff78c034eba51bb945103fde55b9f77f5458cea261179799f1c5",
-            "regression-result.json": "a63ac3b44f6bbab76f29bcc444429c45a8641b1604b19ce9305679059da30514",
-            "sensor-result.json": "1f308cbcea114d5c1683f582a9483f779f756c871e328c7a9447d2449a88b386",
+            "regression-result.json": "6902fe409d83d9af4a3bc66869df639131a51290a6d241d1c051a0cf755bbf5a",
+            "sensor-result.json": "2e831b27e250b6105e06eedf2bb5cecad3ccad61028d4caebc2dd204acfd0c25",
             "variant.json": "fc6468737095a869f9debcf4a6b6067f53dabb74006c0d7ae0c8010f2150a272"
           },
-          "reason": "fitness positive and gates passed",
-          "run_id": "4587b47e",
+          "reason": "metrics evidence gate: missing native full-test provenance/source_result_json; metrics evidence gate: missing measurement_quality; metrics evidence gate: missing structured_telemetry",
+          "run_id": "92e4889b",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "h2-a-inflated-delta"
         },
@@ -133,19 +124,19 @@
             "sustained_tokps": 42.0
           }
         },
-        "path": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T183300Z-4587b47e",
-        "reason": "fitness positive and gates passed",
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T185720Z-92e4889b",
+        "reason": "metrics evidence gate: missing native full-test provenance/source_result_json; metrics evidence gate: missing measurement_quality; metrics evidence gate: missing structured_telemetry",
         "regression_result": {
           "failures": [],
           "full_test_passed": true,
           "host_safety_passed": true,
           "machine_id": "h2-a-malicious-rig",
           "passed": true,
-          "regression_result_hash": "429ea50a750b92b1da66ca79c163468ca89d18bec5fc4f251d0956b3fbfe9783",
+          "regression_result_hash": "22e9f4e6ba3ef2cd92e3eb475846de4280b3edeecf2a2e6caa4900afd469a1e0",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-29T18:33:00+00:00",
+          "timestamp": "2026-06-29T18:57:20+00:00",
           "variant_id": "h2-a-inflated-delta"
         },
         "sensor_result": {
@@ -168,14 +159,21 @@
           "fitness_score": 0.10487805,
           "knobs_removed_vs_parent": 0,
           "machine_id": "h2-a-malicious-rig",
+          "measurement_fingerprint": "859093f5d9ad67d9397c2da6031a9796c7b8188ca8d54a8b353f2e9a853dd09e",
           "missing_core_metrics": [],
           "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 0,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [],
+            "passed": true
+          },
           "preset_version": "h2-a-inflated-delta",
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "c0eb51c285b0178a35674797f66e9a23792a0d29db96393405a537591c3c62da",
+          "sensor_result_hash": "7db2e8e24f0c7cbe3a53f3bd9e4def796de1487740df4f9a73bee498ef44508d",
           "severe_regressions": [],
-          "timestamp": "2026-06-29T18:33:00+00:00",
+          "timestamp": "2026-06-29T18:57:20+00:00",
           "variant": {
             "coldstart_ms": 1638.0,
             "idle_watts": 71.0,
@@ -201,7 +199,7 @@
       "submitted_variant_file": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\inputs\\variant-mode-a.json"
     },
     {
-      "accepted": true,
+      "accepted": false,
       "attack": "Copied a winning measurement and resubmitted it under a different machine/session identity.",
       "cli": {
         "cmd": [
@@ -211,51 +209,51 @@
           "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay",
           "run-variant",
           "--variant",
-          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\variant-mode-b-replay.json",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\attack\\variant-mode-b-replay.json",
           "--metrics",
-          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\metrics-mode-b-replay.json",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\attack\\metrics-mode-b-replay.json",
           "--cycle-id",
           "211"
         ],
         "parsed_stdout": {
-          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T183301Z-480caaed",
-          "bundle_hash": "cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637",
+          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T185720Z-bcd6c2cf",
+          "bundle_hash": "4a69e4e8a752250eaf4625e3e456108d4e94905b5fb82c125680dd6cf4e0fbea",
           "confidence": "0.70",
-          "decision": "accepted",
+          "decision": "rejected_replay",
           "fitness_score": "0.104878",
-          "reason": "fitness positive and gates passed",
+          "reason": "replay gate: measurement fingerprint already accepted in bundle e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406 for machine h2-b-source-stardust",
           "variant": "h2-b-replay-as-independent"
         },
         "returncode": 0,
         "stderr": "",
-        "stdout": "variant: h2-b-replay-as-independent\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637\nbundle: .cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T183301Z-480caaed\n"
+        "stdout": "variant: h2-b-replay-as-independent\ndecision: rejected_replay\nreason: replay gate: measurement fingerprint already accepted in bundle e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406 for machine h2-b-source-stardust\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 4a69e4e8a752250eaf4625e3e456108d4e94905b5fb82c125680dd6cf4e0fbea\nbundle: .cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T185720Z-bcd6c2cf\n"
       },
       "cycle_id": 211,
       "deferred_to_trust_layer": false,
       "extra": {
         "source_bundle": {
-          "bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566",
+          "bundle_hash": "e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406",
           "confidence": 0.7,
           "decision": "accepted",
           "fitness_score": 0.104878,
           "manifest": {
-            "bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566",
-            "created_at": "2026-06-29T18:33:01+00:00",
+            "bundle_hash": "e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406",
+            "created_at": "2026-06-29T18:57:20+00:00",
             "cycle_id": "210",
             "decision": "accepted",
             "files": {
-              "metrics.json": "fe2f16f386917c5b4c1de0351a519f79ccebbe0c2eb3dda54f016d44d7577860",
-              "regression-result.json": "c6f865168749789dc78cd6960027c531d7c8650d3d061646073fc91874cda2d9",
-              "sensor-result.json": "2c9d5f0f0f65b21b10255a89f5e9327d80cddbf197dd1779193ba77e40127083",
+              "metrics.json": "4019616967fb2f49be5781c6a397fdc82b4749c9558ea970f868e9e8e3849787",
+              "regression-result.json": "0f43359137096daf7565d6839fe7d5f56c98ef9676d28a1d60d5d95e9a0d11f6",
+              "sensor-result.json": "9e220f75dfbf7a62b84c2e4d3b199e7f50ce1f8151ddcf6b99a535e50ed9e9a9",
               "variant.json": "ff34982b0f8c2bee402085a0edf8ebf5b8272e12ce0ddf414b97afb4ddb6dd78"
             },
             "reason": "fitness positive and gates passed",
-            "run_id": "f90621ad",
+            "run_id": "ddfdbdab",
             "schema_version": "seed-organism.bundle-manifest.v0.1",
             "variant_id": "h2-b-genuine-winning-source"
           },
           "metrics": {
-            "adversarial_claim": "candidate metrics are inflated/fabricated from a real baseline",
+            "adversarial_claim": "treated as accepted source measurement for replay duplicate test",
             "baseline": {
               "coldstart_ms": 1820.0,
               "idle_watts": 71.0,
@@ -264,6 +262,11 @@
               "sustained_tokps": 41.0
             },
             "machine_id": "h2-b-source-stardust",
+            "measurement_quality": {
+              "decision_grade": true,
+              "flags": [],
+              "schema_version": "cursiveos.measurement-quality.h2-fixture.v0.1"
+            },
             "preset_version": "h2-test",
             "regression": {
               "failures": [],
@@ -278,7 +281,20 @@
               "sustained": 3
             },
             "schema_version": "seed-organism.metrics.h2.v0.1",
-            "source_provenance": "treated_as_genuine_winning_measurement_for_replay_source",
+            "source_provenance": "native_full_test_json",
+            "source_result_json": ".cursiveos/h2-adversarial-tester/fixtures/h2-b-source-stardust.json",
+            "structured_telemetry": {
+              "coldstart": {
+                "available": true
+              },
+              "idle_power": {},
+              "network": {
+                "available": true
+              },
+              "sustained": {
+                "available": true
+              }
+            },
             "variant": {
               "coldstart_ms": 1638.0,
               "idle_watts": 71.0,
@@ -287,7 +303,7 @@
               "sustained_tokps": 42.0
             }
           },
-          "path": ".cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T183301Z-f90621ad",
+          "path": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T185720Z-ddfdbdab",
           "reason": "fitness positive and gates passed",
           "regression_result": {
             "failures": [],
@@ -295,11 +311,11 @@
             "host_safety_passed": true,
             "machine_id": "h2-b-source-stardust",
             "passed": true,
-            "regression_result_hash": "e9f97900e2bce0cd5fd295d84f08d2911a44a42fe264299cefee8ff80f352227",
+            "regression_result_hash": "f19232b1b1575054b0b950c2a575a4fdd8112c22f63779abee57809f62120784",
             "reverted_cleanly": true,
             "schema_version": "seed-organism.regression-result.v0.1",
             "sensor_id": "regression.genesis.v1",
-            "timestamp": "2026-06-29T18:33:01+00:00",
+            "timestamp": "2026-06-29T18:57:20+00:00",
             "variant_id": "h2-b-genuine-winning-source"
           },
           "sensor_result": {
@@ -322,14 +338,21 @@
             "fitness_score": 0.10487805,
             "knobs_removed_vs_parent": 0,
             "machine_id": "h2-b-source-stardust",
+            "measurement_fingerprint": "8fd98d6fe45691044b4e603a003a319f7255c3bde6880278cdd3e9be2bb05c91",
             "missing_core_metrics": [],
             "parsimony_bonus": 0.0,
+            "parsimony_validation": {
+              "claimed_knobs_removed_vs_parent": 0,
+              "derived_knobs_removed_vs_parent": 0,
+              "failures": [],
+              "passed": true
+            },
             "preset_version": "h2-b-genuine-winning-source",
             "schema_version": "seed-organism.sensor-result.v0.1",
             "sensor_id": "perf.genesis.v1",
-            "sensor_result_hash": "880864183cb65ee860a8a483aeb3ddfa7d2508d6edc8cddfb63c7e08755ed8d4",
+            "sensor_result_hash": "dd04a083eacca285269de59f4f442016580e0abf2990d3263d4705a1d8dfe4a5",
             "severe_regressions": [],
-            "timestamp": "2026-06-29T18:33:01+00:00",
+            "timestamp": "2026-06-29T18:57:20+00:00",
             "variant": {
               "coldstart_ms": 1638.0,
               "idle_watts": 71.0,
@@ -356,18 +379,18 @@
             "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
             "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
             "--state-dir",
-            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-source-genuine",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay",
             "run-variant",
             "--variant",
-            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\inputs\\variant-mode-b-source.json",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\source\\variant-mode-b-source.json",
             "--metrics",
-            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\inputs\\metrics-mode-b-source.json",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\source\\metrics-mode-b-source.json",
             "--cycle-id",
             "210"
           ],
           "parsed_stdout": {
-            "bundle": ".cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T183301Z-f90621ad",
-            "bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566",
+            "bundle": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T185720Z-ddfdbdab",
+            "bundle_hash": "e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406",
             "confidence": "0.70",
             "decision": "accepted",
             "fitness_score": "0.104878",
@@ -376,11 +399,12 @@
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "variant: h2-b-genuine-winning-source\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566\nbundle: .cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T183301Z-f90621ad\n"
+          "stdout": "variant: h2-b-genuine-winning-source\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406\nbundle: .cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T185720Z-ddfdbdab\n"
         },
-        "source_state_dir": ".cursiveos\\h2-adversarial-tester\\mode-b-source-genuine"
+        "source_cycle_id": 210,
+        "source_state_dir": ".cursiveos\\h2-adversarial-tester\\mode-b-replay"
       },
-      "gate_triggered": null,
+      "gate_triggered": "measurement replay gate",
       "mode": "B",
       "name": "replay as independent machine/session",
       "payout_report": {
@@ -400,54 +424,54 @@
             "contributors": "1",
             "cycle": "211",
             "report": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\cycles\\cycle-211-payout.json",
-            "report_hash": "d4ef6fe8061fbe4edc6a63c851b98bff12ceab41b8f86a32c53b23484b5fa569"
+            "report_hash": "96e3d977296a91d207c83e381ebb32143800acdae821d872bae26127a9990f42"
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "cycle: 211\ncontributors: 1\nreport_hash: d4ef6fe8061fbe4edc6a63c851b98bff12ceab41b8f86a32c53b23484b5fa569\nreport: .cursiveos\\h2-adversarial-tester\\mode-b-replay\\cycles\\cycle-211-payout.json\n"
+          "stdout": "cycle: 211\ncontributors: 1\nreport_hash: 96e3d977296a91d207c83e381ebb32143800acdae821d872bae26127a9990f42\nreport: .cursiveos\\h2-adversarial-tester\\mode-b-replay\\cycles\\cycle-211-payout.json\n"
         },
         "contributors": [
           {
-            "contributor_id": "h2-malicious-contributor",
-            "current_cycle_payout_sats": 20000,
-            "cycle_fitness": 0.10487805,
+            "contributor_id": "h2-honest-contributor",
+            "current_cycle_payout_sats": 0,
+            "cycle_fitness": 0.0,
             "lifetime_fitness": 0.10487805,
             "lifetime_payout_sats": 80000,
-            "total_payout_sats": 100000
+            "total_payout_sats": 80000
           }
         ],
         "payout_triggered": true,
-        "report_hash": "d4ef6fe8061fbe4edc6a63c851b98bff12ceab41b8f86a32c53b23484b5fa569",
+        "report_hash": "96e3d977296a91d207c83e381ebb32143800acdae821d872bae26127a9990f42",
         "report_path": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\cycles\\cycle-211-payout.json"
       },
-      "payout_triggered": true,
-      "pipeline": "seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> bundle/ledger",
-      "pipeline_verdict": "accepted",
-      "reason": "fitness positive and gates passed",
+      "payout_triggered": false,
+      "pipeline": "seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> replay_gate -> bundle/ledger",
+      "pipeline_verdict": "rejected_replay",
+      "reason": "replay gate: measurement fingerprint already accepted in bundle e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406 for machine h2-b-source-stardust",
       "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-b-replay",
       "submitted_bundle": {
-        "bundle_hash": "cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637",
+        "bundle_hash": "4a69e4e8a752250eaf4625e3e456108d4e94905b5fb82c125680dd6cf4e0fbea",
         "confidence": 0.7,
-        "decision": "accepted",
+        "decision": "rejected_replay",
         "fitness_score": 0.104878,
         "manifest": {
-          "bundle_hash": "cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637",
-          "created_at": "2026-06-29T18:33:01+00:00",
+          "bundle_hash": "4a69e4e8a752250eaf4625e3e456108d4e94905b5fb82c125680dd6cf4e0fbea",
+          "created_at": "2026-06-29T18:57:20+00:00",
           "cycle_id": "211",
-          "decision": "accepted",
+          "decision": "rejected_replay",
           "files": {
-            "metrics.json": "e91551f3174b4be1312c755e0a0e953eade80197e4e5259e071be9932cba6327",
-            "regression-result.json": "8fdb80c40ed7cf5cc3b3fc7d707b4640ad29780f93e559dc4a0c386e24c999db",
-            "sensor-result.json": "9cc3ef3166e7b2a7676dad6916d2a9231687e216d5a91381734e98ceaa3f8916",
+            "metrics.json": "c9a3e146af1db8a9b3aeeeb60c5a792fae95ed407684c59f54baec4a0a581d2f",
+            "regression-result.json": "e03d87fe825c95ea92502d3ac12a73c74eb25bcd174d3d21540b47be541c20d0",
+            "sensor-result.json": "b51882902de5b7c70f0641094139930d2f42eb87de05a7aece213f1cfcaa7663",
             "variant.json": "b9b1501e9a4c0b8b39d873499148563be32cc3bfe78b2f76e782c594049317d9"
           },
-          "reason": "fitness positive and gates passed",
-          "run_id": "480caaed",
+          "reason": "replay gate: measurement fingerprint already accepted in bundle e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406 for machine h2-b-source-stardust",
+          "run_id": "bcd6c2cf",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "h2-b-replay-as-independent"
         },
         "metrics": {
-          "adversarial_claim": "candidate metrics are inflated/fabricated from a real baseline",
+          "adversarial_claim": "treated as accepted source measurement for replay duplicate test",
           "baseline": {
             "coldstart_ms": 1820.0,
             "idle_watts": 71.0,
@@ -457,6 +481,11 @@
           },
           "hardware_fingerprint_hash": "h2-b-fake-independent-laptop",
           "machine_id": "h2-b-fake-independent-laptop",
+          "measurement_quality": {
+            "decision_grade": true,
+            "flags": [],
+            "schema_version": "cursiveos.measurement-quality.h2-fixture.v0.1"
+          },
           "preset_version": "h2-test",
           "regression": {
             "failures": [],
@@ -466,7 +495,7 @@
           },
           "replay_attack": {
             "claim": "same winning metrics resubmitted as a different machine/session",
-            "copied_from_bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566"
+            "copied_from_bundle_hash": "e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406"
           },
           "sample_counts": {
             "coldstart": 3,
@@ -475,7 +504,20 @@
             "sustained": 3
           },
           "schema_version": "seed-organism.metrics.h2.v0.1",
-          "source_provenance": "treated_as_genuine_winning_measurement_for_replay_source",
+          "source_provenance": "native_full_test_json",
+          "source_result_json": ".cursiveos/h2-adversarial-tester/fixtures/h2-b-source-stardust.json",
+          "structured_telemetry": {
+            "coldstart": {
+              "available": true
+            },
+            "idle_power": {},
+            "network": {
+              "available": true
+            },
+            "sustained": {
+              "available": true
+            }
+          },
           "variant": {
             "coldstart_ms": 1638.0,
             "idle_watts": 71.0,
@@ -484,19 +526,19 @@
             "sustained_tokps": 42.0
           }
         },
-        "path": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T183301Z-480caaed",
-        "reason": "fitness positive and gates passed",
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T185720Z-bcd6c2cf",
+        "reason": "replay gate: measurement fingerprint already accepted in bundle e2c11a4a9214791c0284f9e144cea55071397e6febfc0008cb44f27342a66406 for machine h2-b-source-stardust",
         "regression_result": {
           "failures": [],
           "full_test_passed": true,
           "host_safety_passed": true,
           "machine_id": "h2-b-fake-independent-laptop",
           "passed": true,
-          "regression_result_hash": "429ef729908099e31089cb0c9ef6ecafff3dbfc96a111912f458ad074639ef73",
+          "regression_result_hash": "acda38c2c9ed081af9e05406986dafa0acc7c30cf5072de1c3e7c914a8ff0b38",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-29T18:33:01+00:00",
+          "timestamp": "2026-06-29T18:57:20+00:00",
           "variant_id": "h2-b-replay-as-independent"
         },
         "sensor_result": {
@@ -519,14 +561,21 @@
           "fitness_score": 0.10487805,
           "knobs_removed_vs_parent": 0,
           "machine_id": "h2-b-fake-independent-laptop",
+          "measurement_fingerprint": "8fd98d6fe45691044b4e603a003a319f7255c3bde6880278cdd3e9be2bb05c91",
           "missing_core_metrics": [],
           "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 0,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [],
+            "passed": true
+          },
           "preset_version": "h2-b-replay-as-independent",
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "4288de926721490ede8396c58a9ef64ca38c50bac53dfc2d7c16ccb18f333fdf",
+          "sensor_result_hash": "77922dd30a60d7701937e3dedd7fb301ea1d285b5106ca5a34a6f2dcd49c3a74",
           "severe_regressions": [],
-          "timestamp": "2026-06-29T18:33:01+00:00",
+          "timestamp": "2026-06-29T18:57:20+00:00",
           "variant": {
             "coldstart_ms": 1638.0,
             "idle_watts": 71.0,
@@ -548,38 +597,38 @@
           "variant_id": "h2-b-replay-as-independent"
         }
       },
-      "submitted_metrics_file": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\metrics-mode-b-replay.json",
-      "submitted_variant_file": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\variant-mode-b-replay.json"
+      "submitted_metrics_file": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\attack\\metrics-mode-b-replay.json",
+      "submitted_variant_file": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\attack\\variant-mode-b-replay.json"
     },
     {
-      "accepted": true,
+      "accepted": false,
       "attack": "Claimed knob removals that the genome does not actually reflect.",
       "deferred_to_trust_layer": false,
-      "gate_triggered": null,
+      "gate_triggered": "shared invariant gate",
       "mode": "C",
       "name": "parsimony gaming",
-      "payout_triggered": true,
+      "payout_triggered": false,
       "pipeline": "QD guarded path plus direct seed CLI path probe",
-      "pipeline_verdict": "accepted",
-      "reason": "QD path caught overclaim, but direct seed run-variant accepted it",
+      "pipeline_verdict": "rejected_invariant",
+      "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
       "submitted_bundle": {
-        "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+        "bundle_hash": "1327a043f5b6a8554d27492a68688c4a1d09076afd6285be527016dbaf641210",
         "confidence": 0.7,
-        "decision": "accepted",
-        "fitness_score": 0.15,
+        "decision": "rejected_invariant",
+        "fitness_score": 0.0,
         "manifest": {
-          "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
-          "created_at": "2026-06-29T18:33:01+00:00",
+          "bundle_hash": "1327a043f5b6a8554d27492a68688c4a1d09076afd6285be527016dbaf641210",
+          "created_at": "2026-06-29T18:57:21+00:00",
           "cycle_id": "221",
-          "decision": "accepted",
+          "decision": "rejected_invariant",
           "files": {
             "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
-            "regression-result.json": "b17348d51dd3b55d75b74d19a1194657a08af60f70b6a5bd033773cc91fb988e",
-            "sensor-result.json": "9e519e0d5700b344057db2b6021ba9b09584a61efc0d182c67fa3d0fb2c4d095",
+            "regression-result.json": "a1caad3ad1b4b11819cc1b2bd5ac64e534d37d014171de4d2eb2b2fa652cf083",
+            "sensor-result.json": "1ada4bb6937f68420087f83f9657333a782b4c5f22d30ab7617027ac92450baf",
             "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
           },
-          "reason": "fitness positive and gates passed",
-          "run_id": "e18d6e61",
+          "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+          "run_id": "0aa07e21",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "h2-c-direct-overdeclared-parsimony"
         },
@@ -614,19 +663,19 @@
             "sustained_tokps": 41.0
           }
         },
-        "path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61",
-        "reason": "fitness positive and gates passed",
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T185721Z-0aa07e21",
+        "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
         "regression_result": {
           "failures": [],
           "full_test_passed": true,
           "host_safety_passed": true,
           "machine_id": "h2-c-direct-source",
           "passed": true,
-          "regression_result_hash": "796677364bd8c97ec32c6fa86f8b5112bdef804fce91e456d717fd9d01b657c3",
+          "regression_result_hash": "631cad9eb03d649f1d32305bca70e8b005f7ebb547b6a967867feebc82286c40",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-29T18:33:01+00:00",
+          "timestamp": "2026-06-29T18:57:21+00:00",
           "variant_id": "h2-c-direct-overdeclared-parsimony"
         },
         "sensor_result": {
@@ -646,17 +695,26 @@
             "network_pct": 0.0,
             "sustained_pct": 0.0
           },
-          "fitness_score": 0.15,
-          "knobs_removed_vs_parent": 5,
+          "fitness_score": 0.0,
+          "knobs_removed_vs_parent": 0,
           "machine_id": "h2-c-direct-source",
+          "measurement_fingerprint": "e1ef13a0b8a340e542a1a7a197c797e8ba48845d17579515aec41df75efe45a0",
           "missing_core_metrics": [],
-          "parsimony_bonus": 0.15,
+          "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 5,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [
+              "parsimony invariant failed: claimed 5 removed knobs but genome derives 0"
+            ],
+            "passed": false
+          },
           "preset_version": "h2-c-direct-overdeclared-parsimony",
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "c3293d5c082213599a8260deaa56a1c32122707cccad18094443efa55c23cd18",
+          "sensor_result_hash": "b54089ee1048d734a7e66f98d6d45579e44ef21198b9d433d52bb24f53b611ef",
           "severe_regressions": [],
-          "timestamp": "2026-06-29T18:33:01+00:00",
+          "timestamp": "2026-06-29T18:57:21+00:00",
           "variant": {
             "coldstart_ms": 1820.0,
             "idle_watts": 71.0,
@@ -694,7 +752,7 @@
       },
       "subtests": {
         "direct_seed_submission": {
-          "accepted": true,
+          "accepted": false,
           "attack": "Claimed knob removals that the submitted genome did not actually reflect, through run-variant.",
           "cli": {
             "cmd": [
@@ -711,21 +769,21 @@
               "221"
             ],
             "parsed_stdout": {
-              "bundle": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61",
-              "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+              "bundle": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T185721Z-0aa07e21",
+              "bundle_hash": "1327a043f5b6a8554d27492a68688c4a1d09076afd6285be527016dbaf641210",
               "confidence": "0.70",
-              "decision": "accepted",
-              "fitness_score": "0.150000",
-              "reason": "fitness positive and gates passed",
+              "decision": "rejected_invariant",
+              "fitness_score": "0.000000",
+              "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
               "variant": "h2-c-direct-overdeclared-parsimony"
             },
             "returncode": 0,
             "stderr": "",
-            "stdout": "variant: h2-c-direct-overdeclared-parsimony\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.150000\nconfidence: 0.70\nbundle_hash: 0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610\nbundle: .cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61\n"
+            "stdout": "variant: h2-c-direct-overdeclared-parsimony\ndecision: rejected_invariant\nreason: parsimony invariant failed: claimed 5 removed knobs but genome derives 0\nfitness_score: 0.000000\nconfidence: 0.70\nbundle_hash: 1327a043f5b6a8554d27492a68688c4a1d09076afd6285be527016dbaf641210\nbundle: .cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T185721Z-0aa07e21\n"
           },
           "cycle_id": 221,
           "deferred_to_trust_layer": false,
-          "gate_triggered": null,
+          "gate_triggered": "shared invariant gate",
           "mode": "C-direct",
           "name": "direct seed parsimony overclaim bypass",
           "payout_report": {
@@ -742,52 +800,43 @@
                 "100000"
               ],
               "parsed_stdout": {
-                "contributors": "1",
+                "contributors": "0",
                 "cycle": "221",
                 "report": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json",
-                "report_hash": "54c29f113c6a5a5c1be7d74ae229ff526107412896430906d60f0de4e7e73999"
+                "report_hash": "998e8624bd744757b1375637a34b9abc6cd7ff3454e91b5e12c85b77424e92d7"
               },
               "returncode": 0,
               "stderr": "",
-              "stdout": "cycle: 221\ncontributors: 1\nreport_hash: 54c29f113c6a5a5c1be7d74ae229ff526107412896430906d60f0de4e7e73999\nreport: .cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json\n"
+              "stdout": "cycle: 221\ncontributors: 0\nreport_hash: 998e8624bd744757b1375637a34b9abc6cd7ff3454e91b5e12c85b77424e92d7\nreport: .cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json\n"
             },
-            "contributors": [
-              {
-                "contributor_id": "h2-malicious-contributor",
-                "current_cycle_payout_sats": 20000,
-                "cycle_fitness": 0.15,
-                "lifetime_fitness": 0.15,
-                "lifetime_payout_sats": 80000,
-                "total_payout_sats": 100000
-              }
-            ],
-            "payout_triggered": true,
-            "report_hash": "54c29f113c6a5a5c1be7d74ae229ff526107412896430906d60f0de4e7e73999",
+            "contributors": [],
+            "payout_triggered": false,
+            "report_hash": "998e8624bd744757b1375637a34b9abc6cd7ff3454e91b5e12c85b77424e92d7",
             "report_path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json"
           },
-          "payout_triggered": true,
+          "payout_triggered": false,
           "pipeline": "seed_organism.py CLI: run-variant direct acceptance path",
-          "pipeline_verdict": "accepted",
-          "reason": "fitness positive and gates passed",
+          "pipeline_verdict": "rejected_invariant",
+          "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
           "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass",
           "submitted_bundle": {
-            "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+            "bundle_hash": "1327a043f5b6a8554d27492a68688c4a1d09076afd6285be527016dbaf641210",
             "confidence": 0.7,
-            "decision": "accepted",
-            "fitness_score": 0.15,
+            "decision": "rejected_invariant",
+            "fitness_score": 0.0,
             "manifest": {
-              "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
-              "created_at": "2026-06-29T18:33:01+00:00",
+              "bundle_hash": "1327a043f5b6a8554d27492a68688c4a1d09076afd6285be527016dbaf641210",
+              "created_at": "2026-06-29T18:57:21+00:00",
               "cycle_id": "221",
-              "decision": "accepted",
+              "decision": "rejected_invariant",
               "files": {
                 "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
-                "regression-result.json": "b17348d51dd3b55d75b74d19a1194657a08af60f70b6a5bd033773cc91fb988e",
-                "sensor-result.json": "9e519e0d5700b344057db2b6021ba9b09584a61efc0d182c67fa3d0fb2c4d095",
+                "regression-result.json": "a1caad3ad1b4b11819cc1b2bd5ac64e534d37d014171de4d2eb2b2fa652cf083",
+                "sensor-result.json": "1ada4bb6937f68420087f83f9657333a782b4c5f22d30ab7617027ac92450baf",
                 "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
               },
-              "reason": "fitness positive and gates passed",
-              "run_id": "e18d6e61",
+              "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+              "run_id": "0aa07e21",
               "schema_version": "seed-organism.bundle-manifest.v0.1",
               "variant_id": "h2-c-direct-overdeclared-parsimony"
             },
@@ -822,19 +871,19 @@
                 "sustained_tokps": 41.0
               }
             },
-            "path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61",
-            "reason": "fitness positive and gates passed",
+            "path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T185721Z-0aa07e21",
+            "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
             "regression_result": {
               "failures": [],
               "full_test_passed": true,
               "host_safety_passed": true,
               "machine_id": "h2-c-direct-source",
               "passed": true,
-              "regression_result_hash": "796677364bd8c97ec32c6fa86f8b5112bdef804fce91e456d717fd9d01b657c3",
+              "regression_result_hash": "631cad9eb03d649f1d32305bca70e8b005f7ebb547b6a967867feebc82286c40",
               "reverted_cleanly": true,
               "schema_version": "seed-organism.regression-result.v0.1",
               "sensor_id": "regression.genesis.v1",
-              "timestamp": "2026-06-29T18:33:01+00:00",
+              "timestamp": "2026-06-29T18:57:21+00:00",
               "variant_id": "h2-c-direct-overdeclared-parsimony"
             },
             "sensor_result": {
@@ -854,17 +903,26 @@
                 "network_pct": 0.0,
                 "sustained_pct": 0.0
               },
-              "fitness_score": 0.15,
-              "knobs_removed_vs_parent": 5,
+              "fitness_score": 0.0,
+              "knobs_removed_vs_parent": 0,
               "machine_id": "h2-c-direct-source",
+              "measurement_fingerprint": "e1ef13a0b8a340e542a1a7a197c797e8ba48845d17579515aec41df75efe45a0",
               "missing_core_metrics": [],
-              "parsimony_bonus": 0.15,
+              "parsimony_bonus": 0.0,
+              "parsimony_validation": {
+                "claimed_knobs_removed_vs_parent": 5,
+                "derived_knobs_removed_vs_parent": 0,
+                "failures": [
+                  "parsimony invariant failed: claimed 5 removed knobs but genome derives 0"
+                ],
+                "passed": false
+              },
               "preset_version": "h2-c-direct-overdeclared-parsimony",
               "schema_version": "seed-organism.sensor-result.v0.1",
               "sensor_id": "perf.genesis.v1",
-              "sensor_result_hash": "c3293d5c082213599a8260deaa56a1c32122707cccad18094443efa55c23cd18",
+              "sensor_result_hash": "b54089ee1048d734a7e66f98d6d45579e44ef21198b9d433d52bb24f53b611ef",
               "severe_regressions": [],
-              "timestamp": "2026-06-29T18:33:01+00:00",
+              "timestamp": "2026-06-29T18:57:21+00:00",
               "variant": {
                 "coldstart_ms": 1820.0,
                 "idle_watts": 71.0,
@@ -928,37 +986,37 @@
                 "contributors": "0",
                 "cycle": "220",
                 "report": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json",
-                "report_hash": "0d65dde3aa9302363f519bcbfda610c5720acd788bc4ad2b34718a360382593a"
+                "report_hash": "d3704eb143242489fa91714a86f6e0da8af45234848334103b857ff9177cb39c"
               },
               "returncode": 0,
               "stderr": "",
-              "stdout": "cycle: 220\ncontributors: 0\nreport_hash: 0d65dde3aa9302363f519bcbfda610c5720acd788bc4ad2b34718a360382593a\nreport: .cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json\n"
+              "stdout": "cycle: 220\ncontributors: 0\nreport_hash: d3704eb143242489fa91714a86f6e0da8af45234848334103b857ff9177cb39c\nreport: .cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json\n"
             },
             "contributors": [],
             "payout_triggered": false,
-            "report_hash": "0d65dde3aa9302363f519bcbfda610c5720acd788bc4ad2b34718a360382593a",
+            "report_hash": "d3704eb143242489fa91714a86f6e0da8af45234848334103b857ff9177cb39c",
             "report_path": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json"
           },
-          "pipeline_verdict": "rejected_negative_fitness",
+          "pipeline_verdict": "rejected_unverified_evidence",
           "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded",
           "submitted_bundle": {
-            "bundle_hash": "ae58df5d2634e6670c2a4a85c1a551fb80ea618d13984c9ba39fcbc10402b88d",
+            "bundle_hash": "460d101ce2d0940d7effa9798252e357ad9f331a02b4f4eb7850ed780126ee05",
             "confidence": 0.7,
-            "decision": "rejected_negative_fitness",
+            "decision": "rejected_unverified_evidence",
             "fitness_score": 0.0,
             "manifest": {
-              "bundle_hash": "ae58df5d2634e6670c2a4a85c1a551fb80ea618d13984c9ba39fcbc10402b88d",
-              "created_at": "2026-06-29T18:33:01+00:00",
+              "bundle_hash": "460d101ce2d0940d7effa9798252e357ad9f331a02b4f4eb7850ed780126ee05",
+              "created_at": "2026-06-29T18:57:21+00:00",
               "cycle_id": "220",
-              "decision": "rejected_negative_fitness",
+              "decision": "rejected_unverified_evidence",
               "files": {
                 "metrics.json": "9eaab94415c0e6f0a6bc939de9c1719c7b963947f43c44412bd029c23f90b772",
-                "regression-result.json": "3bd64698eee981b0a4bc3f8fc8f7a957f0dfc278aff297ca3585287542ea14dc",
-                "sensor-result.json": "65beab4aa20db1ece9ed81df0a70be75aea37792cf3722a792709a35a1b2a3a4",
+                "regression-result.json": "cb349cc813605f03876a8dac81484aca84a02b763a5747b707658a5e222649ec",
+                "sensor-result.json": "63a4646f26527f6dae8b39b1690cfc04e7918b74f6e445d16cd18f94354cc075",
                 "variant.json": "f8b7cdf02d3bdbde52c5fbf4428ddca5533fd8fc503038c11ed5e3e3a3262f09"
               },
-              "reason": "fitness 0.0000 below acceptance threshold",
-              "run_id": "ce9a0c5b",
+              "reason": "metrics evidence gate: missing native full-test provenance/source_result_json; metrics evidence gate: missing measurement_quality; metrics evidence gate: missing structured_telemetry",
+              "run_id": "ca29df28",
               "schema_version": "seed-organism.bundle-manifest.v0.1",
               "variant_id": "h2-c-qd-overdeclared-parsimony"
             },
@@ -993,19 +1051,19 @@
                 "sustained_tokps": 41.0
               }
             },
-            "path": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\runs\\cycle-220\\h2-c-qd-overdeclared-parsimony-20260629T183301Z-ce9a0c5b",
-            "reason": "fitness 0.0000 below acceptance threshold",
+            "path": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\runs\\cycle-220\\h2-c-qd-overdeclared-parsimony-20260629T185721Z-ca29df28",
+            "reason": "metrics evidence gate: missing native full-test provenance/source_result_json; metrics evidence gate: missing measurement_quality; metrics evidence gate: missing structured_telemetry",
             "regression_result": {
               "failures": [],
               "full_test_passed": true,
               "host_safety_passed": true,
               "machine_id": "h2-c-qd-source",
               "passed": true,
-              "regression_result_hash": "5e89fc28a32c130cb4f232eceb40f731d02739468ffdec37b14db29e7d2b70b9",
+              "regression_result_hash": "20ef27631e65a8ea3056cfdbbc0c370564715473d4e4ad9cc30b7c5914f754b8",
               "reverted_cleanly": true,
               "schema_version": "seed-organism.regression-result.v0.1",
               "sensor_id": "regression.genesis.v1",
-              "timestamp": "2026-06-29T18:33:01+00:00",
+              "timestamp": "2026-06-29T18:57:21+00:00",
               "variant_id": "h2-c-qd-overdeclared-parsimony"
             },
             "sensor_result": {
@@ -1028,14 +1086,21 @@
               "fitness_score": 0.0,
               "knobs_removed_vs_parent": 0,
               "machine_id": "h2-c-qd-source",
+              "measurement_fingerprint": "e1ef13a0b8a340e542a1a7a197c797e8ba48845d17579515aec41df75efe45a0",
               "missing_core_metrics": [],
               "parsimony_bonus": 0.0,
+              "parsimony_validation": {
+                "claimed_knobs_removed_vs_parent": 0,
+                "derived_knobs_removed_vs_parent": 0,
+                "failures": [],
+                "passed": true
+              },
               "preset_version": "qd-sim",
               "schema_version": "seed-organism.sensor-result.v0.1",
               "sensor_id": "perf.genesis.v1",
-              "sensor_result_hash": "92be51f13e93d20f4a81e727b1b1505d3d75cee59be8c4fb0fbb54cff45da5f8",
+              "sensor_result_hash": "9fa9a1ddf835e41e29b3cbe6c9963eba9fc82e99304b6a9b4be292805da3e73b",
               "severe_regressions": [],
-              "timestamp": "2026-06-29T18:33:01+00:00",
+              "timestamp": "2026-06-29T18:57:21+00:00",
               "variant": {
                 "coldstart_ms": 1820.0,
                 "idle_watts": 71.0,
@@ -1075,7 +1140,7 @@
       }
     },
     {
-      "accepted": true,
+      "accepted": false,
       "attack": "Asserted three independent confirmations for near-identical same-source measurements via --confirmations 3.",
       "cli": {
         "cmd": [
@@ -1098,27 +1163,28 @@
           "230"
         ],
         "parsed_stdout": {
-          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T183302Z-2453ec89",
-          "bundle_hash": "974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b",
+          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T185721Z-117deb6f",
+          "bundle_hash": "2f89afa0b1c0a99949604f104844e7c0b6b1183c536c5d17948f08e559a148fc",
           "confidence": "0.88",
-          "decision": "accepted",
+          "decision": "inconclusive",
           "fitness_score": "0.104878",
-          "reason": "fitness positive and gates passed",
+          "reason": "confirmation independence gate: confirmation_count > 1 is caller-asserted; requires CursiveRoot independent aggregation before acceptance",
           "variant": "h2-d-confirmation-sybil"
         },
         "returncode": 0,
         "stderr": "",
-        "stdout": "variant: h2-d-confirmation-sybil\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.88\nbundle_hash: 974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b\nbundle: .cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T183302Z-2453ec89\n"
+        "stdout": "variant: h2-d-confirmation-sybil\ndecision: inconclusive\nreason: confirmation independence gate: confirmation_count > 1 is caller-asserted; requires CursiveRoot independent aggregation before acceptance\nfitness_score: 0.104878\nconfidence: 0.88\nbundle_hash: 2f89afa0b1c0a99949604f104844e7c0b6b1183c536c5d17948f08e559a148fc\nbundle: .cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T185721Z-117deb6f\n"
       },
       "cycle_id": 230,
       "deferred_to_trust_layer": true,
       "extra": {
         "asserted_confirmations": 3,
         "candidate_result_json": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-candidate-result.json",
-        "current_code_limitation": "confirmation_count is an asserted integer; current code does not auto-count independent machine/session bundles",
-        "parent_result_json": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-parent-result.json"
+        "current_code_limitation": "caller-asserted confirmation_count is now rejected/inconclusive; real confidence aggregation still requires CursiveRoot-derived independent machine/session evidence",
+        "parent_result_json": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-parent-result.json",
+        "remaining_trust_layer_gap": "system-owned independent confirmation aggregation is not implemented in this local runner"
       },
-      "gate_triggered": null,
+      "gate_triggered": "confirmation independence gate",
       "mode": "D",
       "name": "confirmation Sybil",
       "payout_report": {
@@ -1135,52 +1201,43 @@
             "100000"
           ],
           "parsed_stdout": {
-            "contributors": "1",
+            "contributors": "0",
             "cycle": "230",
             "report": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\cycles\\cycle-230-payout.json",
-            "report_hash": "fec570cb94487a4ddbc13aece498161f469fa850aaec688ffe0bbba50abb0a8f"
+            "report_hash": "6e57091e9dc91e590bfeb0c6f9ef224543c7e36d945eee2bfbf6895c7e9aec0e"
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "cycle: 230\ncontributors: 1\nreport_hash: fec570cb94487a4ddbc13aece498161f469fa850aaec688ffe0bbba50abb0a8f\nreport: .cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\cycles\\cycle-230-payout.json\n"
+          "stdout": "cycle: 230\ncontributors: 0\nreport_hash: 6e57091e9dc91e590bfeb0c6f9ef224543c7e36d945eee2bfbf6895c7e9aec0e\nreport: .cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\cycles\\cycle-230-payout.json\n"
         },
-        "contributors": [
-          {
-            "contributor_id": "h2-malicious-contributor",
-            "current_cycle_payout_sats": 20000,
-            "cycle_fitness": 0.10487805,
-            "lifetime_fitness": 0.10487805,
-            "lifetime_payout_sats": 80000,
-            "total_payout_sats": 100000
-          }
-        ],
-        "payout_triggered": true,
-        "report_hash": "fec570cb94487a4ddbc13aece498161f469fa850aaec688ffe0bbba50abb0a8f",
+        "contributors": [],
+        "payout_triggered": false,
+        "report_hash": "6e57091e9dc91e590bfeb0c6f9ef224543c7e36d945eee2bfbf6895c7e9aec0e",
         "report_path": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\cycles\\cycle-230-payout.json"
       },
-      "payout_triggered": true,
+      "payout_triggered": false,
       "pipeline": "seed_organism.py CLI: screen-variant -> comparison_metrics(--confirmations) -> record_evaluation",
-      "pipeline_verdict": "accepted",
-      "reason": "fitness positive and gates passed",
+      "pipeline_verdict": "inconclusive",
+      "reason": "confirmation independence gate: confirmation_count > 1 is caller-asserted; requires CursiveRoot independent aggregation before acceptance",
       "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil",
       "submitted_bundle": {
-        "bundle_hash": "974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b",
+        "bundle_hash": "2f89afa0b1c0a99949604f104844e7c0b6b1183c536c5d17948f08e559a148fc",
         "confidence": 0.88,
-        "decision": "accepted",
+        "decision": "inconclusive",
         "fitness_score": 0.104878,
         "manifest": {
-          "bundle_hash": "974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b",
-          "created_at": "2026-06-29T18:33:02+00:00",
+          "bundle_hash": "2f89afa0b1c0a99949604f104844e7c0b6b1183c536c5d17948f08e559a148fc",
+          "created_at": "2026-06-29T18:57:21+00:00",
           "cycle_id": "230",
-          "decision": "accepted",
+          "decision": "inconclusive",
           "files": {
-            "metrics.json": "926b8b1bd199ee9aa95a00bae3b4e04872b7b72b47af1d822065cd070fe189b3",
-            "regression-result.json": "40024db0b3ca2f67724cd25de3095ee62a7f22f011e15815c5432b931e49bd6f",
-            "sensor-result.json": "6045bffec621126b435ef1551424628d0426ca7e4aefefd094eac50a32fa2160",
+            "metrics.json": "448db8ea563a62c2aa1d2256fffa972a9be584eccb6e040a484443e0b9e28895",
+            "regression-result.json": "6b97b960e0832a428f8392678fd6128619a184e53ee636e8d6c1750ac698e407",
+            "sensor-result.json": "b860643e44504dceb011b15587d0decebb3d4abd1de1d45c7f5210aa3803e913",
             "variant.json": "4db5cd183b7081657c45fd792fd5dca41100ae601ce12a2eb5c4e584d7129380"
           },
-          "reason": "fitness positive and gates passed",
-          "run_id": "2453ec89",
+          "reason": "confirmation independence gate: confirmation_count > 1 is caller-asserted; requires CursiveRoot independent aggregation before acceptance",
+          "run_id": "117deb6f",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "h2-d-confirmation-sybil"
         },
@@ -1203,6 +1260,7 @@
           "comparison_role": "screening_only_single_session",
           "confidence": 0.875,
           "confirmation_count": 3,
+          "confirmation_source": "caller_asserted_cli",
           "hardware_fingerprint_hash": "h2-d-single-source-rig",
           "machine_id": "h2-d-single-source-rig",
           "preset_version": "h2-d-confirmation-sybil",
@@ -1358,19 +1416,19 @@
             "sustained_tokps": 42.0
           }
         },
-        "path": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T183302Z-2453ec89",
-        "reason": "fitness positive and gates passed",
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T185721Z-117deb6f",
+        "reason": "confirmation independence gate: confirmation_count > 1 is caller-asserted; requires CursiveRoot independent aggregation before acceptance",
         "regression_result": {
           "failures": [],
           "full_test_passed": true,
           "host_safety_passed": true,
           "machine_id": "h2-d-single-source-rig",
           "passed": true,
-          "regression_result_hash": "cce1420faae17b028768a934eab06c785bb2607b0910e581d18a6295c2b1dea5",
+          "regression_result_hash": "9d63ce5ed899275f5f109663c17596a99c101cb2e5d65d0427b028ac2d819fc4",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-29T18:33:02+00:00",
+          "timestamp": "2026-06-29T18:57:21+00:00",
           "variant_id": "h2-d-confirmation-sybil"
         },
         "sensor_result": {
@@ -1393,14 +1451,21 @@
           "fitness_score": 0.10487805,
           "knobs_removed_vs_parent": 0,
           "machine_id": "h2-d-single-source-rig",
+          "measurement_fingerprint": "bb06bfba6680c29771604686eebe60eda797d99defaac78a55ab6d226445cfb9",
           "missing_core_metrics": [],
           "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 0,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [],
+            "passed": true
+          },
           "preset_version": "h2-d-confirmation-sybil",
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "bfb62e7a2c810b820b727ad8ac2dcda5e14a341b190996f4e272bc922d28127a",
+          "sensor_result_hash": "6596bb262e413f64c12b37775ba0813a914845693ff4ba19a0f5683e44088afd",
           "severe_regressions": [],
-          "timestamp": "2026-06-29T18:33:02+00:00",
+          "timestamp": "2026-06-29T18:57:21+00:00",
           "variant": {
             "coldstart_ms": 1638.0,
             "idle_watts": 71.0,

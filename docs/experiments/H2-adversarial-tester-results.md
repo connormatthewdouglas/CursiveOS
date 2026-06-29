@@ -1,13 +1,13 @@
 # H2 — Adversarial / Dishonest Tester Experiment Results
 
-Status: **pre-registered before adversarial submissions were run**
+Status: **pre-registered before adversarial submissions were run; remediation pass applied after initial failure**
 Branch: `h2-adversarial-tester`
 
 ## Purpose
 
-H2 tests whether the current seed-organism acceptance pipeline rejects fabricated or dishonest tester contributions **without relying on a trusted center**.
+H2 tests whether the seed-organism acceptance pipeline rejects fabricated or dishonest tester contributions **without relying on a trusted center**.
 
-The experiment must submit malicious bundles through the real acceptance path where possible, not through a mocked verdict function. The point is to find holes, not to adjust the acceptance logic until it passes.
+The experiment submits malicious bundles through the real acceptance path where possible, not through a mocked verdict function. The initial run intentionally did **not** modify acceptance logic to make H2 pass; it exposed the holes below. The remediation pass then hardened the shared seed/QD acceptance boundary and reran the same attack shapes.
 
 ## Pre-registered pass / fail thresholds
 
@@ -31,7 +31,7 @@ If confirmation Sybil resistance cannot be defended by the current code without 
 
 Do not pretend that near-identical confirmations from one source are independently trustworthy if the current code has no mechanism to distinguish them.
 
-## Attack modes to run
+## Attack modes
 
 - **Mode A — inflated delta:** real baseline metrics, but candidate metrics fabricate an improvement that was not measured.
 - **Mode B — replay:** copy a genuine winning measurement from one machine/run and resubmit it as a different machine/session to fake independent confirmation.
@@ -45,20 +45,14 @@ The experiment is grounded in:
 - `tools/seed_organism.py`
 - `tools/qd_organism.py`
 - regression gates
+- evidence/provenance gates
+- replay guard
 - confirmation aggregation via `--confirmations`
-- QD parsimony guard
+- QD parsimony guard and shared seed parsimony invariant
 - `references/seed-organism/variant-*.json`
 - `references/seed-organism/metrics-*.example.json`
 
-## Results JSON
-
-Machine-readable results will be written to:
-
-`docs/experiments/H2-adversarial-tester-results.json`
-
-## Run record
-
-Runner:
+## Run command
 
 ```bash
 python tools/exp_adversarial_tester.py
@@ -72,56 +66,93 @@ Local audit state / submitted bundles:
 
 `.cursiveos/h2-adversarial-tester/`
 
-## Verdict table
+## Initial H2 result before remediation
 
-| Mode | Attack | Pipeline verdict | Gate caught it | Accepted? | Payout triggered? | H2 classification |
+The pre-remediation H2 run **failed** the registered bar:
+
+| Mode | Initial result | Hole exposed |
+|---|---:|---|
+| A | `accepted`, payout triggered | Direct `run-variant` trusted submitted metric numbers with no decision-grade evidence/provenance gate. |
+| B | `accepted`, payout triggered | Replayed measurements under a new claimed machine/session were not fingerprinted against previous accepted results. |
+| C | `accepted` in direct seed path | QD recomputed parsimony, but direct seed scoring trusted `knobs_removed_vs_parent` metadata. |
+| D | `accepted`, payout triggered | `--confirmations 3` was caller-asserted and lifted confidence without system-owned independence checks. |
+
+That failure was the expected purpose of H2: identify where decentralized acceptance could be gamed before any real BTC/reward path depends on it.
+
+## Remediation implemented
+
+Implemented fixes in the production acceptance boundary, not only in the experiment runner:
+
+1. **Evidence/provenance gate for acceptance-eligible direct submissions**
+   - Positive external submissions now require decision-grade measurement evidence fields before they can be accepted.
+   - Synthetic QD simulation remains allowed as a simulation-only path.
+   - Rejection verdict: `rejected_unverified_evidence`.
+
+2. **Measurement replay guard**
+   - Sensor results now include a stable `measurement_fingerprint` computed from metric content while excluding caller-controlled identity.
+   - `record_evaluation` rejects a new candidate if the fingerprint already appears in the accepted local ledger.
+   - Rejection verdict: `rejected_replay`.
+
+3. **Shared parsimony invariant**
+   - `seed_organism.score_performance` no longer awards parsimony from `knobs_removed_vs_parent` metadata alone.
+   - Removed knobs are derived from `parent_genome_knobs` and `genome_knobs`; mismatches become a shared acceptance-boundary invariant failure.
+   - Rejection verdict: `rejected_invariant`.
+
+4. **Caller-asserted confirmation gate**
+   - `confirmation_count > 1` is no longer acceptance-grade unless `confirmation_source == "cursiveroot_independent_aggregation"`.
+   - CLI `screen-variant --confirmations N` records the assertion for audit but cannot by itself produce independent confidence.
+   - Verdict: `inconclusive` with the `confirmation independence gate`.
+
+5. **Regression coverage**
+   - Added tests for unverified evidence rejection, replay rejection, direct seed parsimony overclaim rejection, and caller-asserted confirmation rejection.
+
+## Remediation H2 verdict table
+
+Latest local rerun of `python tools/exp_adversarial_tester.py`:
+
+| Mode | Attack | Pipeline verdict | Gate caught it | Accepted? | Attack payout triggered? | H2 classification |
 |---|---|---:|---|---:|---:|---|
-| A | Inflated delta: real baseline, fabricated candidate improvement | `accepted` | none | yes | yes | **FAIL/KILL** — fabricated delta reached accepted |
-| B | Replay: winning measurement resubmitted as different machine/session | `accepted` | none | yes | yes | **FAIL** — replay not detected |
-| C | Parsimony gaming: overdeclared knob removals | `accepted` in direct seed path | QD path caught via genome-derived parsimony guard, but direct `run-variant` path had no guard | yes | yes | **FAIL** — guard is bypassable outside QD path |
-| D | Confirmation Sybil: `--confirmations 3` asserted for same-source near-identical measurements | `accepted` | none in current code | yes | yes | **DEFERRED TO TRUST LAYER** — current code only records founder-attested confirmation count; real BTC must stay gated |
+| A | Inflated delta: real baseline, fabricated candidate improvement | `rejected_unverified_evidence` | evidence/provenance gate | no | no | **PASS** |
+| B | Replay: winning measurement resubmitted as different machine/session | `rejected_replay` | measurement replay gate | no | no | **PASS** |
+| C | Parsimony gaming: overdeclared knob removals | `rejected_invariant` | shared invariant gate | no | no | **PASS** |
+| D | Confirmation Sybil: `--confirmations 3` asserted for same-source near-identical measurements | `inconclusive` | confirmation independence gate | no | no | **DEFERRED TO TRUST LAYER** — real independent aggregation still not implemented |
 
-## Detailed findings
+Current overall H2 status from the runner:
 
-### Mode A — inflated delta
+`PASSED_EXCEPT_MODE_D_DEFERRED_TO_TRUST_LAYER`
 
-- Submitted through: `seed_organism.py run-variant` → `record_evaluation` → `verdict` → bundle/ledger.
-- Result: `accepted`.
-- Gate triggered: none.
-- Payout: simulated payout triggered after `close-cycle`.
-- Finding: current scoring trusts submitted metric numbers. It does not require signed/raw measurement provenance, detail-log consistency, or recomputation from immutable harness output before acceptance.
-- Minimal fix: acceptance-eligible metric bundles need content-addressed raw artifacts and verifier-side recomputation/cross-checks before `score_performance` can accept a positive fabricated delta.
+## Remaining gaps / explicitly not fixed yet
 
-### Mode B — replay
+These are marked intentionally so future reruns do not mistake local hardening for a complete decentralized trust layer:
 
-- Submitted through: `seed_organism.py run-variant` → `record_evaluation` → `verdict` → bundle/ledger.
-- Result: `accepted`.
-- Gate triggered: none.
-- Payout: simulated payout triggered after `close-cycle`.
-- Finding: replayed metrics with a changed machine/session identity were treated as fresh independent evidence.
-- Minimal fix: bind measurements to signed machine identity/session nonce/result hash, reject duplicate metric fingerprints across claimed machines, and require CursiveRoot-side independence checks before acceptance or payout.
+1. **Evidence gate is not cryptographic proof.**
+   - The local gate rejects bare fabricated metric summaries, but a malicious submitter could still forge a self-consistent JSON blob unless raw detail logs, harness outputs, signatures, and content-addressed artifacts are verified by a system-owned verifier.
+   - Required next fix: verifier-side recomputation from immutable raw artifacts, signed machine/session identity, and artifact hash binding.
 
-### Mode C — parsimony gaming
+2. **Replay guard is local-ledger scoped.**
+   - The current `measurement_fingerprint` check catches duplicates already present in the same state ledger.
+   - It does not prove global uniqueness across disconnected contributors unless CursiveRoot/Hub shares accepted fingerprints or consensus state.
+   - Required next fix: CursiveRoot-wide accepted-measurement fingerprint index with signed session nonces.
 
-Two real-code paths were probed:
+3. **Independent confirmation aggregation is deferred.**
+   - Caller-asserted confirmation counts are now blocked from acceptance, but there is not yet an implementation that derives confidence from distinct trusted roots/machines/sessions.
+   - Required next fix: CursiveRoot-owned aggregation that counts independent evidence bundles and emits `confirmation_source == "cursiveroot_independent_aggregation"` only after identity/session/raw-artifact checks pass.
 
-1. QD guarded path: `qd_organism.evaluate_variant` synchronized `knobs_removed_vs_parent` from `parent_genome_knobs` + `genome_knobs`, reducing the malicious claim from 5 removed knobs to 0. The resulting bundle was `rejected_negative_fitness` by the `minimum_accept_fitness` gate.
-2. Direct seed path: the same overclaim shape submitted through `seed_organism.py run-variant` was `accepted`, because `seed_organism.score_performance` still trusts `variant["knobs_removed_vs_parent"]` directly.
+4. **Real BTC/reward path must remain gated.**
+   - H2 still uses simulated payout reports.
+   - Do not connect scarce-resource payout to this path until the three gaps above are closed or explicitly bounded by policy.
 
-- Overall Mode C result: **failed** for the external contributor surface, even though the QD-internal guard works.
-- Minimal fix: move the genome-derived parsimony synchronization/validation into the seed acceptance path itself, or reject `knobs_removed_vs_parent > 0` unless the variant includes verifiable parent and child genomes and the accepted value is recomputed by `seed_organism` before scoring.
+## Rerun checklist
 
-### Mode D — confirmation Sybil
+Before declaring a future H2 pass:
 
-- Submitted through: `seed_organism.py screen-variant --confirmations 3`.
-- Result: `accepted`.
-- Gate triggered: none.
-- Payout: simulated payout triggered after `close-cycle`.
-- Finding: current confirmation aggregation is an asserted integer (`--confirmations`), not an automatic count of independent CursiveRoot bundles with distinct trust roots, machine IDs, session nonces, or raw evidence.
-- Classification: **deferred to trust layer; real BTC must stay gated**. This is not defendable by the current code alone without an identity/reputation/stake/trust layer.
+```bash
+python -m unittest tests.test_seed_organism
+python tools/exp_adversarial_tester.py
+python -m json.tool docs/experiments/H2-adversarial-tester-results.json >/dev/null
+```
 
-## Final H2 verdict
+Expected after this remediation pass:
 
-**H2 FAILED** against the pre-registered bar.
-
-The failure is not subtle: fabricated-delta bundles in Modes A and B reached `accepted` and triggered simulated payout reports. Mode C also exposes a bypass where the QD parsimony guard catches overclaims only when the submission actually routes through QD code; direct seed submissions can still claim false parsimony. Mode D is explicitly deferred to the trust layer, and should block real BTC payout until independent-confirmation accounting is no longer caller-asserted.
+- Modes A/B/C: rejected by named gates, no accepted adversarial bundle, no adversarial payout.
+- Mode D: `inconclusive` / deferred until independent CursiveRoot aggregation exists.

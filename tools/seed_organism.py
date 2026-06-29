@@ -38,15 +38,19 @@ DEFAULT_CONFIG = {
     "lifetime_share": 0.80,
     "minimum_confidence": 0.65,
     "minimum_accept_fitness": 0.01,
-    # Weights retuned 2026-06-16 to match the measured reality (Chapter 16):
+    # Weights retuned to match the measured reality (Chapter 00 / VALIDATION):
     #  - network GATE-ONLY (0.40->0.0): its magnitude is a loopback artifact
     #    (real-path A/B showed our buffers add ~0; the win is just BBR) AND it
     #    is the noisiest channel (CV 0.19). It no longer scores — it only
     #    rejects a real regression via the severe-regression gate below.
     #  - cold-start (0.30->0.55->0.50): the only rock-solid channel (CV 0.002).
     #  - sustained DOWN (0.20->0.10): single-stream signal is below its noise.
-    #  - idle_power UP (0.10->0.35->0.30): reliable after the v1.4.4 sampling fix
-    #    (settled-idle CV ~0.01, was a 0.83 sampling artifact).
+    #  - idle_power GATE-ONLY (0.30->0.0) 2026-06-29: v1.4.5 made desktop
+    #    idle power selection-usable within a machine (Stardust CV 0.016), but
+    #    laptop AC failed the production-path CV check (cold run-1 spike) and
+    #    cross-machine idle-power pooling is invalid because sources differ.
+    #    Keep the severe-regression gate, but do not score fleet fitness on it
+    #    until the drop-first / battery / per-machine scoping work lands.
     #  - memory NEW (0.10) 2026-06-25: the 5th channel. cgroup-memory.high
     #    refault-time probe (benchmark-memory-pressure-v0.2.sh), validated on two
     #    machines (zram ~2x faster than disk swap, CV 0.003-0.019, cross-machine
@@ -57,7 +61,7 @@ DEFAULT_CONFIG = {
         "network": 0.0,
         "coldstart": 0.50,
         "sustained": 0.10,
-        "idle_power": 0.30,
+        "idle_power": 0.0,
         "memory": 0.10,
     },
     # Parsimony: reward a variant that removes invasive knobs without losing
@@ -241,6 +245,153 @@ def normalize_pct(value: float | None, cap: float) -> float:
     return clamp(value / cap, -1.0, 1.0)
 
 
+KNOB_ACTIVE_THRESHOLD = 0.05
+
+
+def knob_is_active(value: Any) -> bool:
+    try:
+        return float(value) > KNOB_ACTIVE_THRESHOLD
+    except (TypeError, ValueError):
+        return False
+
+
+def genome_knob_map(raw: Any) -> dict[str, float] | None:
+    if not isinstance(raw, dict):
+        return None
+    knobs: dict[str, float] = {}
+    for key, value in raw.items():
+        try:
+            knobs[str(key)] = float(value)
+        except (TypeError, ValueError):
+            knobs[str(key)] = 0.0
+    return knobs
+
+
+def derive_knobs_removed_vs_parent(variant: dict[str, Any]) -> tuple[int, list[str]]:
+    """Derive parsimony from submitted genome truth instead of trusting metadata."""
+    claimed = int(variant.get("knobs_removed_vs_parent", 0) or 0)
+    if claimed <= 0:
+        return 0, []
+    parent_knobs = genome_knob_map(variant.get("parent_genome_knobs"))
+    child_knobs = genome_knob_map(variant.get("genome_knobs"))
+    if parent_knobs is None or child_knobs is None:
+        return 0, [
+            "parsimony invariant failed: knobs_removed_vs_parent requires parent_genome_knobs and genome_knobs"
+        ]
+    keys = sorted(set(parent_knobs) | set(child_knobs))
+    derived = sum(
+        1
+        for key in keys
+        if knob_is_active(parent_knobs.get(key, 0.0))
+        and not knob_is_active(child_knobs.get(key, 0.0))
+    )
+    if derived != claimed:
+        return derived, [
+            f"parsimony invariant failed: claimed {claimed} removed knobs but genome derives {derived}"
+        ]
+    return derived, []
+
+
+def measurement_fingerprint(metrics: dict[str, Any]) -> str:
+    """
+    Stable fingerprint of the measured result, excluding caller-controlled identity.
+
+    This is not a cryptographic proof of honest measurement; it is a replay/duplicate
+    guard for the local/CursiveRoot ledger boundary. Signed machine/session binding is
+    still required before real-money payout.
+    """
+    material = {
+        "schema_version": metrics.get("schema_version"),
+        "source_provenance": metrics.get("source_provenance"),
+        "comparison": metrics.get("comparison"),
+        "baseline": metrics.get("baseline"),
+        "variant": metrics.get("variant"),
+        "sample_counts": metrics.get("sample_counts"),
+        "regression": metrics.get("regression"),
+    }
+    return sha256_json(material)
+
+
+def evidence_quality_failures(metrics: dict[str, Any], role: str = "metrics") -> list[str]:
+    failures: list[str] = []
+    source = str(metrics.get("source_provenance") or "")
+    schema = str(metrics.get("schema_version") or "")
+    if "qd-sim" in schema or source == "qd_simulation":
+        return []
+    if source not in {"native_full_test_json", "paired_full_test_screen"} and not metrics.get("source_result_json"):
+        failures.append(
+            f"{role} evidence gate: missing native full-test provenance/source_result_json"
+        )
+    quality = metrics.get("measurement_quality")
+    if not isinstance(quality, dict):
+        failures.append(f"{role} evidence gate: missing measurement_quality")
+    elif not quality.get("decision_grade", False):
+        flags = quality.get("flags", [])
+        failures.append(f"{role} evidence gate: measurement_quality not decision-grade: {flags}")
+    structured = metrics.get("structured_telemetry")
+    if not isinstance(structured, dict):
+        failures.append(f"{role} evidence gate: missing structured_telemetry")
+    else:
+        for channel in ("network", "coldstart", "sustained"):
+            channel_data = structured.get(channel)
+            if not isinstance(channel_data, dict) or not channel_data.get("available", False):
+                failures.append(f"{role} evidence gate: {channel} detail telemetry unavailable")
+    return failures
+
+
+def acceptance_evidence_gate(variant: dict[str, Any], metrics: dict[str, Any]) -> tuple[bool, list[str]]:
+    if not variant.get("fitness_eligible", True):
+        return True, []
+    schema = str(metrics.get("schema_version") or "")
+    source = str(metrics.get("source_provenance") or "")
+    if "qd-sim" in schema or source == "qd_simulation" or variant.get("contributor_id") == "qd-simulator":
+        return True, []
+    failures: list[str] = []
+    if source == "paired_full_test_screen" or metrics.get("comparison"):
+        source_runs = metrics.get("source_runs")
+        if not isinstance(source_runs, dict):
+            failures.append("evidence gate: paired screen missing source_runs")
+        else:
+            for role in ("parent", "candidate"):
+                run = source_runs.get(role)
+                if not isinstance(run, dict):
+                    failures.append(f"evidence gate: paired screen missing {role} source run")
+                else:
+                    failures.extend(evidence_quality_failures(run, role=f"{role} source run"))
+    else:
+        failures.extend(evidence_quality_failures(metrics))
+    return not failures, failures
+
+
+def confirmation_independence_gate(metrics: dict[str, Any]) -> tuple[bool, list[str]]:
+    count = int(metrics.get("confirmation_count", 1) or 1)
+    if count <= 1:
+        return True, []
+    source = metrics.get("confirmation_source")
+    if source == "cursiveroot_independent_aggregation":
+        return True, []
+    return False, [
+        "confirmation independence gate: confirmation_count > 1 is caller-asserted; "
+        "requires CursiveRoot independent aggregation before acceptance"
+    ]
+
+
+def replay_gate(state: Path, sensor: dict[str, Any]) -> tuple[bool, str | None]:
+    fingerprint = sensor.get("measurement_fingerprint")
+    if not fingerprint:
+        return True, None
+    for row in read_jsonl(state / "ledger" / "sensor-results.jsonl"):
+        if row.get("measurement_fingerprint") != fingerprint:
+            continue
+        if row.get("decision") != "accepted":
+            continue
+        return False, (
+            "replay gate: measurement fingerprint already accepted "
+            f"in bundle {row.get('bundle_hash')} for machine {row.get('machine_id')}"
+        )
+    return True, None
+
+
 def present_core_metrics(metrics: dict[str, Any]) -> list[str]:
     baseline = metrics.get("baseline", {})
     variant = metrics.get("variant", {})
@@ -321,15 +472,21 @@ def score_performance(
     if deltas["memory_pct"] is not None and deltas["memory_pct"] < thresholds.get("memory", -20.0):
         severe.append(f"memory regression {deltas['memory_pct']:.2f}%")
 
-    # Parsimony bonus: a variant that declares it removed N invasive knobs vs
-    # its parent earns a small bonus, but ONLY when performance is non-regressing
-    # (no severe regressions and base fitness ~neutral-or-better). This lets an
-    # equal-performance-but-simpler variant clear the acceptance threshold.
-    knobs_removed = int(variant.get("knobs_removed_vs_parent", 0) or 0)
+    # Parsimony bonus: reward only genome-derived removals. A direct seed
+    # submission cannot earn parsimony from caller metadata alone.
+    claimed_knobs_removed = int(variant.get("knobs_removed_vs_parent", 0) or 0)
+    knobs_removed, parsimony_failures = derive_knobs_removed_vs_parent(variant)
+    parsimony_validation = {
+        "claimed_knobs_removed_vs_parent": claimed_knobs_removed,
+        "derived_knobs_removed_vs_parent": knobs_removed,
+        "passed": not parsimony_failures,
+        "failures": parsimony_failures,
+    }
     parsimony_bonus = 0.0
     if (
         knobs_removed > 0
         and not severe
+        and not parsimony_failures
         and base_fitness >= float(config.get("parsimony_min_base_fitness", -0.01))
     ):
         capped = min(knobs_removed, int(config.get("parsimony_cap_knobs", 5)))
@@ -362,6 +519,8 @@ def score_performance(
         "base_fitness": round(base_fitness, 8),
         "parsimony_bonus": round(parsimony_bonus, 8),
         "knobs_removed_vs_parent": knobs_removed,
+        "parsimony_validation": parsimony_validation,
+        "measurement_fingerprint": measurement_fingerprint(metrics),
         "missing_core_metrics": missing_core,
         "severe_regressions": severe,
         "timestamp": now_iso(),
@@ -408,6 +567,7 @@ def verdict(
     sensor: dict[str, Any],
     regression: dict[str, Any],
     config: dict[str, Any],
+    metrics: dict[str, Any],
 ) -> tuple[str, str]:
     if sensor["missing_core_metrics"]:
         return "invalid", "missing core metrics: " + ", ".join(sensor["missing_core_metrics"])
@@ -415,6 +575,15 @@ def verdict(
         return "rejected_regression", "; ".join(regression["failures"])
     if not variant.get("fitness_eligible", True):
         return "measured_baseline", "genesis baseline characterization; not eligible for contributor fitness"
+    parsimony = sensor.get("parsimony_validation", {})
+    if isinstance(parsimony, dict) and not parsimony.get("passed", True):
+        return "rejected_invariant", "; ".join(parsimony.get("failures", []) or ["parsimony invariant failed"])
+    confirmations_ok, confirmation_failures = confirmation_independence_gate(metrics)
+    if not confirmations_ok:
+        return "inconclusive", "; ".join(confirmation_failures)
+    evidence_ok, evidence_failures = acceptance_evidence_gate(variant, metrics)
+    if not evidence_ok:
+        return "rejected_unverified_evidence", "; ".join(evidence_failures)
     if sensor["severe_regressions"]:
         return "rejected_negative_fitness", "; ".join(sensor["severe_regressions"])
     if sensor["confidence"] < float(config["minimum_confidence"]):
@@ -517,7 +686,12 @@ def record_evaluation(
 ) -> tuple[str, str]:
     sensor = score_performance(variant=variant, metrics=metrics, config=config)
     regression = evaluate_regression(variant, metrics)
-    decision, reason = verdict(variant, sensor, regression, config)
+    decision, reason = verdict(variant, sensor, regression, config, metrics)
+    if decision == "accepted":
+        replay_ok, replay_reason = replay_gate(state, sensor)
+        if not replay_ok:
+            decision = "rejected_replay"
+            reason = replay_reason or "replay gate failed"
     run_dir, bundle_hash = write_bundle(
         state=state,
         cycle_id=cycle_id,
@@ -948,11 +1122,13 @@ def comparison_metrics(
         # Confidence rises with the number of INDEPENDENT confirming sessions
         # (repeated + counterbalanced + multi-machine): 1->0.50, 2->0.75,
         # 3->0.875. A single screen stays diagnostic-only (0.50 < accept gate).
-        # Phase 0: `confirmations` is founder-attested and recorded for audit;
-        # pre-external-rollout this must be auto-counted from independent
-        # confirming bundles in CursiveRoot rather than asserted.
+        # Phase 0: `confirmations` remains recorded for audit, but it is not
+        # acceptance-grade independence evidence. It must be replaced by a
+        # CursiveRoot-derived independent aggregation before it can lift a
+        # candidate over the confidence gate or unlock real payout.
         "confidence": round(min(0.95, 1.0 - 0.5 ** max(1, int(confirmations))), 4),
         "confirmation_count": max(1, int(confirmations)),
+        "confirmation_source": "caller_asserted_cli",
         "sample_counts": {"network": 1, "coldstart": 1, "sustained": 1, "idle_power": 1},
         "source_runs": {
             "parent": parent_metrics,
