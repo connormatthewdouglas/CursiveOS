@@ -1,0 +1,1437 @@
+{
+  "experiment": "H2 adversarial/dishonest tester",
+  "overall_h2_status": "FAILED",
+  "pre_registered_doc": "docs/experiments/H2-adversarial-tester-results.md",
+  "results": [
+    {
+      "accepted": true,
+      "attack": "Real baseline values with fabricated candidate improvement that clears minimum_accept_fitness.",
+      "cli": {
+        "cmd": [
+          "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+          "--state-dir",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta",
+          "run-variant",
+          "--variant",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\inputs\\variant-mode-a.json",
+          "--metrics",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\inputs\\metrics-mode-a-inflated.json",
+          "--cycle-id",
+          "201"
+        ],
+        "parsed_stdout": {
+          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T183300Z-4587b47e",
+          "bundle_hash": "02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd",
+          "confidence": "0.70",
+          "decision": "accepted",
+          "fitness_score": "0.104878",
+          "reason": "fitness positive and gates passed",
+          "variant": "h2-a-inflated-delta"
+        },
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "variant: h2-a-inflated-delta\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd\nbundle: .cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T183300Z-4587b47e\n"
+      },
+      "cycle_id": 201,
+      "deferred_to_trust_layer": false,
+      "gate_triggered": null,
+      "mode": "A",
+      "name": "inflated delta",
+      "payout_report": {
+        "cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta",
+            "close-cycle",
+            "--cycle-id",
+            "201",
+            "--revenue-sats",
+            "100000"
+          ],
+          "parsed_stdout": {
+            "contributors": "1",
+            "cycle": "201",
+            "report": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json",
+            "report_hash": "19624a124776c0930b7eeb317208fe554521f2ad9d809498cb22e007baf5b8c2"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "cycle: 201\ncontributors: 1\nreport_hash: 19624a124776c0930b7eeb317208fe554521f2ad9d809498cb22e007baf5b8c2\nreport: .cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json\n"
+        },
+        "contributors": [
+          {
+            "contributor_id": "h2-malicious-contributor",
+            "current_cycle_payout_sats": 20000,
+            "cycle_fitness": 0.10487805,
+            "lifetime_fitness": 0.10487805,
+            "lifetime_payout_sats": 80000,
+            "total_payout_sats": 100000
+          }
+        ],
+        "payout_triggered": true,
+        "report_hash": "19624a124776c0930b7eeb317208fe554521f2ad9d809498cb22e007baf5b8c2",
+        "report_path": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json"
+      },
+      "payout_triggered": true,
+      "pipeline": "seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> bundle/ledger",
+      "pipeline_verdict": "accepted",
+      "reason": "fitness positive and gates passed",
+      "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta",
+      "submitted_bundle": {
+        "bundle_hash": "02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd",
+        "confidence": 0.7,
+        "decision": "accepted",
+        "fitness_score": 0.104878,
+        "manifest": {
+          "bundle_hash": "02dc67fe4ea4b3cc6619541ea822ab95ee4cdba7946daaff40abf13800a43ffd",
+          "created_at": "2026-06-29T18:33:00+00:00",
+          "cycle_id": "201",
+          "decision": "accepted",
+          "files": {
+            "metrics.json": "62073ad7a53fff78c034eba51bb945103fde55b9f77f5458cea261179799f1c5",
+            "regression-result.json": "a63ac3b44f6bbab76f29bcc444429c45a8641b1604b19ce9305679059da30514",
+            "sensor-result.json": "1f308cbcea114d5c1683f582a9483f779f756c871e328c7a9447d2449a88b386",
+            "variant.json": "fc6468737095a869f9debcf4a6b6067f53dabb74006c0d7ae0c8010f2150a272"
+          },
+          "reason": "fitness positive and gates passed",
+          "run_id": "4587b47e",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "h2-a-inflated-delta"
+        },
+        "metrics": {
+          "adversarial_claim": "candidate metrics are inflated/fabricated from a real baseline",
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "machine_id": "h2-a-malicious-rig",
+          "preset_version": "h2-test",
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "sample_counts": {
+            "coldstart": 3,
+            "idle_power": 3,
+            "network": 3,
+            "sustained": 3
+          },
+          "schema_version": "seed-organism.metrics.h2.v0.1",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          }
+        },
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260629T183300Z-4587b47e",
+        "reason": "fitness positive and gates passed",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "h2-a-malicious-rig",
+          "passed": true,
+          "regression_result_hash": "429ea50a750b92b1da66ca79c163468ca89d18bec5fc4f251d0956b3fbfe9783",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-29T18:33:00+00:00",
+          "variant_id": "h2-a-inflated-delta"
+        },
+        "sensor_result": {
+          "base_fitness": 0.10487805,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.7,
+          "delta": {
+            "coldstart_pct": 10.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 2.4390243902439024
+          },
+          "fitness_score": 0.10487805,
+          "knobs_removed_vs_parent": 0,
+          "machine_id": "h2-a-malicious-rig",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.0,
+          "preset_version": "h2-a-inflated-delta",
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "c0eb51c285b0178a35674797f66e9a23792a0d29db96393405a537591c3c62da",
+          "severe_regressions": [],
+          "timestamp": "2026-06-29T18:33:00+00:00",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          },
+          "variant_id": "h2-a-inflated-delta"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "h2-a-inflated-delta",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.v0.1",
+          "variant_id": "h2-a-inflated-delta"
+        }
+      },
+      "submitted_metrics_file": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\inputs\\metrics-mode-a-inflated.json",
+      "submitted_variant_file": ".cursiveos\\h2-adversarial-tester\\mode-a-inflated-delta\\inputs\\variant-mode-a.json"
+    },
+    {
+      "accepted": true,
+      "attack": "Copied a winning measurement and resubmitted it under a different machine/session identity.",
+      "cli": {
+        "cmd": [
+          "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+          "--state-dir",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay",
+          "run-variant",
+          "--variant",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\variant-mode-b-replay.json",
+          "--metrics",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\metrics-mode-b-replay.json",
+          "--cycle-id",
+          "211"
+        ],
+        "parsed_stdout": {
+          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T183301Z-480caaed",
+          "bundle_hash": "cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637",
+          "confidence": "0.70",
+          "decision": "accepted",
+          "fitness_score": "0.104878",
+          "reason": "fitness positive and gates passed",
+          "variant": "h2-b-replay-as-independent"
+        },
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "variant: h2-b-replay-as-independent\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637\nbundle: .cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T183301Z-480caaed\n"
+      },
+      "cycle_id": 211,
+      "deferred_to_trust_layer": false,
+      "extra": {
+        "source_bundle": {
+          "bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566",
+          "confidence": 0.7,
+          "decision": "accepted",
+          "fitness_score": 0.104878,
+          "manifest": {
+            "bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566",
+            "created_at": "2026-06-29T18:33:01+00:00",
+            "cycle_id": "210",
+            "decision": "accepted",
+            "files": {
+              "metrics.json": "fe2f16f386917c5b4c1de0351a519f79ccebbe0c2eb3dda54f016d44d7577860",
+              "regression-result.json": "c6f865168749789dc78cd6960027c531d7c8650d3d061646073fc91874cda2d9",
+              "sensor-result.json": "2c9d5f0f0f65b21b10255a89f5e9327d80cddbf197dd1779193ba77e40127083",
+              "variant.json": "ff34982b0f8c2bee402085a0edf8ebf5b8272e12ce0ddf414b97afb4ddb6dd78"
+            },
+            "reason": "fitness positive and gates passed",
+            "run_id": "f90621ad",
+            "schema_version": "seed-organism.bundle-manifest.v0.1",
+            "variant_id": "h2-b-genuine-winning-source"
+          },
+          "metrics": {
+            "adversarial_claim": "candidate metrics are inflated/fabricated from a real baseline",
+            "baseline": {
+              "coldstart_ms": 1820.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 41.0
+            },
+            "machine_id": "h2-b-source-stardust",
+            "preset_version": "h2-test",
+            "regression": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "reverted_cleanly": true
+            },
+            "sample_counts": {
+              "coldstart": 3,
+              "idle_power": 3,
+              "network": 3,
+              "sustained": 3
+            },
+            "schema_version": "seed-organism.metrics.h2.v0.1",
+            "source_provenance": "treated_as_genuine_winning_measurement_for_replay_source",
+            "variant": {
+              "coldstart_ms": 1638.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 42.0
+            }
+          },
+          "path": ".cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T183301Z-f90621ad",
+          "reason": "fitness positive and gates passed",
+          "regression_result": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "machine_id": "h2-b-source-stardust",
+            "passed": true,
+            "regression_result_hash": "e9f97900e2bce0cd5fd295d84f08d2911a44a42fe264299cefee8ff80f352227",
+            "reverted_cleanly": true,
+            "schema_version": "seed-organism.regression-result.v0.1",
+            "sensor_id": "regression.genesis.v1",
+            "timestamp": "2026-06-29T18:33:01+00:00",
+            "variant_id": "h2-b-genuine-winning-source"
+          },
+          "sensor_result": {
+            "base_fitness": 0.10487805,
+            "baseline": {
+              "coldstart_ms": 1820.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 41.0
+            },
+            "confidence": 0.7,
+            "delta": {
+              "coldstart_pct": 10.0,
+              "idle_power_pct": 0.0,
+              "memory_pct": 0.0,
+              "network_pct": 0.0,
+              "sustained_pct": 2.4390243902439024
+            },
+            "fitness_score": 0.10487805,
+            "knobs_removed_vs_parent": 0,
+            "machine_id": "h2-b-source-stardust",
+            "missing_core_metrics": [],
+            "parsimony_bonus": 0.0,
+            "preset_version": "h2-b-genuine-winning-source",
+            "schema_version": "seed-organism.sensor-result.v0.1",
+            "sensor_id": "perf.genesis.v1",
+            "sensor_result_hash": "880864183cb65ee860a8a483aeb3ddfa7d2508d6edc8cddfb63c7e08755ed8d4",
+            "severe_regressions": [],
+            "timestamp": "2026-06-29T18:33:01+00:00",
+            "variant": {
+              "coldstart_ms": 1638.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 42.0
+            },
+            "variant_id": "h2-b-genuine-winning-source"
+          },
+          "variant": {
+            "commit_ref": "h2-adversarial-untrusted-submission",
+            "contributor_id": "h2-honest-contributor",
+            "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+            "fitness_eligible": true,
+            "parent_variant_id": "parent-baseline-v0.12",
+            "preset_version": "h2-b-genuine-winning-source",
+            "rollback_method": "none; synthetic adversarial test fixture",
+            "schema_version": "seed-organism.variant.v0.1",
+            "variant_id": "h2-b-genuine-winning-source"
+          }
+        },
+        "source_cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-source-genuine",
+            "run-variant",
+            "--variant",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\inputs\\variant-mode-b-source.json",
+            "--metrics",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\inputs\\metrics-mode-b-source.json",
+            "--cycle-id",
+            "210"
+          ],
+          "parsed_stdout": {
+            "bundle": ".cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T183301Z-f90621ad",
+            "bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566",
+            "confidence": "0.70",
+            "decision": "accepted",
+            "fitness_score": "0.104878",
+            "reason": "fitness positive and gates passed",
+            "variant": "h2-b-genuine-winning-source"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "variant: h2-b-genuine-winning-source\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566\nbundle: .cursiveos\\h2-adversarial-tester\\mode-b-source-genuine\\runs\\cycle-210\\h2-b-genuine-winning-source-20260629T183301Z-f90621ad\n"
+        },
+        "source_state_dir": ".cursiveos\\h2-adversarial-tester\\mode-b-source-genuine"
+      },
+      "gate_triggered": null,
+      "mode": "B",
+      "name": "replay as independent machine/session",
+      "payout_report": {
+        "cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-b-replay",
+            "close-cycle",
+            "--cycle-id",
+            "211",
+            "--revenue-sats",
+            "100000"
+          ],
+          "parsed_stdout": {
+            "contributors": "1",
+            "cycle": "211",
+            "report": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\cycles\\cycle-211-payout.json",
+            "report_hash": "d4ef6fe8061fbe4edc6a63c851b98bff12ceab41b8f86a32c53b23484b5fa569"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "cycle: 211\ncontributors: 1\nreport_hash: d4ef6fe8061fbe4edc6a63c851b98bff12ceab41b8f86a32c53b23484b5fa569\nreport: .cursiveos\\h2-adversarial-tester\\mode-b-replay\\cycles\\cycle-211-payout.json\n"
+        },
+        "contributors": [
+          {
+            "contributor_id": "h2-malicious-contributor",
+            "current_cycle_payout_sats": 20000,
+            "cycle_fitness": 0.10487805,
+            "lifetime_fitness": 0.10487805,
+            "lifetime_payout_sats": 80000,
+            "total_payout_sats": 100000
+          }
+        ],
+        "payout_triggered": true,
+        "report_hash": "d4ef6fe8061fbe4edc6a63c851b98bff12ceab41b8f86a32c53b23484b5fa569",
+        "report_path": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\cycles\\cycle-211-payout.json"
+      },
+      "payout_triggered": true,
+      "pipeline": "seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> bundle/ledger",
+      "pipeline_verdict": "accepted",
+      "reason": "fitness positive and gates passed",
+      "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-b-replay",
+      "submitted_bundle": {
+        "bundle_hash": "cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637",
+        "confidence": 0.7,
+        "decision": "accepted",
+        "fitness_score": 0.104878,
+        "manifest": {
+          "bundle_hash": "cdb377b39a269c08a6fd8e14b1e44d4604a8138c8ad279d1f5755a934c44b637",
+          "created_at": "2026-06-29T18:33:01+00:00",
+          "cycle_id": "211",
+          "decision": "accepted",
+          "files": {
+            "metrics.json": "e91551f3174b4be1312c755e0a0e953eade80197e4e5259e071be9932cba6327",
+            "regression-result.json": "8fdb80c40ed7cf5cc3b3fc7d707b4640ad29780f93e559dc4a0c386e24c999db",
+            "sensor-result.json": "9cc3ef3166e7b2a7676dad6916d2a9231687e216d5a91381734e98ceaa3f8916",
+            "variant.json": "b9b1501e9a4c0b8b39d873499148563be32cc3bfe78b2f76e782c594049317d9"
+          },
+          "reason": "fitness positive and gates passed",
+          "run_id": "480caaed",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "h2-b-replay-as-independent"
+        },
+        "metrics": {
+          "adversarial_claim": "candidate metrics are inflated/fabricated from a real baseline",
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "hardware_fingerprint_hash": "h2-b-fake-independent-laptop",
+          "machine_id": "h2-b-fake-independent-laptop",
+          "preset_version": "h2-test",
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "replay_attack": {
+            "claim": "same winning metrics resubmitted as a different machine/session",
+            "copied_from_bundle_hash": "3646dcf6c2e13b8e7aa72cea0c504aabe94a1d3aff8244a2016c7ac7bfeb5566"
+          },
+          "sample_counts": {
+            "coldstart": 3,
+            "idle_power": 3,
+            "network": 3,
+            "sustained": 3
+          },
+          "schema_version": "seed-organism.metrics.h2.v0.1",
+          "source_provenance": "treated_as_genuine_winning_measurement_for_replay_source",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          }
+        },
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\runs\\cycle-211\\h2-b-replay-as-independent-20260629T183301Z-480caaed",
+        "reason": "fitness positive and gates passed",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "h2-b-fake-independent-laptop",
+          "passed": true,
+          "regression_result_hash": "429ef729908099e31089cb0c9ef6ecafff3dbfc96a111912f458ad074639ef73",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-29T18:33:01+00:00",
+          "variant_id": "h2-b-replay-as-independent"
+        },
+        "sensor_result": {
+          "base_fitness": 0.10487805,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.7,
+          "delta": {
+            "coldstart_pct": 10.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 2.4390243902439024
+          },
+          "fitness_score": 0.10487805,
+          "knobs_removed_vs_parent": 0,
+          "machine_id": "h2-b-fake-independent-laptop",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.0,
+          "preset_version": "h2-b-replay-as-independent",
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "4288de926721490ede8396c58a9ef64ca38c50bac53dfc2d7c16ccb18f333fdf",
+          "severe_regressions": [],
+          "timestamp": "2026-06-29T18:33:01+00:00",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          },
+          "variant_id": "h2-b-replay-as-independent"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "h2-b-replay-as-independent",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.v0.1",
+          "variant_id": "h2-b-replay-as-independent"
+        }
+      },
+      "submitted_metrics_file": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\metrics-mode-b-replay.json",
+      "submitted_variant_file": ".cursiveos\\h2-adversarial-tester\\mode-b-replay\\inputs\\variant-mode-b-replay.json"
+    },
+    {
+      "accepted": true,
+      "attack": "Claimed knob removals that the genome does not actually reflect.",
+      "deferred_to_trust_layer": false,
+      "gate_triggered": null,
+      "mode": "C",
+      "name": "parsimony gaming",
+      "payout_triggered": true,
+      "pipeline": "QD guarded path plus direct seed CLI path probe",
+      "pipeline_verdict": "accepted",
+      "reason": "QD path caught overclaim, but direct seed run-variant accepted it",
+      "submitted_bundle": {
+        "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+        "confidence": 0.7,
+        "decision": "accepted",
+        "fitness_score": 0.15,
+        "manifest": {
+          "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+          "created_at": "2026-06-29T18:33:01+00:00",
+          "cycle_id": "221",
+          "decision": "accepted",
+          "files": {
+            "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
+            "regression-result.json": "b17348d51dd3b55d75b74d19a1194657a08af60f70b6a5bd033773cc91fb988e",
+            "sensor-result.json": "9e519e0d5700b344057db2b6021ba9b09584a61efc0d182c67fa3d0fb2c4d095",
+            "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
+          },
+          "reason": "fitness positive and gates passed",
+          "run_id": "e18d6e61",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        },
+        "metrics": {
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "machine_id": "h2-c-direct-source",
+          "preset_version": "h2-test",
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "sample_counts": {
+            "coldstart": 3,
+            "idle_power": 3,
+            "network": 3,
+            "sustained": 3
+          },
+          "schema_version": "seed-organism.metrics.h2.v0.1",
+          "variant": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          }
+        },
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61",
+        "reason": "fitness positive and gates passed",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "h2-c-direct-source",
+          "passed": true,
+          "regression_result_hash": "796677364bd8c97ec32c6fa86f8b5112bdef804fce91e456d717fd9d01b657c3",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-29T18:33:01+00:00",
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        },
+        "sensor_result": {
+          "base_fitness": 0.0,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.7,
+          "delta": {
+            "coldstart_pct": 0.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 0.0
+          },
+          "fitness_score": 0.15,
+          "knobs_removed_vs_parent": 5,
+          "machine_id": "h2-c-direct-source",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.15,
+          "preset_version": "h2-c-direct-overdeclared-parsimony",
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "c3293d5c082213599a8260deaa56a1c32122707cccad18094443efa55c23cd18",
+          "severe_regressions": [],
+          "timestamp": "2026-06-29T18:33:01+00:00",
+          "variant": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "genome_knobs": {
+            "cpu_governor_boost": 0.4,
+            "gpu_idle_pin_mhz": 0.2,
+            "power_cap_relief": 0.0,
+            "scheduler_aggressive": 0.1
+          },
+          "knobs_removed_vs_parent": 5,
+          "mutation_operator": "malicious_parsimony_overclaim",
+          "parent_genome_knobs": {
+            "cpu_governor_boost": 0.4,
+            "gpu_idle_pin_mhz": 0.2,
+            "power_cap_relief": 0.0,
+            "scheduler_aggressive": 0.1
+          },
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "h2-c-direct-overdeclared-parsimony",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.qd-sim.v0.1",
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        }
+      },
+      "subtests": {
+        "direct_seed_submission": {
+          "accepted": true,
+          "attack": "Claimed knob removals that the submitted genome did not actually reflect, through run-variant.",
+          "cli": {
+            "cmd": [
+              "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+              "--state-dir",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass",
+              "run-variant",
+              "--variant",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\inputs\\variant-mode-c-direct-overclaim.json",
+              "--metrics",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\inputs\\metrics-mode-c-neutral.json",
+              "--cycle-id",
+              "221"
+            ],
+            "parsed_stdout": {
+              "bundle": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61",
+              "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+              "confidence": "0.70",
+              "decision": "accepted",
+              "fitness_score": "0.150000",
+              "reason": "fitness positive and gates passed",
+              "variant": "h2-c-direct-overdeclared-parsimony"
+            },
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "variant: h2-c-direct-overdeclared-parsimony\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.150000\nconfidence: 0.70\nbundle_hash: 0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610\nbundle: .cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61\n"
+          },
+          "cycle_id": 221,
+          "deferred_to_trust_layer": false,
+          "gate_triggered": null,
+          "mode": "C-direct",
+          "name": "direct seed parsimony overclaim bypass",
+          "payout_report": {
+            "cli": {
+              "cmd": [
+                "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+                "--state-dir",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass",
+                "close-cycle",
+                "--cycle-id",
+                "221",
+                "--revenue-sats",
+                "100000"
+              ],
+              "parsed_stdout": {
+                "contributors": "1",
+                "cycle": "221",
+                "report": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json",
+                "report_hash": "54c29f113c6a5a5c1be7d74ae229ff526107412896430906d60f0de4e7e73999"
+              },
+              "returncode": 0,
+              "stderr": "",
+              "stdout": "cycle: 221\ncontributors: 1\nreport_hash: 54c29f113c6a5a5c1be7d74ae229ff526107412896430906d60f0de4e7e73999\nreport: .cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json\n"
+            },
+            "contributors": [
+              {
+                "contributor_id": "h2-malicious-contributor",
+                "current_cycle_payout_sats": 20000,
+                "cycle_fitness": 0.15,
+                "lifetime_fitness": 0.15,
+                "lifetime_payout_sats": 80000,
+                "total_payout_sats": 100000
+              }
+            ],
+            "payout_triggered": true,
+            "report_hash": "54c29f113c6a5a5c1be7d74ae229ff526107412896430906d60f0de4e7e73999",
+            "report_path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json"
+          },
+          "payout_triggered": true,
+          "pipeline": "seed_organism.py CLI: run-variant direct acceptance path",
+          "pipeline_verdict": "accepted",
+          "reason": "fitness positive and gates passed",
+          "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass",
+          "submitted_bundle": {
+            "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+            "confidence": 0.7,
+            "decision": "accepted",
+            "fitness_score": 0.15,
+            "manifest": {
+              "bundle_hash": "0eec06626d8c3c2c0acba064113c4a9d58ee157a30d2fc069462e3cdfc940610",
+              "created_at": "2026-06-29T18:33:01+00:00",
+              "cycle_id": "221",
+              "decision": "accepted",
+              "files": {
+                "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
+                "regression-result.json": "b17348d51dd3b55d75b74d19a1194657a08af60f70b6a5bd033773cc91fb988e",
+                "sensor-result.json": "9e519e0d5700b344057db2b6021ba9b09584a61efc0d182c67fa3d0fb2c4d095",
+                "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
+              },
+              "reason": "fitness positive and gates passed",
+              "run_id": "e18d6e61",
+              "schema_version": "seed-organism.bundle-manifest.v0.1",
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            },
+            "metrics": {
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "machine_id": "h2-c-direct-source",
+              "preset_version": "h2-test",
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 3,
+                "idle_power": 3,
+                "network": 3,
+                "sustained": 3
+              },
+              "schema_version": "seed-organism.metrics.h2.v0.1",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              }
+            },
+            "path": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260629T183301Z-e18d6e61",
+            "reason": "fitness positive and gates passed",
+            "regression_result": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "machine_id": "h2-c-direct-source",
+              "passed": true,
+              "regression_result_hash": "796677364bd8c97ec32c6fa86f8b5112bdef804fce91e456d717fd9d01b657c3",
+              "reverted_cleanly": true,
+              "schema_version": "seed-organism.regression-result.v0.1",
+              "sensor_id": "regression.genesis.v1",
+              "timestamp": "2026-06-29T18:33:01+00:00",
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            },
+            "sensor_result": {
+              "base_fitness": 0.0,
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "confidence": 0.7,
+              "delta": {
+                "coldstart_pct": 0.0,
+                "idle_power_pct": 0.0,
+                "memory_pct": 0.0,
+                "network_pct": 0.0,
+                "sustained_pct": 0.0
+              },
+              "fitness_score": 0.15,
+              "knobs_removed_vs_parent": 5,
+              "machine_id": "h2-c-direct-source",
+              "missing_core_metrics": [],
+              "parsimony_bonus": 0.15,
+              "preset_version": "h2-c-direct-overdeclared-parsimony",
+              "schema_version": "seed-organism.sensor-result.v0.1",
+              "sensor_id": "perf.genesis.v1",
+              "sensor_result_hash": "c3293d5c082213599a8260deaa56a1c32122707cccad18094443efa55c23cd18",
+              "severe_regressions": [],
+              "timestamp": "2026-06-29T18:33:01+00:00",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            },
+            "variant": {
+              "commit_ref": "h2-adversarial-untrusted-submission",
+              "contributor_id": "h2-malicious-contributor",
+              "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+              "fitness_eligible": true,
+              "genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "knobs_removed_vs_parent": 5,
+              "mutation_operator": "malicious_parsimony_overclaim",
+              "parent_genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "parent_variant_id": "parent-baseline-v0.12",
+              "preset_version": "h2-c-direct-overdeclared-parsimony",
+              "rollback_method": "none; synthetic adversarial test fixture",
+              "schema_version": "seed-organism.variant.qd-sim.v0.1",
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            }
+          },
+          "submitted_metrics_file": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\inputs\\metrics-mode-c-neutral.json",
+          "submitted_variant_file": ".cursiveos\\h2-adversarial-tester\\mode-c-direct-seed-bypass\\inputs\\variant-mode-c-direct-overclaim.json"
+        },
+        "qd_guarded_submission": {
+          "accepted": false,
+          "after_qd_guard": 0,
+          "before_qd_guard": 5,
+          "claimed_knobs_removed_vs_parent": 5,
+          "cycle_id": 220,
+          "gate_triggered": "QD genome-derived parsimony guard -> minimum_accept_fitness gate",
+          "guard_caught_overclaim": true,
+          "payout_report": {
+            "cli": {
+              "cmd": [
+                "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+                "--state-dir",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded",
+                "close-cycle",
+                "--cycle-id",
+                "220",
+                "--revenue-sats",
+                "100000"
+              ],
+              "parsed_stdout": {
+                "contributors": "0",
+                "cycle": "220",
+                "report": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json",
+                "report_hash": "0d65dde3aa9302363f519bcbfda610c5720acd788bc4ad2b34718a360382593a"
+              },
+              "returncode": 0,
+              "stderr": "",
+              "stdout": "cycle: 220\ncontributors: 0\nreport_hash: 0d65dde3aa9302363f519bcbfda610c5720acd788bc4ad2b34718a360382593a\nreport: .cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json\n"
+            },
+            "contributors": [],
+            "payout_triggered": false,
+            "report_hash": "0d65dde3aa9302363f519bcbfda610c5720acd788bc4ad2b34718a360382593a",
+            "report_path": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json"
+          },
+          "pipeline_verdict": "rejected_negative_fitness",
+          "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded",
+          "submitted_bundle": {
+            "bundle_hash": "ae58df5d2634e6670c2a4a85c1a551fb80ea618d13984c9ba39fcbc10402b88d",
+            "confidence": 0.7,
+            "decision": "rejected_negative_fitness",
+            "fitness_score": 0.0,
+            "manifest": {
+              "bundle_hash": "ae58df5d2634e6670c2a4a85c1a551fb80ea618d13984c9ba39fcbc10402b88d",
+              "created_at": "2026-06-29T18:33:01+00:00",
+              "cycle_id": "220",
+              "decision": "rejected_negative_fitness",
+              "files": {
+                "metrics.json": "9eaab94415c0e6f0a6bc939de9c1719c7b963947f43c44412bd029c23f90b772",
+                "regression-result.json": "3bd64698eee981b0a4bc3f8fc8f7a957f0dfc278aff297ca3585287542ea14dc",
+                "sensor-result.json": "65beab4aa20db1ece9ed81df0a70be75aea37792cf3722a792709a35a1b2a3a4",
+                "variant.json": "f8b7cdf02d3bdbde52c5fbf4428ddca5533fd8fc503038c11ed5e3e3a3262f09"
+              },
+              "reason": "fitness 0.0000 below acceptance threshold",
+              "run_id": "ce9a0c5b",
+              "schema_version": "seed-organism.bundle-manifest.v0.1",
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            },
+            "metrics": {
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "machine_id": "h2-c-qd-source",
+              "preset_version": "h2-test",
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 3,
+                "idle_power": 3,
+                "network": 3,
+                "sustained": 3
+              },
+              "schema_version": "seed-organism.metrics.h2.v0.1",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              }
+            },
+            "path": ".cursiveos\\h2-adversarial-tester\\mode-c-qd-guarded\\runs\\cycle-220\\h2-c-qd-overdeclared-parsimony-20260629T183301Z-ce9a0c5b",
+            "reason": "fitness 0.0000 below acceptance threshold",
+            "regression_result": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "machine_id": "h2-c-qd-source",
+              "passed": true,
+              "regression_result_hash": "5e89fc28a32c130cb4f232eceb40f731d02739468ffdec37b14db29e7d2b70b9",
+              "reverted_cleanly": true,
+              "schema_version": "seed-organism.regression-result.v0.1",
+              "sensor_id": "regression.genesis.v1",
+              "timestamp": "2026-06-29T18:33:01+00:00",
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            },
+            "sensor_result": {
+              "base_fitness": 0.0,
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "confidence": 0.7,
+              "delta": {
+                "coldstart_pct": 0.0,
+                "idle_power_pct": 0.0,
+                "memory_pct": 0.0,
+                "network_pct": 0.0,
+                "sustained_pct": 0.0
+              },
+              "fitness_score": 0.0,
+              "knobs_removed_vs_parent": 0,
+              "machine_id": "h2-c-qd-source",
+              "missing_core_metrics": [],
+              "parsimony_bonus": 0.0,
+              "preset_version": "qd-sim",
+              "schema_version": "seed-organism.sensor-result.v0.1",
+              "sensor_id": "perf.genesis.v1",
+              "sensor_result_hash": "92be51f13e93d20f4a81e727b1b1505d3d75cee59be8c4fb0fbb54cff45da5f8",
+              "severe_regressions": [],
+              "timestamp": "2026-06-29T18:33:01+00:00",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            },
+            "variant": {
+              "commit_ref": "h2-adversarial-untrusted-submission",
+              "contributor_id": "h2-malicious-contributor",
+              "declared_scope": "quality-diversity simulation only",
+              "fitness_eligible": true,
+              "genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "knobs_removed_vs_parent": 0,
+              "parent_genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "parent_variant_id": "h2-c-qd-parent-active-knobs",
+              "preset_version": "qd-sim",
+              "qd_generation": 0,
+              "rollback_method": "simulation discard",
+              "schema_version": "seed-organism.variant.qd-sim.v0.1",
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            }
+          }
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "attack": "Asserted three independent confirmations for near-identical same-source measurements via --confirmations 3.",
+      "cli": {
+        "cmd": [
+          "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+          "--state-dir",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil",
+          "screen-variant",
+          "--parent-variant",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\references\\seed-organism\\variant.v0.12.json",
+          "--candidate-variant",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\variant-mode-d-sybil-candidate.json",
+          "--parent-result-json",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-parent-result.json",
+          "--candidate-result-json",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-candidate-result.json",
+          "--confirmations",
+          "3",
+          "--cycle-id",
+          "230"
+        ],
+        "parsed_stdout": {
+          "bundle": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T183302Z-2453ec89",
+          "bundle_hash": "974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b",
+          "confidence": "0.88",
+          "decision": "accepted",
+          "fitness_score": "0.104878",
+          "reason": "fitness positive and gates passed",
+          "variant": "h2-d-confirmation-sybil"
+        },
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "variant: h2-d-confirmation-sybil\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.88\nbundle_hash: 974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b\nbundle: .cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T183302Z-2453ec89\n"
+      },
+      "cycle_id": 230,
+      "deferred_to_trust_layer": true,
+      "extra": {
+        "asserted_confirmations": 3,
+        "candidate_result_json": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-candidate-result.json",
+        "current_code_limitation": "confirmation_count is an asserted integer; current code does not auto-count independent machine/session bundles",
+        "parent_result_json": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-parent-result.json"
+      },
+      "gate_triggered": null,
+      "mode": "D",
+      "name": "confirmation Sybil",
+      "payout_report": {
+        "cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil",
+            "close-cycle",
+            "--cycle-id",
+            "230",
+            "--revenue-sats",
+            "100000"
+          ],
+          "parsed_stdout": {
+            "contributors": "1",
+            "cycle": "230",
+            "report": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\cycles\\cycle-230-payout.json",
+            "report_hash": "fec570cb94487a4ddbc13aece498161f469fa850aaec688ffe0bbba50abb0a8f"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "cycle: 230\ncontributors: 1\nreport_hash: fec570cb94487a4ddbc13aece498161f469fa850aaec688ffe0bbba50abb0a8f\nreport: .cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\cycles\\cycle-230-payout.json\n"
+        },
+        "contributors": [
+          {
+            "contributor_id": "h2-malicious-contributor",
+            "current_cycle_payout_sats": 20000,
+            "cycle_fitness": 0.10487805,
+            "lifetime_fitness": 0.10487805,
+            "lifetime_payout_sats": 80000,
+            "total_payout_sats": 100000
+          }
+        ],
+        "payout_triggered": true,
+        "report_hash": "fec570cb94487a4ddbc13aece498161f469fa850aaec688ffe0bbba50abb0a8f",
+        "report_path": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\cycles\\cycle-230-payout.json"
+      },
+      "payout_triggered": true,
+      "pipeline": "seed_organism.py CLI: screen-variant -> comparison_metrics(--confirmations) -> record_evaluation",
+      "pipeline_verdict": "accepted",
+      "reason": "fitness positive and gates passed",
+      "state_dir": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil",
+      "submitted_bundle": {
+        "bundle_hash": "974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b",
+        "confidence": 0.88,
+        "decision": "accepted",
+        "fitness_score": 0.104878,
+        "manifest": {
+          "bundle_hash": "974c7b7d43ba2a1fa8d1d8d4e11f70f847c45069eb55db214193f718dcf44e8b",
+          "created_at": "2026-06-29T18:33:02+00:00",
+          "cycle_id": "230",
+          "decision": "accepted",
+          "files": {
+            "metrics.json": "926b8b1bd199ee9aa95a00bae3b4e04872b7b72b47af1d822065cd070fe189b3",
+            "regression-result.json": "40024db0b3ca2f67724cd25de3095ee62a7f22f011e15815c5432b931e49bd6f",
+            "sensor-result.json": "6045bffec621126b435ef1551424628d0426ca7e4aefefd094eac50a32fa2160",
+            "variant.json": "4db5cd183b7081657c45fd792fd5dca41100ae601ce12a2eb5c4e584d7129380"
+          },
+          "reason": "fitness positive and gates passed",
+          "run_id": "2453ec89",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "h2-d-confirmation-sybil"
+        },
+        "metrics": {
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "comparison": {
+            "acceptance_limit": "one screening session is not sufficient to accept a candidate",
+            "candidate_preset_version": "h2-d-confirmation-sybil",
+            "candidate_variant_id": "h2-d-confirmation-sybil",
+            "method": "compare tuned absolute outcomes from consecutive full-test runs on one host",
+            "parent_preset_version": "v0.12",
+            "parent_variant_id": "parent-baseline-v0.12"
+          },
+          "comparison_role": "screening_only_single_session",
+          "confidence": 0.875,
+          "confirmation_count": 3,
+          "hardware_fingerprint_hash": "h2-d-single-source-rig",
+          "machine_id": "h2-d-single-source-rig",
+          "preset_version": "h2-d-confirmation-sybil",
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "sample_counts": {
+            "coldstart": 1,
+            "idle_power": 1,
+            "network": 1,
+            "sustained": 1
+          },
+          "schema_version": "seed-organism.metrics.parent-candidate-screen.v0.1",
+          "source_provenance": "paired_full_test_screen",
+          "source_runs": {
+            "candidate": {
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "benchmark_context": {},
+              "hardware_fingerprint_hash": "h2-d-single-source-rig",
+              "machine_id": "h2-d-single-source-rig",
+              "measurement_quality": {
+                "decision_grade": false,
+                "flags": [
+                  "network_detail_log_missing",
+                  "coldstart_detail_log_missing",
+                  "sustained_detail_log_missing"
+                ],
+                "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+                "schema_version": "cursiveos.measurement-quality.v0.2"
+              },
+              "preset_version": "h2-d-confirmation-sybil",
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 3,
+                "idle_power": 3,
+                "network": 3,
+                "sustained": 3
+              },
+              "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+              "source_log": null,
+              "source_provenance": "h2_same_source_near_identical_sybil_sessions",
+              "source_provenance_notes": null,
+              "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-candidate-result.json",
+              "structured_telemetry": {
+                "coldstart": {
+                  "available": false,
+                  "reason": "detail log not found"
+                },
+                "idle_power": {},
+                "network": {
+                  "available": false,
+                  "reason": "detail log not found"
+                },
+                "schema_version": "cursiveos.structured-telemetry.v0.2",
+                "sustained": {
+                  "available": false,
+                  "reason": "detail log not found"
+                }
+              },
+              "telemetry": {},
+              "variant": {
+                "coldstart_ms": 1638.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 42.0
+              }
+            },
+            "parent": {
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "benchmark_context": {},
+              "hardware_fingerprint_hash": "h2-d-single-source-rig",
+              "machine_id": "h2-d-single-source-rig",
+              "measurement_quality": {
+                "decision_grade": false,
+                "flags": [
+                  "network_detail_log_missing",
+                  "coldstart_detail_log_missing",
+                  "sustained_detail_log_missing"
+                ],
+                "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+                "schema_version": "cursiveos.measurement-quality.v0.2"
+              },
+              "preset_version": "parent-v0.12",
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 3,
+                "idle_power": 3,
+                "network": 3,
+                "sustained": 3
+              },
+              "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+              "source_log": null,
+              "source_provenance": "h2_same_source_near_identical_sybil_sessions",
+              "source_provenance_notes": null,
+              "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-parent-result.json",
+              "structured_telemetry": {
+                "coldstart": {
+                  "available": false,
+                  "reason": "detail log not found"
+                },
+                "idle_power": {},
+                "network": {
+                  "available": false,
+                  "reason": "detail log not found"
+                },
+                "schema_version": "cursiveos.structured-telemetry.v0.2",
+                "sustained": {
+                  "available": false,
+                  "reason": "detail log not found"
+                }
+              },
+              "telemetry": {},
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              }
+            }
+          },
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          }
+        },
+        "path": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\runs\\cycle-230\\h2-d-confirmation-sybil-20260629T183302Z-2453ec89",
+        "reason": "fitness positive and gates passed",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "h2-d-single-source-rig",
+          "passed": true,
+          "regression_result_hash": "cce1420faae17b028768a934eab06c785bb2607b0910e581d18a6295c2b1dea5",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-29T18:33:02+00:00",
+          "variant_id": "h2-d-confirmation-sybil"
+        },
+        "sensor_result": {
+          "base_fitness": 0.10487805,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.875,
+          "delta": {
+            "coldstart_pct": 10.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 2.4390243902439024
+          },
+          "fitness_score": 0.10487805,
+          "knobs_removed_vs_parent": 0,
+          "machine_id": "h2-d-single-source-rig",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.0,
+          "preset_version": "h2-d-confirmation-sybil",
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "bfb62e7a2c810b820b727ad8ac2dcda5e14a341b190996f4e272bc922d28127a",
+          "severe_regressions": [],
+          "timestamp": "2026-06-29T18:33:02+00:00",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          },
+          "variant_id": "h2-d-confirmation-sybil"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "h2-d-confirmation-sybil",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.v0.1",
+          "variant_id": "h2-d-confirmation-sybil"
+        }
+      },
+      "submitted_metrics_file": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\mode-d-candidate-result.json",
+      "submitted_variant_file": ".cursiveos\\h2-adversarial-tester\\mode-d-confirmation-sybil\\inputs\\variant-mode-d-sybil-candidate.json"
+    }
+  ],
+  "results_json": "docs\\experiments\\H2-adversarial-tester-results.json",
+  "schema_version": "cursiveos.experiment.h2-adversarial-tester-results.v0.1",
+  "state_root": ".cursiveos\\h2-adversarial-tester",
+  "thresholds": {
+    "fail_kill": "any fabricated-delta bundle reaches accepted",
+    "mode_d_exception": "if confirmation Sybil is not defendable without a trust layer, mark deferred to trust layer; real BTC must stay gated",
+    "pass": "zero fabricated bundles reach accepted state or trigger payout across all attack modes; every rejection logs the gate"
+  }
+}
