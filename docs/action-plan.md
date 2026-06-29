@@ -3,6 +3,7 @@
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
 **Current candidate:** none — v0.12b-swappiness **rejected** 2026-06-28; v0.13-sched **rejected** 2026-06-27
 **Current wrapper:** v1.4.5 (memory-pressure 5th channel + observe-only concurrency probe)
+**Next focus:** Seed Organism → OS.0 — remove the founder from the loop's center (contributor daemon + requests queue first). See "Next Phase" section below.
 **Board reviewed:** 2026-03-23 05:30 EDT
 
 ---
@@ -22,6 +23,36 @@
 5. **v0.12b swappiness** — **rejected** on Stardust (mem +0.7% worse, J/token +3.0%); see `experiments/v0.12b-swappiness-screen-plan.md`.
 6. **Rig automation** — `tools/rig-smoke.sh` (SCP/nohup/poll pattern).
 7. **Schema:** add `page_cache_state` to harness telemetry (Ch00 open gap).
+
+**Sprint verdict:** the measurement frontier is largely exhausted — concurrency, scheduler (v0.13), load-power, idle-pooling, and v0.12b swappiness were all ruled out with rigor. Diminishing returns on adding sensors. The binding constraint is no longer *measurement quality*; it is that **the loop still has the founder as its hub** (founder picks the variant, runs the screen, attests confirmations, triggers payout). Focus now shifts to removing the founder from the center.
+
+---
+
+## Next Phase: Seed Organism → OS.0  (opened 2026-06-28)
+
+**Diagnosis.** Phase 0 is proven: the loop closes (2 accepted cycles), measures honestly (5 validated channels), and — importantly — *rejects* dead ends correctly. What it cannot yet do is run **without a human orchestrator in the middle.** "Seed → OS.0" is fundamentally the work of removing the founder from the loop so machines we don't own can contribute.
+
+**OS.0 north star (testable definition).** One external person installs one thing; their machine autonomously runs a measurement the organism *requested* and uploads it; they can see their contribution and a placeholder reward — **with zero founder involvement.** This single milestone forces gaps G1, G2, G4, G5 into existence without boiling the ocean.
+
+**Gaps, in dependency order:**
+
+- **G1 — Contributor runtime (daemon). KEYSTONE.** A process that lives on any contributor machine and autonomously: pulls "what should I measure" → runs the screen via the existing harness → uploads → reverts, no SSH/agent babysitting. Embryos exist (`seed-session-linux-test.sh`, `tools/rig-smoke.sh`); productize into an unattended, restartable daemon. Everything else hangs off this.
+- **G2 — Requests / job queue in CursiveRoot. (build with G1).** A table the organism writes ("need N confirmations of candidate X on hardware-class Y") and the daemon + dashboard read. This one object unifies *interaction*, *dashboard*, and future *BTC bounties* into a single coordination spine instead of three separate problems. Makes contributor work non-redundant.
+- **G3 — Autonomous proposer.** Wire `tools/qd_organism.py` (QD/MAP-Elites simulator, already built) to emit real candidate presets into the G2 queue, so the next variant isn't bottlenecked on founder imagination. This is the "self" in self-improvement.
+- **G4 — Trust / independence layer.** Auto-counted confirmations (replace founder-attested `--confirmations N` with independent-bundle counting), hardware/wallet independence, immune/anomaly sensors. **Hard gate in front of money** — believing data from a machine we don't control.
+- **G5 — Incentive + interface.**
+  - **Dashboard → bidirectional:** render the request queue, per-machine lineage, contributions, and placeholder rewards — not just read-only state. (Addresses the "how does a user feed the organism" gap directly.)
+  - **BTC payout — gated by G4.** Real (even tiny) payout cannot ship before Sybil detection exists, or it just funds fake benchmark farms. Order is: trust, *then* money.
+
+**Recommended first build (next sprint): G1 + G2 together** — a minimal contributor daemon + a `requests` table + a dashboard panel that renders the queue. It removes the founder from orchestration, gives the dashboard something real and bidirectional, creates the slot BTC bounties drop into, and makes the "first external tester" milestone (board tasks #6–8) actually runnable by a non-founder. Then layer G3, G4, G5.
+
+**Relationship to the Founding-Operator board tasks (#4–13):** those are the go-to-market wrapper around G1–G5. Sequence matters — **build the daemon + queue spine (G1–G2) before recruiting operators (#7)**, because operators need something that runs itself.
+
+### Housekeeping carried from the 2026-06-28 assessment
+- **Reconcile `idle_power` weight vs its own validation.** `DEFAULT_CONFIG` weights `idle_power` 0.30, but the 2026-06-28 CV check failed on laptop AC (CV 1.60) while passing on Stardust (0.016). Either scope idle per-machine or fix the laptop cold-run-1 sampling (same class as the earlier 0.83→0.01 settle fix) — a 0.30-weighted channel should not run on an unreliable measurement.
+- **Remove the `C:\WINDOWS\system32\Tasks\goal-deliverables\` reference** from the top of `HANDOVER.md` — a Windows system path leaked into a committed doc; meaningless to other contributors.
+- **Prune the 5 stale `claude/*` branches** on the CursiveResearch origin (review/merge/delete).
+- **Resolve the 3 open red-team flags** in `CursiveResearch/VALIDATION.md` — especially the **BBR single-flow** flag (keep "switch to BBR" out of public copy / default presets until multi-flow fairness is tested).
 
 ---
 
