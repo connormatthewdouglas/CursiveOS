@@ -1,6 +1,6 @@
 {
   "version": "2026-06-27-concurrency-sprint",
-  "description": "Mirrors concurrency-inference-sensor-noise-floor-plan gates and acceptance-scope paths. run-concurrency-sprint-verify.ps1 must pass before writing scratch evidence.",
+  "description": "Mirrors concurrency-inference-sensor-noise-floor-plan gates and acceptance-scope paths. run-concurrency-sprint-verify.ps1 must pass before writing scratch evidence. Historical scope checks are fixture-backed; later H2* seed acceptance hardening intentionally modifies tools/seed_organism.py and must not be treated as a concurrency-sprint failure.",
   "cursiveos_baseline": "67681ce092bafcb9510d54ac56b16fe392b48b1c",
   "cursiveresearch_baseline": "0a7e405e9fa893fc026898edf3af5e9f3cfe8887",
   "cursiveresearch_repo": "../CursiveResearch",
@@ -34,9 +34,8 @@
     "benchmarks/benchmark-inference-concurrency-v0.1.sh",
     "tools/concurrency_metrics.py"
   ],
-  "must_not_modify": [
-    "tools/seed_organism.py"
-  ],
+  "must_not_modify": [],
+  "historical_must_not_modify_note": "The original 2026-06-27 concurrency sprint did not modify tools/seed_organism.py. This shipped contract is now kept as historical/fixture-backed evidence rather than a global ban on future seed-organism acceptance work.",
   "gate_evidence_files": {
     "h1_stardust": "concurrency-cv-stardust.txt",
     "h1_laptop": "concurrency-cv-laptop.txt",

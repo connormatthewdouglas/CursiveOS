@@ -23,8 +23,8 @@ Why: this lets us learn which optimizations work on which hardware and improve r
 
 CursiveOS adjusts settings in three areas. All of these are standard Linux tuning knobs — nothing obscure, nothing dangerous.
 
-### Network (the strongest measured signal)
-CursiveOS tests 16MB buffers and BBR against a canonical untuned reference in a controlled loopback WAN simulation (50ms RTT, 0.5% loss). Initial measured hosts showed large changes in that specific transport test. Real internet paths, existing custom tuning, and real workloads can behave differently, which is why each machine is benchmarked rather than promised a result.
+### Network (path-scoped signal)
+CursiveOS measures transport behavior in a controlled loopback WAN simulation (50ms RTT, 0.5% loss) and in real-path checks where available. Current evidence says the large ordinary ≤1GbE lossy-path win is mostly CUBIC→BBR; CursiveOS buffer/qdisc changes add ~0% with BBR held constant on that path. Real internet paths, existing custom tuning, multi-flow fairness, and real workloads can behave differently, which is why each machine is benchmarked rather than promised a result.
 
 ### CPU
 CursiveOS v0.8 sets your CPU governor to "performance" mode and disables some aggressive idle states (C2, C3, C6). This can reduce response latency, but it can increase idle power. The May 25 Vega seed baseline recorded +3.2W; earlier machines also showed increases. The benchmark now stores repeated power readings so this tradeoff is measured rather than assumed.

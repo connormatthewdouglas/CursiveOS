@@ -1,6 +1,6 @@
-# H2 — Adversarial / Dishonest Tester Experiment Results
+# H2 / H2* — Adversarial / Dishonest Tester Experiment Results
 
-Status: **pre-registered before adversarial submissions were run; remediation pass applied after initial failure**
+Status: **H2 pre-registered before adversarial submissions were run; H2* remediation pass applied after initial failure and rerun locally**
 Branch: `h2-adversarial-tester`
 
 ## Purpose
@@ -8,6 +8,8 @@ Branch: `h2-adversarial-tester`
 H2 tests whether the seed-organism acceptance pipeline rejects fabricated or dishonest tester contributions **without relying on a trusted center**.
 
 The experiment submits malicious bundles through the real acceptance path where possible, not through a mocked verdict function. The initial run intentionally did **not** modify acceptance logic to make H2 pass; it exposed the holes below. The remediation pass then hardened the shared seed/QD acceptance boundary and reran the same attack shapes.
+
+Terminology: **H2** is the original adversarial test that intentionally exposed the holes; **H2*** is the hardened/remediated rerun after acceptance gates were added.
 
 ## Pre-registered pass / fail thresholds
 
@@ -106,7 +108,7 @@ Implemented fixes in the production acceptance boundary, not only in the experim
 5. **Regression coverage**
    - Added tests for unverified evidence rejection, replay rejection, direct seed parsimony overclaim rejection, and caller-asserted confirmation rejection.
 
-## Remediation H2 verdict table
+## H2* remediation verdict table
 
 Latest local rerun of `python tools/exp_adversarial_tester.py`:
 
@@ -117,9 +119,11 @@ Latest local rerun of `python tools/exp_adversarial_tester.py`:
 | C | Parsimony gaming: overdeclared knob removals | `rejected_invariant` | shared invariant gate | no | no | **PASS** |
 | D | Confirmation Sybil: `--confirmations 3` asserted for same-source near-identical measurements | `inconclusive` | confirmation independence gate | no | no | **DEFERRED TO TRUST LAYER** — real independent aggregation still not implemented |
 
-Current overall H2 status from the runner:
+Current overall H2* status from the runner:
 
 `PASSED_EXCEPT_MODE_D_DEFERRED_TO_TRUST_LAYER`
+
+Latest checked from this branch on 2026-06-29 after the H2* rerun. The current machine-readable artifact is `docs/experiments/H2-adversarial-tester-results.json`; local submitted bundles and ledgers live under `.cursiveos/h2-adversarial-tester/`.
 
 ## Remaining gaps / explicitly not fixed yet
 
@@ -139,14 +143,15 @@ These are marked intentionally so future reruns do not mistake local hardening f
    - Required next fix: CursiveRoot-owned aggregation that counts independent evidence bundles and emits `confirmation_source == "cursiveroot_independent_aggregation"` only after identity/session/raw-artifact checks pass.
 
 4. **Real BTC/reward path must remain gated.**
-   - H2 still uses simulated payout reports.
+   - H2/H2* still uses simulated payout reports.
    - Do not connect scarce-resource payout to this path until the three gaps above are closed or explicitly bounded by policy.
 
 ## Rerun checklist
 
-Before declaring a future H2 pass:
+Before declaring a future H2/H2* pass:
 
 ```bash
+python -m py_compile tools/seed_organism.py tools/qd_organism.py tools/exp_adversarial_tester.py
 python -m unittest tests.test_seed_organism
 python tools/exp_adversarial_tester.py
 python -m json.tool docs/experiments/H2-adversarial-tester-results.json >/dev/null
@@ -156,3 +161,5 @@ Expected after this remediation pass:
 
 - Modes A/B/C: rejected by named gates, no accepted adversarial bundle, no adversarial payout.
 - Mode D: `inconclusive` / deferred until independent CursiveRoot aggregation exists.
+
+Full-suite note: the older concurrency sprint contract is now kept as historical/fixture-backed evidence, not as a global ban on future `tools/seed_organism.py` changes. H2* intentionally changes `tools/seed_organism.py` to harden the shared acceptance boundary, and the legacy contract no longer treats that as a concurrency-sprint failure.

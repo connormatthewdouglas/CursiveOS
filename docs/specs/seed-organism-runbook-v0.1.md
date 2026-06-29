@@ -29,9 +29,11 @@ Local state is written under `.cursiveos/seed/` and is intentionally ignored by 
 
 `seed-session-linux-test.sh` runs the complete Phase 0 session in one paste:
 recovery of any locally saved results → genesis baseline for this machine's
-fingerprint (skipped if CursiveRoot already has one) → current parent-vs-candidate
-screen (default: v0.9 vs v0.11-zram-swappiness, cycle 3) → upload → analyzer verdict. Every step is safe
-to repeat; re-pasting the same command resumes/retries idempotently.
+fingerprint (skipped if CursiveRoot already has one) → optional explicitly
+requested parent-vs-candidate screen → upload → analyzer verdict. No active
+candidate is configured by default right now; v0.11-zram-swappiness has already
+been promoted to v0.12, and v0.12b/v0.13 were rejected. Every step is safe to
+repeat; re-pasting the same command resumes/retries idempotently.
 
 ```bash
 command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh) | bash
@@ -59,13 +61,16 @@ The `--execute` mode is Linux-only. It runs `cursiveos-full-test-v1.4.sh` with t
 
 ### Current candidate screen
 
-After a host has a genesis baseline, the current real test compares the canonical parent (`v0.9`) to the active cycle-3 candidate (`v0.11-zram-swappiness`). v0.11 is v0.9 plus zram and `vm.swappiness=60`; it exists because validated memory-pressure results showed zram alone remains neutral while v0.9 pins `swappiness=0`. This screen runs two full tests back-to-back on one machine:
+There is currently **no default candidate screen**. Cycle 3's
+`v0.11-zram-swappiness` screen is closed and promoted to parent `v0.12`; the
+follow-on `v0.12b-swappiness` and `v0.13-sched` screens were rejected. To run a
+specific historical or new candidate, set `CURSIVEOS_CANDIDATE_VARIANT`:
 
 ```bash
-command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | CURSIVEOS_CYCLE_ID=3 CURSIVEOS_PARENT_VARIANT=v0.9 CURSIVEOS_CANDIDATE_VARIANT=v0.11-zram-swappiness bash
+command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh) | CURSIVEOS_CANDIDATE_VARIANT=v0.12b-swappiness bash
 ```
 
-One screen can reveal whether the hypothesis is worth repeating. It cannot accept a mutation or produce a payout: acceptance requires repeated, counterbalanced parent/candidate sessions so that thermal drift and run order do not masquerade as fitness.
+One screen can reveal whether a hypothesis is worth repeating. It cannot accept a mutation or produce a payout: acceptance requires repeated, counterbalanced parent/candidate sessions so that thermal drift and run order do not masquerade as fitness.
 
 If Ollama is installed but not running, the harness now tries to start it automatically before pulling or validating a model. If Ollama still cannot become ready, the run continues with inference metrics marked `N/A`; the seed organism should then emit an invalid or inconclusive bundle rather than losing the whole audit trail.
 
@@ -86,6 +91,17 @@ Each evaluated variant writes an audit bundle:
 - `bundle-manifest.json`
 
 Accepted variants append to `.cursiveos/seed/ledger/ledger.jsonl`. All variants append sensor and regression results whether accepted, rejected, invalid, or inconclusive.
+
+## H2* acceptance hardening notes
+
+H2* is the current adversarial acceptance audit for this runbook. It hardens the local seed/QD acceptance boundary against dishonest submissions while leaving global trust to CursiveRoot:
+
+- Bare positive metric summaries without decision-grade evidence/provenance reject as `rejected_unverified_evidence`.
+- Measurements now carry a `measurement_fingerprint`; duplicate accepted fingerprints in the same local ledger reject as `rejected_replay`.
+- Parsimony is derived from `parent_genome_knobs` and `genome_knobs`; metadata overclaims reject as `rejected_invariant`.
+- Caller-asserted `--confirmations N` is audit metadata only. Counts above 1 are not acceptance-grade unless emitted by CursiveRoot independent aggregation, so same-source confirmation Sybil attempts remain `inconclusive`.
+
+See `docs/experiments/H2-adversarial-tester-results.md` for the pre-remediation H2 failure, H2* rerun verdicts, and remaining trust-layer gaps. Real BTC/reward settlement must stay disabled until CursiveRoot owns independent identity/session/artifact aggregation.
 
 ## Sensor Direction
 

@@ -111,7 +111,7 @@ The operational takeaway for future work: stress-test before dependencies become
 
 The `hub/` and `hub-api/` code currently implement v3.1 semantics (pool, voting, 60/40 split, Babylon integration stubs). These do not match v3.3 docs.
 
-Hub code migration is tracked as a separate engineering workstream beginning with a Phase 0 audit ([claude-code-phase-0-hub-audit.md](../claude-code-phase-0-hub-audit.md) in the ops tree). The audit inventories what exists before any code changes. Schema migration, backend rewrite, frontend rewrite, and launch readiness are subsequent phases with explicit gates between them.
+Hub code migration is tracked as a separate engineering workstream beginning with a Phase 0 audit in the ops tree. The audit inventories what exists before any code changes. Schema migration, backend rewrite, frontend rewrite, and launch readiness are subsequent phases with explicit gates between them.
 
 Until hub migration completes, the docs describe the target architecture and the code describes the current implementation. This gap is acknowledged and being actively closed. Readers should treat the docs as the specification and the code as an in-progress implementation of an earlier spec transitioning to match.
 

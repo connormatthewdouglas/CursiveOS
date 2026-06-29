@@ -6,9 +6,9 @@ set -euo pipefail
 REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveOS.git}"
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
 BRANCH="${CURSIVEOS_BRANCH:-main}"
-CYCLE_ID="${CURSIVEOS_CYCLE_ID:-3}"
+CYCLE_ID="${CURSIVEOS_CYCLE_ID:-4}"
 PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.12}"
-CANDIDATE_VARIANT="${CURSIVEOS_CANDIDATE_VARIANT:-v0.11-zram-swappiness}"
+CANDIDATE_VARIANT="${CURSIVEOS_CANDIDATE_VARIANT:-}"
 
 say() { printf '\n[CursiveOS mutation screen] %s\n' "$*"; }
 
@@ -39,6 +39,13 @@ fi
 cd "$TARGET_DIR"
 chmod +x cursiveos-full-test-v1.4.sh presets/*.sh tools/seed_organism.py
 python3 tools/seed_organism.py init
+
+if [[ -z "$CANDIDATE_VARIANT" ]]; then
+  say "No active candidate is configured."
+  say "Cycle 3's v0.11-zram-swappiness is already accepted/promoted to v0.12; v0.12b and v0.13 were rejected."
+  say "For an explicit historical or new screen, set CURSIVEOS_CANDIDATE_VARIANT=<variant> and, if needed, CURSIVEOS_CYCLE_ID=<cycle>."
+  exit 2
+fi
 
 case "$PARENT_VARIANT" in
   v0.8|genesis|genesis-linux)

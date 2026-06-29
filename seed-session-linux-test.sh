@@ -12,13 +12,15 @@
 #      2026-06-10 CursiveRoot data loss).
 #   3. GENESIS: records a v0.8 genesis baseline for this machine's hardware
 #      fingerprint (skipped automatically if CursiveRoot already has one).
-#   4. SCREEN: runs the current parent (default v0.9) vs the current candidate
-#      (default v0.11-zram-swappiness) mutation screen (two full benchmark
-#      sessions, back to back).
+#   4. OPTIONAL SCREEN: if CURSIVEOS_SCREENS is set, runs the current parent
+#      (default v0.12) vs the requested candidate screen(s), two full benchmark
+#      sessions per screen. With no active candidate configured, this step is
+#      skipped by default.
 #   5. Uploads all artifacts and prints the analyzer verdict.
 #
-# This takes a while (up to three full benchmark passes). Leave the terminal
-# open; everything is logged under ~/CursiveOS/logs/.
+# This can take a while: one full genesis benchmark if the machine has no
+# baseline yet, plus two full benchmark passes for each requested screen. Leave
+# the terminal open; everything is logged under ~/CursiveOS/logs/.
 
 set -uo pipefail
 
@@ -33,7 +35,7 @@ main() {
 REPO_URL="${CURSIVEOS_REPO_URL:-https://github.com/connormatthewdouglas/CursiveOS.git}"
 TARGET_DIR="${CURSIVEOS_DIR:-$HOME/CursiveOS}"
 BRANCH="${CURSIVEOS_BRANCH:-main}"
-CYCLE_ID="${CURSIVEOS_CYCLE_ID:-3}"
+CYCLE_ID="${CURSIVEOS_CYCLE_ID:-4}"
 SUPABASE_URL="${CURSIVEOS_SUPABASE_URL:-https://iovvktpuoinmjdgfxgvm.supabase.co}"
 SUPABASE_KEY="${CURSIVEOS_SUPABASE_KEY:-sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn}"
 
@@ -161,9 +163,13 @@ fi
 
 # Screens to run, space-separated "order:variant" entries. Order is "normal"
 # (parent first) or "reversed" (candidate first, for counterbalancing).
+# No active candidate is configured right now: v0.11-zram-swappiness was
+# accepted/promoted to v0.12; v0.12b and v0.13 were rejected. To run an
+# explicit historical or new screen, set CURSIVEOS_SCREENS, e.g.
+#   CURSIVEOS_SCREENS="normal:v0.12b-swappiness reversed:v0.12b-swappiness"
 # Parent defaults to the current canonical parent (v0.12). Override with
 # CURSIVEOS_PARENT_VARIANT=v0.9 or v0.8/genesis for historical screens.
-SCREENS="${CURSIVEOS_SCREENS:-normal:v0.11-zram-swappiness}"
+SCREENS="${CURSIVEOS_SCREENS:-}"
 PARENT_VARIANT="${CURSIVEOS_PARENT_VARIANT:-v0.12}"
 case "$PARENT_VARIANT" in
   v0.8|genesis|genesis-linux)
@@ -180,9 +186,14 @@ if [[ ! -f "$PARENT_FILE" ]]; then
   exit 1
 fi
 
-step "4/5 Mutation screen(s): $SCREENS"
-note "Each screen is two full benchmark sessions, back to back. Screening only —"
-note "one screen cannot accept a mutation or create a payout."
+step "4/5 Mutation screen(s): ${SCREENS:-none configured}"
+if [[ -z "$SCREENS" ]]; then
+  note "No active candidate is configured; skipping mutation screens by default."
+  note "Set CURSIVEOS_SCREENS='normal:<variant>' to run an explicit historical or new screen."
+else
+  note "Each screen is two full benchmark sessions, back to back. Screening only —"
+  note "one screen cannot accept a mutation or create a payout."
+fi
 for entry in $SCREENS; do
   order="${entry%%:*}"
   cand="${entry#*:}"

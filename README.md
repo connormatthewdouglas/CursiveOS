@@ -27,9 +27,11 @@ What it does, in order:
 1. **Recovers** any results still saved locally from earlier installs.
 2. **Genesis baseline** — records this machine's v0.8 baseline under its
    hardware fingerprint (skipped automatically if CursiveRoot already has one).
-3. **Mutation screen** — compares the current parent preset (`v0.12`) against
-   the current candidate (`v0.11-zram-swappiness`). A single screen is diagnostic only — one observation
-   can never accept a mutation or create a payout.
+3. **Optional mutation screen** — no candidate is active by default. To run an
+   explicit historical or new screen, set `CURSIVEOS_SCREENS="normal:<variant>"`;
+   the script compares that candidate against the current parent preset (`v0.12`).
+   A single screen is diagnostic only — one observation can never accept a
+   mutation or create a payout.
 4. **Uploads** all artifacts and prints the analyzer verdict.
 
 Every step is idempotent — if anything is interrupted, just paste the same
@@ -49,17 +51,22 @@ also the contributor of an accepted variant.
 ./scripts/cursiveroot-status.sh
 ```
 
-### Cycle-3 confirmation run (current ask)
+### Current mutation status
 
-The active candidate is **v0.11-zram-swappiness**: the v0.9 parent stack plus a
-zram swap device and `vm.swappiness=60`. This is the swappiness-aware successor
-to v0.10-zram; the validated finding is that zram alone stays neutral while
-v0.9 pins `vm.swappiness=0`, but v0.11 lets reclaim actually land in fast
-compressed RAM. On any Linux box (a live-USB Linux Mint session on a Windows
-machine works — no install needed), paste:
+There is **no active candidate configured by default**. Cycle 3 already accepted
+**v0.11-zram-swappiness** (v0.9 + zram + `vm.swappiness=60`) and promoted it to
+**canonical parent v0.12**. Follow-on swappiness 100 (`v0.12b`) and scheduler
+(`v0.13`) screens were rejected, so the near-term focus has moved from more
+manual screens to **Seed Organism → OS.0**: contributor daemon + request queue.
+The H2* adversarial acceptance hardening pass is complete for local gates:
+fabricated evidence, local replay, and parsimony metadata overclaims are rejected;
+same-source confirmation Sybil attempts remain deferred to the CursiveRoot trust
+layer before any real payout path.
+
+To run an explicit historical screen on a Linux box, name the candidate:
 
 ```bash
-command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh | CURSIVEOS_PARENT_VARIANT=v0.12 bash
+command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh | CURSIVEOS_CANDIDATE_VARIANT=v0.12b-swappiness bash
 ```
 
 Cycle 3 result (accepted 2026-06-26): v0.11-zram-swappiness vs v0.9 parent,
@@ -71,13 +78,14 @@ reports.
 
 ### A note on the network numbers (honesty box)
 
-The headline "+500–900% network" figures measure **transport resilience under
-emulated lossy-WAN conditions** — and most of that delta comes from switching
-TCP congestion control from CUBIC (Linux default) to BBR, a well-documented
-algorithm behavior, not a CursiveOS invention. What our tuning adds *beyond*
-BBR is measured separately by `benchmarks/benchmark-network-stackdelta-v0.1.sh`
-(BBR held constant, only the CursiveOS buffer/qdisc tuning toggled). Real-path
-(non-loopback) validation is in progress.
+The old headline "+500–900% network" numbers are now scoped more tightly. The
+large measured win on ordinary ≤1GbE lossy paths is the **CUBIC → BBR** switch;
+with BBR held constant, the CursiveOS buffer/qdisc stack measured ~0% on that
+real path. Loopback lossy-WAN tests remain useful for mechanism debugging, but
+their magnitudes do not transfer directly to real links. Because in-tree BBRv1
+has known multi-flow fairness / retransmit risks, public copy and future default
+recommendations should stay scoped to "single flow under loss" until the
+multi-flow fairness test is done.
 
 ### Individual test paths (advanced)
 
@@ -130,7 +138,7 @@ Details and development workflows: [docs/specs/seed-organism-runbook-v0.1.md](do
 
 This is a genesis baseline characterization, reconstructed into CursiveRoot from the terminal summary after the database was unavailable during upload. It is not a candidate acceptance and produces no payout.
 
-**Network is the strongest measured signal.** Under the repository's controlled loopback WAN simulation (50ms RTT, 0.5% loss), the 16MB buffers, BBR/fq, and TCP tuning produce large throughput changes relative to the canonical untuned reference on the measured hosts. This test isolates transport behavior; it does not by itself predict a production internet path, a user's existing custom configuration, or application revenue.
+**Network is now scoped as a safety/measurement claim.** Under the repository's controlled loopback WAN simulation (50ms RTT, 0.5% loss), transport changes can produce large throughput changes, but real-path A/B showed the ordinary ≤1GbE win is dominated by CUBIC→BBR while the CursiveOS buffer/qdisc stack adds ~0% with BBR held constant. Treat network magnitudes as path-scoped evidence, not a universal performance promise; multi-flow fairness/retransmit testing remains open before BBR becomes an unqualified public/default recommendation.
 
 **Power tradeoff is real.** v0.8 disables CPU idle states and may pin GPU frequency. The recorded Vega seed baseline incurred +3.2W at idle, and older measurements also showed increases. Whether the latency benefit justifies the cost is workload-specific; the next candidate isolates this tradeoff instead of assuming it.
 
@@ -148,9 +156,9 @@ CursiveOS applies a set of temporary, safe OS tweaks tuned for local compute wor
 | --- | --- | --- |
 | CPU governor | performance | Full clock speed, no scaling delays |
 | Energy perf preference | performance | AMD/Intel power hint to hardware |
-| Net buffers (rmem/wmem_max) | 16MB | Closes BDP gap on modern WAN links |
-| tcp_rmem / tcp_wmem | 4096 / 262144 / 16MB | Closes auto-tuner ceiling gap |
-| TCP congestion control | BBR + fq | Better sustained throughput on WAN |
+| Net buffers (rmem/wmem_max) | 16MB | High-BDP hypothesis; ordinary ≤1GbE BBR-held stack delta measured ~0% |
+| tcp_rmem / tcp_wmem | 4096 / 262144 / 16MB | High-BDP hypothesis; keep magnitude scoped until real high-BDP test |
+| TCP congestion control | BBR + fq | Path-scoped lossy single-flow win; multi-flow fairness/retransmit testing open |
 | TCP slow start after idle | disabled | Throughput doesn't drop after pauses |
 | net.core.netdev_max_backlog | 5000 | Prevents silent packet drops under P2P load |
 | net.core.somaxconn | 4096 | Larger connection queue |
@@ -223,6 +231,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Done** → Full-test wrapper v1.4 (CursiveRoot auto-submit, zero setup)
 - **Done** → CursiveRoot: live hardware/performance database
 - **Done** → Decision-grade CursiveRoot analyzer: cohort signal, organism state, and data hygiene reporting
+- **Done** → H2* adversarial acceptance hardening: fabricated evidence, local replay, and parsimony overclaims blocked; independent confirmation aggregation remains the trust-layer gate
 - **Done** → v3.3 economic architecture specified (white paper v2.4)
 - **Done** → Agent architecture specified (measurement daemon + natural-language shell)
 - **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)
@@ -251,6 +260,7 @@ Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is 
 - [`white-paper.md`](white-paper.md) — technical white paper (v2.4)
 - [`software-organisms-manifesto.md`](software-organisms-manifesto.md) — the software organism framework and theory
 - [`docs/specs/seed-organism-v0.1.md`](docs/specs/seed-organism-v0.1.md) — Phase 0 minimum viable organism specification
+- [`docs/experiments/H2-adversarial-tester-results.md`](docs/experiments/H2-adversarial-tester-results.md) — H2/H2* dishonest-submission audit, remediation verdicts, and remaining trust-layer gates
 - [`docs/audits/2026-05-25-phase0-reality-check.md`](docs/audits/2026-05-25-phase0-reality-check.md) — current implementation and benchmark reality check
 - [`docs/specs/layer5-economics-v3.3.md`](docs/specs/layer5-economics-v3.3.md) — authoritative economics specification
 - [`docs/architecture/biological-architecture.md`](docs/architecture/biological-architecture.md) — the organism frame and biological mapping

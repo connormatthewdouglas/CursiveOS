@@ -1,10 +1,10 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-06-28
+**Last updated:** 2026-06-29
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
 **Current candidate:** none — v0.12b-swappiness **rejected** 2026-06-28; v0.13-sched **rejected** 2026-06-27
-**Current wrapper:** v1.4.5 (memory-pressure 5th channel + observe-only concurrency probe)
-**Next focus:** Seed Organism → OS.0 — remove the founder from the loop's center (contributor daemon + requests queue first). See "Next Phase" section below.
-**Board reviewed:** 2026-03-23 05:30 EDT
+**Current wrapper:** v1.4.5 (memory-pressure 5th channel + idle-power gate-only + observe-only concurrency probe)
+**Next focus:** Seed Organism → OS.0 — remove the founder from the loop's center (contributor daemon + requests queue first). H2* has hardened local acceptance gates; the remaining trust work is independent CursiveRoot aggregation. See "Next Phase" section below.
+
 
 ---
 
@@ -39,7 +39,7 @@
 - **G1 — Contributor runtime (daemon). KEYSTONE.** A process that lives on any contributor machine and autonomously: pulls "what should I measure" → runs the screen via the existing harness → uploads → reverts, no SSH/agent babysitting. Embryos exist (`seed-session-linux-test.sh`, `tools/rig-smoke.sh`); productize into an unattended, restartable daemon. Everything else hangs off this.
 - **G2 — Requests / job queue in CursiveRoot. (build with G1).** A table the organism writes ("need N confirmations of candidate X on hardware-class Y") and the daemon + dashboard read. This one object unifies *interaction*, *dashboard*, and future *BTC bounties* into a single coordination spine instead of three separate problems. Makes contributor work non-redundant.
 - **G3 — Autonomous proposer.** Wire `tools/qd_organism.py` (QD/MAP-Elites simulator, already built) to emit real candidate presets into the G2 queue, so the next variant isn't bottlenecked on founder imagination. This is the "self" in self-improvement.
-- **G4 — Trust / independence layer.** Auto-counted confirmations (replace founder-attested `--confirmations N` with independent-bundle counting), hardware/wallet independence, immune/anomaly sensors. **Hard gate in front of money** — believing data from a machine we don't control.
+- **G4 — Trust / independence layer.** Auto-counted confirmations (replace founder-attested `--confirmations N` with independent-bundle counting), hardware/wallet independence, immune/anomaly sensors. H2* now rejects bare fabricated evidence, local replays, and parsimony metadata overclaims, but Mode D remains `inconclusive` until CursiveRoot derives confirmations from independent bundles. **Hard gate in front of money** — believing data from a machine we don't control.
 - **G5 — Incentive + interface.**
   - **Dashboard → bidirectional:** render the request queue, per-machine lineage, contributions, and placeholder rewards — not just read-only state. (Addresses the "how does a user feed the organism" gap directly.)
   - **BTC payout — gated by G4.** Real (even tiny) payout cannot ship before Sybil detection exists, or it just funds fake benchmark farms. Order is: trust, *then* money.
@@ -49,10 +49,12 @@
 **Relationship to the Founding-Operator board tasks (#4–13):** those are the go-to-market wrapper around G1–G5. Sequence matters — **build the daemon + queue spine (G1–G2) before recruiting operators (#7)**, because operators need something that runs itself.
 
 ### Housekeeping carried from the 2026-06-28 assessment
-- **Reconcile `idle_power` weight vs its own validation.** `DEFAULT_CONFIG` weights `idle_power` 0.30, but the 2026-06-28 CV check failed on laptop AC (CV 1.60) while passing on Stardust (0.016). Either scope idle per-machine or fix the laptop cold-run-1 sampling (same class as the earlier 0.83→0.01 settle fix) — a 0.30-weighted channel should not run on an unreliable measurement.
-- **Remove the `C:\WINDOWS\system32\Tasks\goal-deliverables\` reference** from the top of `HANDOVER.md` — a Windows system path leaked into a committed doc; meaningless to other contributors.
-- **Prune the 5 stale `claude/*` branches** on the CursiveResearch origin (review/merge/delete).
-- **Resolve the 3 open red-team flags** in `CursiveResearch/VALIDATION.md` — especially the **BBR single-flow** flag (keep "switch to BBR" out of public copy / default presets until multi-flow fairness is tested).
+- **Done 2026-06-29:** `DEFAULT_CONFIG` now sets `idle_power` weight to **0.0** while keeping the severe-regression gate; this matches the scoped validation (desktop usable, laptop AC unresolved, no cross-machine pooling).
+- **Done 2026-06-29:** removed the leaked Windows system-path reference from `HANDOVER.md`.
+- **Done 2026-06-29:** removed the stale default `v0.11-zram-swappiness` candidate from one-paste scripts/docs; explicit historical/new screens now require `CURSIVEOS_CANDIDATE_VARIANT` or `CURSIVEOS_SCREENS`.
+- **Done 2026-06-29:** H2* adversarial remediation documented in `docs/experiments/H2-adversarial-tester-results.md`; A/B/C are rejected by named local gates and D is correctly deferred to the trust layer.
+- **Open:** 5 `claude/*` branches remain on CursiveResearch, but a 2026-06-29 merge-base check found all 5 are **not merged to `main`**; review/cherry-pick/delete intentionally rather than blind-pruning.
+- **Open:** resolve the 3 open red-team flags in `CursiveResearch/VALIDATION.md`; the BBR single-flow/default-preset issue remains the highest-impact one.
 
 ---
 
@@ -85,62 +87,47 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
 
 ---
 
-## Active Board Tasks — Priority Order
+## Active Board Tasks — OS.0 Priority Order
 
-### 1. ~~Apply the decision-grade sensor migration~~ ✅ done (2026-06-10)
-- `run_detail_bundles` exists on CursiveRoot and is part of the tracked baseline migration.
-- Anon insert/select retained for founder bootstrap; authenticated tester/machine identity still required before external rollout.
+### 1. Build G1 + G2 together: contributor daemon + CursiveRoot request queue ← NEXT BUILD
+- Daemon lives on a contributor machine, pulls the next requested measurement,
+  runs the existing harness, uploads artifacts, reverts presets, and survives
+  interruption/restart without SSH babysitting.
+- Requests table is the coordination spine: parent preset, candidate preset,
+  needed confirmations, hardware class/constraints, status, and placeholder
+  reward metadata.
+- This replaces founder-picked/manual screens as the default workflow.
 
-### 2. Run the v0.9 network-efficient parent/candidate screen ← NEXT PHYSICAL TEST
-- On the rebuilt founder rig (Intel + Arc A750), paste the one-command session:
-  it recovers any saved results, records the new machine's genesis baseline,
-  runs the v0.8 → v0.9 screen, uploads everything, and prints the verdict.
-- Then repeat with reversed order (v0.9 → v0.8) and on at least one additional machine.
-- Treat each single screen as diagnostic only; do not accept inheritance from one host/order.
+### 2. Add a dashboard request/contribution panel
+- Render open requests, per-machine contribution history, lineage, and placeholder
+  rewards from CursiveRoot.
+- Make the dashboard bidirectional enough that an external operator can see what
+  the organism needs and what their machine contributed.
 
-### 3. ~~Canonicalize machine identity~~ ✅ done (2026-06-10)
-- Fingerprint v2 (stable hardware identity) is the canonical join key as of wrapper v1.4.1.
-- Old slug ids and v1 hashes preserved in `machine_aliases`; `os`/`kernel` backfilled.
+### 3. Trust / independence layer before money
+- Replace founder-attested `--confirmations N` with auto-counted independent
+  bundles.
+- H2* Mode D is the current acceptance test for this gap: caller-asserted
+  confirmations must stay `inconclusive` until CursiveRoot emits independent
+  aggregation evidence.
+- Track hardware/wallet independence and anomaly/immune signals.
+- BTC payout remains simulated/placeholder until Sybil resistance exists.
 
-### 4. Define the Founding Operator program
-- Write the simple rules for who qualifies, what they do, what they get, and how future upside will be considered.
-- Keep the framing serious and non-hype: early operators, not disposable testers.
-
-### 5. Create the contributor ledger
-- Track who contributed hardware, runs, bugs found, and overall contribution value.
-- This is the bridge between goodwill now and stronger incentives later.
-
-### 6. Improve the first-run external experience
+### 4. First-run external experience + founding operators
 - Tighten onboarding, rollback clarity, error reporting, and expectation-setting.
-- Goal: the first external run feels safe, legible, and worth repeating.
+- Define the Founding Operator program, then recruit 3–5 technically aligned
+  operators **after** the daemon + queue spine works.
+- White-glove the first cohort as collaborators, not disposable testers.
 
-### 7. Recruit 3–5 technically aligned founding operators
-- Prioritize local AI, mining, homelab, and builder communities.
-- Prefer mission-aligned operators over one-off paid testers.
+### 5. Autonomous proposer after the queue exists
+- Wire `tools/qd_organism.py` to emit candidate presets into the request queue.
+- Keep proposal generation separate from truth-writing: measurement bundles and
+  trust gates remain the source of selection truth.
 
-### 8. White-glove the first cohort
-- Treat the first external operators as collaborators.
-- Use their runs and feedback to harden the product and onboarding.
-
-### 9. Use paid testers only for narrow QA later
-- Fiverr-style testing is not the main validation engine.
-- Reserve paid testers for controlled onboarding/usability checks after the first-run flow is stable.
-
-### 10. Buy hardware only where it closes meaningful validation gaps
-- Spend hardware budget where it reduces uncertainty or covers an important user segment.
-- Prefer coverage/relevance over raw compute prestige.
-
-### 11. Prioritize reliability and repeatability over flashy features
-- Near-term product work should focus on safe rollback, debuggability, and predictable external success.
-- Add new features only when they support trust or leverage.
-
-### 12. Continue improving the preset stack only when gains are measured
-- Every new tweak should be benchmarked, meaningful, and worth the added complexity.
-- Avoid complexity creep that makes external testing harder.
-
-### 13. Build early community through measured proof
-- Share evidence, real deltas, and trust-building results where target users already gather.
-- The immediate goal is not broad hype; it is converting a few good operators into repeat contributors.
+### 6. Narrow QA / hardware buys only where they close gaps
+- Paid testers are for onboarding/usability QA after the first-run flow is stable.
+- Buy hardware only when it reduces a real validation uncertainty or covers a
+  strategically important user segment.
 
 ---
 
@@ -176,7 +163,7 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
 
 ## Benchmark Limitations (known, documented)
 
-- **Inference delta is small on GPU (~5–15%)** — network is the headline (+400–900%). Inference improvement from GPU freq + THP is real but modest for single-stream workloads.
+- **Network gains are path-scoped** — real-path ≤1GbE testing shows CUBIC→BBR dominates under loss; buffer/qdisc stack delta is ~0% with BBR held constant, and BBRv1 needs multi-flow fairness/retransmit testing before unqualified default/public claims.
 - **Concurrent throughput measured but not yet discriminative** — `benchmark-inference-concurrency-v0.1.sh` reports aggregate tok/s under 4 parallel streams (H1 CV ≤ 0.15 on both founder rigs). v0.12 vs v0.8 shows 0% delta on Stardust; fitness weight stays 0 until a scheduler-axis candidate moves the channel.
 - **VRAM model table incomplete** — inference benchmark covers 4GB+ (phi3) and 8GB+ (mistral). Cards with 2–3GB VRAM have no recommendation yet.
 - **ROCm auto-install Ubuntu/Debian only** — other distros get a manual URL. Covers the majority of mining rigs.

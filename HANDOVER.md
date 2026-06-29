@@ -1,6 +1,4 @@
-# CursiveOS — Agent Handover (2026-06-28, post-measurement-frontier sprint)
-
-Workspace deliverables: `C:\WINDOWS\system32\Tasks\goal-deliverables\` (classifier-visible copy of this sprint).
+# CursiveOS — Agent Handover (2026-06-29, post-H2* adversarial hardening)
 
 Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 `docs/action-plan.md`. This file = live operational state.
@@ -16,7 +14,8 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **Idle-power CV (2026-06-28):** Stardust **PASS** (CV 0.016); laptop AC **FAIL** (cold run-1 outlier, CV 1.60); H3 **PASS** (no cross-machine pooling). Idle weight stays **0** fleet-wide until laptop scoped.
 - **Rig automation:** `tools/rig-smoke.sh` — `TAO_SUDO_PASS=`, SCP → `nohup &` → poll `/tmp/rig-smoke-*.out` only (no long SSH one-liners).
 - **v0.12b screen (2026-06-28):** **rejected** on Stardust (mem +0.7% worse, J/token +3.0%).
-- **Next:** new candidate axis (governor/load-power); optional laptop battery idle-power cohort.
+- **H2* adversarial hardening (2026-06-29):** `tools/exp_adversarial_tester.py` now reports A/B/C rejected by named local gates; Mode D is `inconclusive` and deferred to CursiveRoot independent aggregation. See `docs/experiments/H2-adversarial-tester-results.md`.
+- **Next:** Seed Organism → OS.0: contributor daemon + CursiveRoot request queue first; trust/independence layer before any real BTC payout.
 
 ## Lineage
 
@@ -81,7 +80,7 @@ cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh 4 mist
 
 ## Tier 2 remaining (not started)
 
-- Auto-count confirmations from independent CursiveRoot bundles (not founder-attested `--confirmations N`)
+- Auto-count confirmations from independent CursiveRoot bundles (not founder-attested `--confirmations N`). H2* Mode D is the red/amber test for this: caller-asserted counts must remain `inconclusive` until system-owned aggregation exists.
 - `page_cache_state` in harness telemetry
 - CursiveRoot auth hardening before external rollout
 - Daemon MVP + NL shell spec (Transition 1)
@@ -106,3 +105,4 @@ Poll `/tmp/rig-smoke-*.out` on rigs; never block SSH on `nohup` without `&` or c
 - Remote bash over SSH from PowerShell → base64-encode scripts
 - `git fetch; git -c credential.helper= rebase origin/main` before push (backup bot drift)
 - Push: `git -c credential.helper= -c credential.helper=store push origin main`
+- Full `python -m unittest discover -s tests` passes after scoping the older concurrency sprint contract as historical/fixture-backed evidence rather than a global ban on future `tools/seed_organism.py` changes. Use focused H2* checks plus the experiment runner when judging the adversarial hardening itself.
