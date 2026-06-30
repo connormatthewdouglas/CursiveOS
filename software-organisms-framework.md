@@ -1,6 +1,6 @@
 # Software Organisms
 
-### A manifesto on governance-by-measurement and the first instance under construction
+### A framework for governance-by-measurement and the first instance under construction
 
 ---
 
@@ -198,13 +198,13 @@ This is the honest version of what software organisms are currently capable of. 
 
 ## 11. CursiveOS as the First Instance
 
-CursiveOS is the first software organism under active construction. Its design is not downstream of this manifesto; the manifesto is downstream of the design. The architectural moves described here — sensors replacing governance, metabolism without capital pools, metabolic sensor for homeostasis, compensation shape matching work shape, bootstrap honesty, fork obligation inheritance via Bitcoin anchoring, the autonomic nervous system separated from the voice interface — were each worked out while solving specific problems in the CursiveOS design. They are discoveries, not derivations.
+CursiveOS is the first software organism under active construction. Its design is not downstream of this framework; the framework is downstream of the design. The architectural moves described here — sensors replacing governance, metabolism without capital pools, metabolic sensor for homeostasis, compensation shape matching work shape, bootstrap honesty, fork obligation inheritance via Bitcoin anchoring, the autonomic nervous system separated from the voice interface — were each worked out while solving specific problems in the CursiveOS design. They are discoveries, not derivations.
 
 The project is in early-phase implementation. The phenotype — a tuned Linux configuration optimized for local compute workloads — is working and validated on real hardware. The genesis sensor suite is being built against the existing benchmark infrastructure. The economic layer is fully specified but will not meaningfully activate until population grows beyond the founder. The measurement daemon is specified and will be built against the Phase 0 implementation. The natural-language shell is declared as the flagship feature of the v1.0 release.
 
 CursiveOS is proof that the category of software organism is implementable. It is not yet proof that a mature software organism is sustainable at scale — no such proof yet exists, anywhere. The project's commitment is to provide that proof through operation, with every architectural choice subject to adversarial stress testing and documented honestly when it fails or requires revision. The v1.0 economic architecture of CursiveOS differs substantially from the v3.1 architecture published six months prior, because v3.1 failed stress tests that v3.3 survives. This is how the lineage operates: versioned publicly, stress-tested continuously, revised when wrong.
 
-The framework is not finished. The category of software organisms is new enough that we do not yet know all its pathologies. What this manifesto describes is the current state of understanding — the architectural moves that have survived stress testing, the failure modes that have been identified and addressed, the bootstrap honesty the project is committed to maintaining. Future instances of software organisms will find failure modes we have not yet encountered. When they do, the framework will expand. This is how knowledge accumulates in a new category.
+The framework is not finished. The category of software organisms is new enough that we do not yet know all its pathologies. What this framework describes is the current state of understanding — the architectural moves that have survived stress testing, the failure modes that have been identified and addressed, the bootstrap honesty the project is committed to maintaining. Future instances of software organisms will find failure modes we have not yet encountered. When they do, the framework will expand. This is how knowledge accumulates in a new category.
 
 ---
 

@@ -260,7 +260,7 @@ Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is 
 
 - [`ROADMAP.md`](ROADMAP.md) — four-transition roadmap with milestones and flagship features by release
 - [`white-paper.md`](white-paper.md) — technical white paper (v2.4)
-- [`software-organisms-manifesto.md`](software-organisms-manifesto.md) — the software organism framework and theory
+- [`software-organisms-framework.md`](software-organisms-framework.md) — the software organism framework and theory
 - [`docs/specs/seed-organism-v0.1.md`](docs/specs/seed-organism-v0.1.md) — Phase 0 minimum viable organism specification
 - [`docs/experiments/H2-adversarial-tester-results.md`](docs/experiments/H2-adversarial-tester-results.md) — H2/H2* dishonest-submission audit and remediation record
 - [`docs/experiments/V-verifier-hardening-results.md`](docs/experiments/V-verifier-hardening-results.md) — V verifier-hardening results: recompute, signed identity, global replay, independent aggregation, D-funded, and H controls

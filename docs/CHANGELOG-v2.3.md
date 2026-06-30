@@ -6,7 +6,7 @@ v2.3 separates the technical paper from the organism theory. The root white pape
 
 ## Added
 
-- `software-organisms-manifesto.md` — root-level manifesto defining the software organism framework and positioning CursiveOS as the first instance under construction.
+- `software-organisms-framework.md` — root-level framework document defining the software organism category and positioning CursiveOS as the first instance under construction.
 - `docs/specs/seed-organism-v0.1.md` — Phase 0 minimum viable organism specification: variant runner, minimum sensor suite, append-only fitness ledger, and fake-BTC cycle close.
 - `archive/white-paper-v2.2.md` — archived copy of the previous integrated white paper.
 
@@ -22,6 +22,6 @@ v2.3 separates the technical paper from the organism theory. The root white pape
 
 ## Why
 
-The previous white paper carried both the technical specification and the larger theory. That made the project feel more speculative than the current implementation requires. v2.3 makes the technical paper more legible to operators and contributors while preserving the theory in a document designed to carry it.
+The previous white paper carried both the technical specification and the larger theory. That made the project feel more speculative than the current implementation requires. v2.3 makes the technical paper more legible to operators and contributors while preserving the theory in a separate framework document designed to carry it.
 
 The seed organism spec turns Phase 0 into an executable target: one machine, one contributor, current preset stack, two sensor families, append-only fitness ledger, fake-BTC cycle close, three successful cycles, then first external tester.
