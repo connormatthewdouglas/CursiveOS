@@ -58,10 +58,12 @@ There is **no active candidate configured by default**. Cycle 3 already accepted
 **canonical parent v0.12**. Follow-on swappiness 100 (`v0.12b`) and scheduler
 (`v0.13`) screens were rejected, so the near-term focus has moved from more
 manual screens to **Seed Organism → OS.0**: contributor daemon + request queue.
-The H2* adversarial acceptance hardening pass is complete for local gates:
-fabricated evidence, local replay, and parsimony metadata overclaims are rejected;
-same-source confirmation Sybil attempts remain deferred to the CursiveRoot trust
-layer before any real payout path.
+The V verifier-hardening pass extends H2*: fabricated evidence is rejected by
+raw-artifact recompute, cross-state replays by a CursiveRoot/global fingerprint
+index, parsimony overclaims by invariant gates, and funded confirmation-Sybil
+patterns by independent-aggregation policy. Honest noisy/weird-hardware controls
+are accepted or held inconclusive rather than fraud-rejected, and real BTC/reward
+remains simulated/gated.
 
 To run an explicit historical screen on a Linux box, name the candidate:
 
@@ -231,13 +233,13 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Done** → Full-test wrapper v1.4 (CursiveRoot auto-submit, zero setup)
 - **Done** → CursiveRoot: live hardware/performance database
 - **Done** → Decision-grade CursiveRoot analyzer: cohort signal, organism state, and data hygiene reporting
-- **Done** → H2* adversarial acceptance hardening: fabricated evidence, local replay, and parsimony overclaims blocked; independent confirmation aggregation remains the trust-layer gate
+- **Done** → V verifier-hardening: raw-artifact recompute, signed local identity, global replay index, independent aggregation policy, D-funded rejection, and H false-positive controls
 - **Done** → v3.3 economic architecture specified (white paper v2.4)
 - **Done** → Agent architecture specified (measurement daemon + natural-language shell)
 - **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)
 - **In progress** → Phase 0 seed organism (first parent-versus-candidate power/throughput screen)
 - **Next** → Repeat and counterbalance any promising candidate before fitness acceptance
-- **Next** → Harden CursiveRoot identity and write policies before external tester rollout
+- **Next** → Productize V trust rails in CursiveRoot identity, request queue, and aggregation tables before external tester rollout
 - **Next** → First external tester running full sensor array; validate population confirmation
 - **Next** → v0.9 ISO alpha: first installable CursiveOS with measurement daemon
 - **v1.0** → Flagship release with natural-language shell as default terminal
@@ -260,7 +262,8 @@ Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is 
 - [`white-paper.md`](white-paper.md) — technical white paper (v2.4)
 - [`software-organisms-manifesto.md`](software-organisms-manifesto.md) — the software organism framework and theory
 - [`docs/specs/seed-organism-v0.1.md`](docs/specs/seed-organism-v0.1.md) — Phase 0 minimum viable organism specification
-- [`docs/experiments/H2-adversarial-tester-results.md`](docs/experiments/H2-adversarial-tester-results.md) — H2/H2* dishonest-submission audit, remediation verdicts, and remaining trust-layer gates
+- [`docs/experiments/H2-adversarial-tester-results.md`](docs/experiments/H2-adversarial-tester-results.md) — H2/H2* dishonest-submission audit and remediation record
+- [`docs/experiments/V-verifier-hardening-results.md`](docs/experiments/V-verifier-hardening-results.md) — V verifier-hardening results: recompute, signed identity, global replay, independent aggregation, D-funded, and H controls
 - [`docs/audits/2026-05-25-phase0-reality-check.md`](docs/audits/2026-05-25-phase0-reality-check.md) — current implementation and benchmark reality check
 - [`docs/specs/layer5-economics-v3.3.md`](docs/specs/layer5-economics-v3.3.md) — authoritative economics specification
 - [`docs/architecture/biological-architecture.md`](docs/architecture/biological-architecture.md) — the organism frame and biological mapping

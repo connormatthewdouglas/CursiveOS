@@ -30,6 +30,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_STATE_DIR = ROOT / ".cursiveos" / "seed"
+DEFAULT_CURSIVEROOT_DIR = ROOT / ".cursiveos" / "cursiveroot"
+LOCAL_SIGNATURE_SCHEME = "cursiveos-local-sim-signed-nonce-v0.1"
 DEFAULT_SUPABASE_URL = "https://iovvktpuoinmjdgfxgvm.supabase.co"
 DEFAULT_SUPABASE_KEY = "sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
 DEFAULT_CONFIG = {
@@ -38,6 +40,7 @@ DEFAULT_CONFIG = {
     "lifetime_share": 0.80,
     "minimum_confidence": 0.65,
     "minimum_accept_fitness": 0.01,
+    "global_replay_index": str(DEFAULT_CURSIVEROOT_DIR / "accepted-fingerprints.jsonl"),
     # Weights retuned to match the measured reality (Chapter 00 / VALIDATION):
     #  - network GATE-ONLY (0.40->0.0): its magnitude is a loopback artifact
     #    (real-path A/B showed our buffers add ~0; the win is just BBR) AND it
@@ -151,6 +154,296 @@ def sha256_bytes(data: bytes) -> str:
 def sha256_json(data: dict[str, Any]) -> str:
     encoded = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return sha256_bytes(encoded)
+
+
+def file_sha256(path: Path) -> str:
+    return sha256_bytes(path.read_bytes())
+
+
+def simulated_metrics(metrics: dict[str, Any]) -> bool:
+    schema = str(metrics.get("schema_version") or "")
+    source = str(metrics.get("source_provenance") or "")
+    return "qd-sim" in schema or source == "qd_simulation"
+
+
+def resolve_artifact_path(raw: dict[str, Any]) -> Path:
+    path = Path(str(raw.get("path") or ""))
+    if not path.is_absolute():
+        path = ROOT / path
+    return path.resolve()
+
+
+def raw_artifact_records(metrics: dict[str, Any]) -> list[dict[str, Any]]:
+    raw = metrics.get("raw_artifacts")
+    if not isinstance(raw, list):
+        return []
+    return [r for r in raw if isinstance(r, dict)]
+
+
+def raw_artifact_failures(metrics: dict[str, Any]) -> list[str]:
+    failures: list[str] = []
+    records = raw_artifact_records(metrics)
+    if not records:
+        return ["verifier recompute gate: missing immutable raw_artifacts"]
+    for idx, raw in enumerate(records):
+        kind = str(raw.get("kind") or "")
+        if kind not in {"full_test_result_json", "full_test_summary_log"}:
+            failures.append(f"verifier recompute gate: raw_artifacts[{idx}] unsupported kind {kind!r}")
+            continue
+        if raw.get("immutable") is not True:
+            failures.append(f"verifier recompute gate: raw_artifacts[{idx}] is not marked immutable")
+        path = resolve_artifact_path(raw)
+        if not path.exists() or not path.is_file():
+            failures.append(f"verifier recompute gate: raw_artifacts[{idx}] not found: {path}")
+            continue
+        expected = str(raw.get("sha256") or "")
+        actual = file_sha256(path)
+        if not expected:
+            failures.append(f"verifier recompute gate: raw_artifacts[{idx}] missing sha256")
+        elif expected != actual:
+            failures.append(
+                f"verifier recompute gate: raw_artifacts[{idx}] sha256 mismatch: claimed {expected} recomputed {actual}"
+            )
+    return failures
+
+
+def raw_artifact_fingerprint(metrics: dict[str, Any]) -> str | None:
+    records = raw_artifact_records(metrics)
+    if not records:
+        return None
+    material = []
+    for raw in records:
+        path = resolve_artifact_path(raw)
+        sha = str(raw.get("sha256") or "")
+        if path.exists() and path.is_file():
+            sha = file_sha256(path)
+        material.append({"kind": raw.get("kind"), "sha256": sha})
+    return sha256_json({"raw_artifacts": material})
+
+
+def signed_identity_signature(identity_public_key: str, session_nonce: str, raw_fingerprint: str) -> str:
+    """
+    Local V-phase signature shim.
+
+    This binds a claimed identity/session nonce to immutable raw-artifact content in
+    the simulator without introducing an external crypto dependency. It is
+    production-shaped evidence, not a real-money identity scheme; real BTC remains
+    gated until a real key registry / hardware attestation layer replaces it.
+    """
+    return sha256_json(
+        {
+            "scheme": LOCAL_SIGNATURE_SCHEME,
+            "identity_public_key": identity_public_key,
+            "session_nonce": session_nonce,
+            "raw_artifact_fingerprint": raw_fingerprint,
+        }
+    )
+
+
+def make_signed_identity(machine_id: str, raw_fingerprint: str, session_nonce: str | None = None) -> dict[str, Any]:
+    nonce = session_nonce or sha256_json({"machine_id": machine_id, "raw": raw_fingerprint})[:24]
+    identity_public_key = "local-sim-" + sha256_json({"machine_id": machine_id})[:32]
+    return {
+        "scheme": LOCAL_SIGNATURE_SCHEME,
+        "identity_public_key": identity_public_key,
+        "session_nonce": nonce,
+        "signature": signed_identity_signature(identity_public_key, nonce, raw_fingerprint),
+    }
+
+
+def attach_local_verifier_fields(metrics: dict[str, Any], raw_path: Path, kind: str = "full_test_result_json") -> dict[str, Any]:
+    out = dict(metrics)
+    raw = {
+        "kind": kind,
+        "path": str(raw_path),
+        "sha256": file_sha256(raw_path),
+        "immutable": True,
+    }
+    out["raw_artifacts"] = [raw]
+    raw_fp = raw_artifact_fingerprint(out)
+    if raw_fp:
+        out["raw_artifact_fingerprint"] = raw_fp
+        out["signed_identity"] = make_signed_identity(machine_id_from_metrics(out), raw_fp)
+    return out
+
+
+def signed_identity_failures(metrics: dict[str, Any]) -> list[str]:
+    if simulated_metrics(metrics):
+        return []
+    failures: list[str] = []
+    runs = metrics.get("source_runs")
+    if isinstance(runs, dict):
+        for role in ("parent", "candidate"):
+            run = runs.get(role)
+            if isinstance(run, dict):
+                failures.extend(
+                    f"{role} source run {failure}" for failure in signed_identity_failures(run)
+                )
+        return failures
+    raw_fp = raw_artifact_fingerprint(metrics)
+    identity = metrics.get("signed_identity")
+    if not raw_fp:
+        return ["signed identity gate: missing raw artifact fingerprint"]
+    if not isinstance(identity, dict):
+        return ["signed identity gate: missing signed_identity"]
+    if identity.get("scheme") != LOCAL_SIGNATURE_SCHEME:
+        failures.append("signed identity gate: unsupported signature scheme")
+    public_key = str(identity.get("identity_public_key") or "")
+    nonce = str(identity.get("session_nonce") or "")
+    signature = str(identity.get("signature") or "")
+    if not public_key or not nonce or not signature:
+        failures.append("signed identity gate: incomplete signed identity fields")
+    elif signature != signed_identity_signature(public_key, nonce, raw_fp):
+        failures.append("signed identity gate: signature does not bind identity/session to raw artifacts")
+    return failures
+
+
+def metric_derivation_fingerprint(metrics: dict[str, Any]) -> str:
+    """Fingerprint non-identity metric derivation to spot funded Sybil patterns."""
+    return sha256_json(
+        {
+            "schema_version": metrics.get("schema_version"),
+            "source_provenance": metrics.get("source_provenance"),
+            "comparison": metrics.get("comparison"),
+            "baseline": metrics.get("baseline"),
+            "variant": metrics.get("variant"),
+            "sample_counts": metrics.get("sample_counts"),
+            "regression": metrics.get("regression"),
+        }
+    )
+
+
+def compare_metric_objects(claimed: Any, recomputed: Any, label: str, failures: list[str]) -> None:
+    if isinstance(claimed, dict) and isinstance(recomputed, dict):
+        for key in sorted(set(claimed) | set(recomputed)):
+            compare_metric_objects(claimed.get(key), recomputed.get(key), f"{label}.{key}", failures)
+        return
+    if isinstance(claimed, (int, float)) or isinstance(recomputed, (int, float)):
+        try:
+            left = float(claimed)
+            right = float(recomputed)
+        except (TypeError, ValueError):
+            failures.append(f"verifier recompute gate: {label} claimed {claimed!r} recomputed {recomputed!r}")
+            return
+        if abs(left - right) > 1e-9:
+            failures.append(f"verifier recompute gate: {label} claimed {left!r} recomputed {right!r}")
+        return
+    if claimed != recomputed:
+        failures.append(f"verifier recompute gate: {label} claimed {claimed!r} recomputed {recomputed!r}")
+
+
+def compare_recomputed_summary(claimed: dict[str, Any], recomputed: dict[str, Any], role: str) -> list[str]:
+    failures: list[str] = []
+    for key in ("machine_id", "hardware_fingerprint_hash", "preset_version", "source_provenance"):
+        if key in claimed or key in recomputed:
+            compare_metric_objects(claimed.get(key), recomputed.get(key), f"{role}.{key}", failures)
+    for key in ("baseline", "variant", "sample_counts", "regression"):
+        compare_metric_objects(claimed.get(key), recomputed.get(key), f"{role}.{key}", failures)
+    claimed_quality = claimed.get("measurement_quality", {})
+    recomputed_quality = recomputed.get("measurement_quality", {})
+    if isinstance(claimed_quality, dict) or isinstance(recomputed_quality, dict):
+        compare_metric_objects(
+            claimed_quality.get("decision_grade") if isinstance(claimed_quality, dict) else None,
+            recomputed_quality.get("decision_grade") if isinstance(recomputed_quality, dict) else None,
+            f"{role}.measurement_quality.decision_grade",
+            failures,
+        )
+        compare_metric_objects(
+            claimed_quality.get("flags") if isinstance(claimed_quality, dict) else None,
+            recomputed_quality.get("flags") if isinstance(recomputed_quality, dict) else None,
+            f"{role}.measurement_quality.flags",
+            failures,
+        )
+    return failures
+
+
+def recompute_from_raw_artifact(metrics: dict[str, Any]) -> tuple[dict[str, Any] | None, list[str]]:
+    failures = raw_artifact_failures(metrics)
+    if failures:
+        return None, failures
+    primary = raw_artifact_records(metrics)[0]
+    kind = str(primary.get("kind") or "")
+    path = resolve_artifact_path(primary)
+    try:
+        if kind == "full_test_result_json":
+            return load_full_test_metrics_json(path), []
+        if kind == "full_test_summary_log":
+            return parse_full_test_log(path), []
+    except SeedError as exc:
+        return None, [f"verifier recompute gate: failed to recompute raw artifact: {exc}"]
+    return None, [f"verifier recompute gate: unsupported raw artifact kind {kind!r}"]
+
+
+def verifier_recompute_failures(metrics: dict[str, Any]) -> list[str]:
+    if simulated_metrics(metrics):
+        return []
+    runs = metrics.get("source_runs")
+    if isinstance(runs, dict):
+        failures: list[str] = []
+        recomputed_runs: dict[str, dict[str, Any]] = {}
+        for role in ("parent", "candidate"):
+            run = runs.get(role)
+            if not isinstance(run, dict):
+                failures.append(f"verifier recompute gate: paired screen missing {role} source run")
+                continue
+            recomputed, run_failures = recompute_from_raw_artifact(run)
+            if run_failures:
+                failures.extend(f"{role} source run {failure}" for failure in run_failures)
+                continue
+            assert recomputed is not None
+            recomputed_runs[role] = recomputed
+            failures.extend(compare_recomputed_summary(run, recomputed, f"{role} source run"))
+        parent = recomputed_runs.get("parent")
+        candidate = recomputed_runs.get("candidate")
+        if parent and candidate:
+            claimed_baseline = metrics.get("baseline", {})
+            claimed_variant = metrics.get("variant", {})
+            compare_metric_objects(claimed_baseline, parent.get("variant"), "comparison.baseline_from_parent_tuned", failures)
+            compare_metric_objects(claimed_variant, candidate.get("variant"), "comparison.variant_from_candidate_tuned", failures)
+        return failures
+    recomputed, failures = recompute_from_raw_artifact(metrics)
+    if failures:
+        return failures
+    assert recomputed is not None
+    return compare_recomputed_summary(metrics, recomputed, "metrics")
+
+
+def verifier_recompute_gate(metrics: dict[str, Any]) -> tuple[bool, list[str]]:
+    failures = verifier_recompute_failures(metrics)
+    return not failures, failures
+
+
+def global_replay_index_path(config: dict[str, Any]) -> Path:
+    configured = str(config.get("global_replay_index") or "")
+    return Path(configured).expanduser().resolve() if configured else DEFAULT_CURSIVEROOT_DIR / "accepted-fingerprints.jsonl"
+
+
+def build_independent_confirmation_aggregation(confirmations: list[dict[str, Any]]) -> dict[str, Any]:
+    identity_keys = []
+    raw_fingerprints = []
+    measurement_fingerprints = []
+    derivation_fingerprints = []
+    for metrics in confirmations:
+        identity = metrics.get("signed_identity", {}) if isinstance(metrics, dict) else {}
+        identity_keys.append(str(identity.get("identity_public_key") or ""))
+        raw_fingerprints.append(raw_artifact_fingerprint(metrics) or "")
+        measurement_fingerprints.append(measurement_fingerprint(metrics))
+        derivation_fingerprints.append(metric_derivation_fingerprint(metrics))
+    summary = {
+        "aggregation_source": "cursiveroot_owned_local_v_phase",
+        "confirmation_count": len(confirmations),
+        "identity_public_keys": identity_keys,
+        "raw_artifact_fingerprints": raw_fingerprints,
+        "measurement_fingerprints": measurement_fingerprints,
+        "metric_derivation_fingerprints": derivation_fingerprints,
+    }
+    summary["aggregation_hash"] = sha256_json(summary)
+    return {
+        "confirmation_count": len(confirmations),
+        "confirmation_source": "cursiveroot_independent_aggregation",
+        "confidence": round(min(0.95, 1.0 - 0.5 ** max(1, len(confirmations))), 4),
+        "confirmation_aggregation": summary | {"confirmations": confirmations},
+    }
 
 
 def rel(path: Path) -> str:
@@ -296,18 +589,24 @@ def measurement_fingerprint(metrics: dict[str, Any]) -> str:
     """
     Stable fingerprint of the measured result, excluding caller-controlled identity.
 
-    This is not a cryptographic proof of honest measurement; it is a replay/duplicate
-    guard for the local/CursiveRoot ledger boundary. Signed machine/session binding is
-    still required before real-money payout.
+    V hardening binds this to immutable raw-artifact content when present, while
+    still excluding submitter identity/public-key metadata. That makes global
+    replay checks content-addressed instead of trusting claimed machine/session
+    labels.
     """
+    source_runs = metrics.get("source_runs")
+    source_run_fingerprints: dict[str, Any] = {}
+    if isinstance(source_runs, dict):
+        for role, run in source_runs.items():
+            if isinstance(run, dict):
+                source_run_fingerprints[str(role)] = {
+                    "raw_artifact_fingerprint": raw_artifact_fingerprint(run),
+                    "metric_derivation_fingerprint": metric_derivation_fingerprint(run),
+                }
     material = {
-        "schema_version": metrics.get("schema_version"),
-        "source_provenance": metrics.get("source_provenance"),
-        "comparison": metrics.get("comparison"),
-        "baseline": metrics.get("baseline"),
-        "variant": metrics.get("variant"),
-        "sample_counts": metrics.get("sample_counts"),
-        "regression": metrics.get("regression"),
+        "metric_derivation_fingerprint": metric_derivation_fingerprint(metrics),
+        "raw_artifact_fingerprint": raw_artifact_fingerprint(metrics),
+        "source_run_fingerprints": source_run_fingerprints,
     }
     return sha256_json(material)
 
@@ -363,33 +662,134 @@ def acceptance_evidence_gate(variant: dict[str, Any], metrics: dict[str, Any]) -
     return not failures, failures
 
 
-def confirmation_independence_gate(metrics: dict[str, Any]) -> tuple[bool, list[str]]:
+def confirmation_independence_gate(metrics: dict[str, Any]) -> tuple[bool, str, list[str]]:
     count = int(metrics.get("confirmation_count", 1) or 1)
     if count <= 1:
-        return True, []
+        return True, "", []
     source = metrics.get("confirmation_source")
-    if source == "cursiveroot_independent_aggregation":
-        return True, []
-    return False, [
-        "confirmation independence gate: confirmation_count > 1 is caller-asserted; "
-        "requires CursiveRoot independent aggregation before acceptance"
-    ]
+    if source != "cursiveroot_independent_aggregation":
+        return False, "inconclusive", [
+            "confirmation independence gate: confirmation_count > 1 is caller-asserted; "
+            "requires CursiveRoot independent aggregation before acceptance"
+        ]
+
+    aggregation = metrics.get("confirmation_aggregation")
+    if not isinstance(aggregation, dict):
+        return False, "rejected_independence_failure", [
+            "confirmation independence gate: missing CursiveRoot-owned aggregation payload"
+        ]
+    confirmations = aggregation.get("confirmations")
+    if not isinstance(confirmations, list) or len(confirmations) < count:
+        return False, "rejected_independence_failure", [
+            "confirmation independence gate: aggregation does not contain the registered confirmation evidence"
+        ]
+
+    summary = {
+        "aggregation_source": aggregation.get("aggregation_source"),
+        "confirmation_count": aggregation.get("confirmation_count"),
+        "identity_public_keys": aggregation.get("identity_public_keys"),
+        "raw_artifact_fingerprints": aggregation.get("raw_artifact_fingerprints"),
+        "measurement_fingerprints": aggregation.get("measurement_fingerprints"),
+        "metric_derivation_fingerprints": aggregation.get("metric_derivation_fingerprints"),
+    }
+    if aggregation.get("aggregation_hash") != sha256_json(summary):
+        return False, "rejected_independence_failure", [
+            "confirmation independence gate: aggregation hash mismatch"
+        ]
+
+    failures: list[str] = []
+    identity_keys: list[str] = []
+    raw_fingerprints: list[str] = []
+    measurement_fingerprints: list[str] = []
+    derivation_fingerprints: list[str] = []
+    for idx, confirmation in enumerate(confirmations[:count]):
+        if not isinstance(confirmation, dict):
+            failures.append(f"confirmation[{idx}] is not a metrics object")
+            continue
+        recompute_failures = verifier_recompute_failures(confirmation)
+        identity_failures = signed_identity_failures(confirmation)
+        if recompute_failures:
+            return False, "rejected_recompute_mismatch", [
+                f"confirmation[{idx}] {failure}" for failure in recompute_failures
+            ]
+        if identity_failures:
+            return False, "rejected_unsigned_identity", [
+                f"confirmation[{idx}] {failure}" for failure in identity_failures
+            ]
+        identity = confirmation.get("signed_identity", {})
+        identity_keys.append(str(identity.get("identity_public_key") or ""))
+        raw_fingerprints.append(raw_artifact_fingerprint(confirmation) or "")
+        measurement_fingerprints.append(measurement_fingerprint(confirmation))
+        derivation_fingerprints.append(metric_derivation_fingerprint(confirmation))
+
+    if failures:
+        return False, "rejected_independence_failure", failures
+    if len(set(identity_keys)) < count or not all(identity_keys):
+        return False, "rejected_funded_adversary_pattern", [
+            "confirmation independence gate: confirmations do not have distinct signed identities"
+        ]
+    if len(set(raw_fingerprints)) < count or not all(raw_fingerprints):
+        return False, "rejected_replay_global", [
+            "confirmation independence gate: confirmations do not have distinct raw-artifact fingerprints"
+        ]
+    if len(set(measurement_fingerprints)) < count:
+        return False, "rejected_replay_global", [
+            "confirmation independence gate: confirmations replay the same measurement fingerprint"
+        ]
+    if len(set(derivation_fingerprints)) < count:
+        return False, "rejected_funded_adversary_pattern", [
+            "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint"
+        ]
+    return True, "", []
 
 
-def replay_gate(state: Path, sensor: dict[str, Any]) -> tuple[bool, str | None]:
+def replay_gate(state: Path, sensor: dict[str, Any], config: dict[str, Any]) -> tuple[bool, str | None, str | None]:
     fingerprint = sensor.get("measurement_fingerprint")
     if not fingerprint:
-        return True, None
+        return True, None, None
     for row in read_jsonl(state / "ledger" / "sensor-results.jsonl"):
         if row.get("measurement_fingerprint") != fingerprint:
             continue
         if row.get("decision") != "accepted":
             continue
-        return False, (
+        return False, "rejected_replay", (
             "replay gate: measurement fingerprint already accepted "
             f"in bundle {row.get('bundle_hash')} for machine {row.get('machine_id')}"
         )
-    return True, None
+    global_index = global_replay_index_path(config)
+    for row in read_jsonl(global_index):
+        if row.get("measurement_fingerprint") != fingerprint:
+            continue
+        return False, "rejected_replay_global", (
+            "global replay gate: measurement fingerprint already accepted "
+            f"in CursiveRoot index bundle {row.get('bundle_hash')} for machine {row.get('machine_id')}"
+        )
+    return True, None, None
+
+
+def append_global_replay_index(
+    config: dict[str, Any],
+    *,
+    sensor: dict[str, Any],
+    variant: dict[str, Any],
+    bundle_hash: str,
+) -> None:
+    fingerprint = sensor.get("measurement_fingerprint")
+    if not fingerprint:
+        return
+    append_jsonl(
+        global_replay_index_path(config),
+        {
+            "schema_version": "cursiveroot.accepted-fingerprint-index.v0.1",
+            "measurement_fingerprint": fingerprint,
+            "raw_artifact_fingerprint": sensor.get("raw_artifact_fingerprint"),
+            "bundle_hash": bundle_hash,
+            "variant_id": variant.get("variant_id"),
+            "contributor_id": variant.get("contributor_id"),
+            "machine_id": sensor.get("machine_id"),
+            "accepted_at": now_iso(),
+        },
+    )
 
 
 def present_core_metrics(metrics: dict[str, Any]) -> list[str]:
@@ -521,12 +921,15 @@ def score_performance(
         "knobs_removed_vs_parent": knobs_removed,
         "parsimony_validation": parsimony_validation,
         "measurement_fingerprint": measurement_fingerprint(metrics),
+        "raw_artifact_fingerprint": raw_artifact_fingerprint(metrics),
+        "metric_derivation_fingerprint": metric_derivation_fingerprint(metrics),
         "missing_core_metrics": missing_core,
         "severe_regressions": severe,
         "timestamp": now_iso(),
     }
     result["sensor_result_hash"] = sha256_json(result)
     return result
+
 
 
 def evaluate_regression(variant: dict[str, Any], metrics: dict[str, Any]) -> dict[str, Any]:
@@ -578,9 +981,15 @@ def verdict(
     parsimony = sensor.get("parsimony_validation", {})
     if isinstance(parsimony, dict) and not parsimony.get("passed", True):
         return "rejected_invariant", "; ".join(parsimony.get("failures", []) or ["parsimony invariant failed"])
-    confirmations_ok, confirmation_failures = confirmation_independence_gate(metrics)
+    recompute_ok, recompute_failures = verifier_recompute_gate(metrics)
+    if not recompute_ok:
+        return "rejected_recompute_mismatch", "; ".join(recompute_failures)
+    identity_failures = signed_identity_failures(metrics)
+    if identity_failures:
+        return "rejected_unsigned_identity", "; ".join(identity_failures)
+    confirmations_ok, confirmation_decision, confirmation_failures = confirmation_independence_gate(metrics)
     if not confirmations_ok:
-        return "inconclusive", "; ".join(confirmation_failures)
+        return confirmation_decision, "; ".join(confirmation_failures)
     evidence_ok, evidence_failures = acceptance_evidence_gate(variant, metrics)
     if not evidence_ok:
         return "rejected_unverified_evidence", "; ".join(evidence_failures)
@@ -688,10 +1097,11 @@ def record_evaluation(
     regression = evaluate_regression(variant, metrics)
     decision, reason = verdict(variant, sensor, regression, config, metrics)
     if decision == "accepted":
-        replay_ok, replay_reason = replay_gate(state, sensor)
+        replay_ok, replay_decision, replay_reason = replay_gate(state, sensor, config)
         if not replay_ok:
-            decision = "rejected_replay"
+            decision = replay_decision or "rejected_replay_global"
             reason = replay_reason or "replay gate failed"
+
     run_dir, bundle_hash = write_bundle(
         state=state,
         cycle_id=cycle_id,
@@ -712,6 +1122,7 @@ def record_evaluation(
     if decision == "accepted":
         entry = ledger_entry(cycle_id=cycle_id, variant=variant, sensor=sensor, bundle_hash=bundle_hash)
         append_jsonl(state / "ledger" / "ledger.jsonl", entry)
+        append_global_replay_index(config, sensor=sensor, variant=variant, bundle_hash=bundle_hash)
 
     print(f"variant: {variant['variant_id']}")
     print(f"decision: {decision}")
@@ -751,12 +1162,14 @@ def execute_linux_harness(variant: dict[str, Any]) -> dict[str, Any]:
     after_json = set(logs_dir.glob("cursiveos-full-test-*.json"))
     new_json = sorted(after_json - before_json, key=lambda p: p.stat().st_mtime)
     if new_json:
-        return load_full_test_metrics_json(new_json[-1])
+        result_path = new_json[-1]
+        return attach_local_verifier_fields(load_full_test_metrics_json(result_path), result_path)
     after_logs = set(logs_dir.glob("cursiveos-full-test-*.log"))
     new_logs = sorted(after_logs - before_logs, key=lambda p: p.stat().st_mtime)
     if not new_logs:
         raise SeedError("harness completed but no new result JSON or summary log was found")
-    return parse_full_test_log(new_logs[-1])
+    log_path = new_logs[-1]
+    return attach_local_verifier_fields(parse_full_test_log(log_path), log_path, kind="full_test_summary_log")
 
 
 def try_float(value: Any) -> float | None:
@@ -950,13 +1363,26 @@ def measurement_quality_flags(data: dict[str, Any], structured: dict[str, Any]) 
         if not isinstance(details, dict) or not details.get("available"):
             flags.append(f"{name}_detail_log_missing")
     sustained = structured.get("sustained", {})
+    benchmark_context = data.get("benchmark_context", {})
+    if not isinstance(benchmark_context, dict):
+        benchmark_context = {}
+    hardware = data.get("hardware", {})
+    if not isinstance(hardware, dict):
+        hardware = {}
+    legacy_cpu_allowed = bool(
+        benchmark_context.get("legacy_cpu_only_allowed")
+        or benchmark_context.get("cpu_bound_sustained_expected")
+        or str(benchmark_context.get("hardware_class") or hardware.get("hardware_class") or "").lower()
+        in {"legacy_cpu_only", "old_cpu_only", "uncommon_legacy"}
+    )
     if isinstance(sustained, dict):
         tuned_proc = str(sustained.get("tuned", {}).get("processor", "")).lower()
-        if "cpu" in tuned_proc and "gpu" not in tuned_proc:
+        if "cpu" in tuned_proc and "gpu" not in tuned_proc and not legacy_cpu_allowed:
             flags.append("sustained_inference_cpu_bound")
     regression = data.get("regression", {})
     if isinstance(regression, dict) and not regression.get("full_test_passed", True):
         flags.append("full_test_regression_flag_false")
+
     return {
         "schema_version": "cursiveos.measurement-quality.v0.2",
         "flags": flags,
@@ -1163,8 +1589,15 @@ def cmd_screen_variant(args: argparse.Namespace) -> None:
     else:
         if not args.parent_result_json or not args.candidate_result_json:
             raise SeedError("provide both result JSON files, or use --execute on a Linux test host")
-        parent_metrics = load_full_test_metrics_json(Path(args.parent_result_json))
-        candidate_metrics = load_full_test_metrics_json(Path(args.candidate_result_json))
+        parent_result_path = Path(args.parent_result_json)
+        candidate_result_path = Path(args.candidate_result_json)
+        parent_metrics = attach_local_verifier_fields(
+            load_full_test_metrics_json(parent_result_path), parent_result_path
+        )
+        candidate_metrics = attach_local_verifier_fields(
+            load_full_test_metrics_json(candidate_result_path), candidate_result_path
+        )
+
     metrics = comparison_metrics(
         parent_variant=parent_variant,
         candidate_variant=candidate_variant,

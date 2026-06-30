@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""H2 adversarial/dishonest tester experiment runner.
+"""V verifier-hardening adversarial/dishonest tester experiment runner.
 
-Generates malicious seed-organism submissions and routes them through the
-current real code paths so we can see which fabricated bundles are rejected,
-accepted, and payout-eligible. The runner itself does not change acceptance
-logic; remediation belongs in the production seed/QD boundary.
+Generates malicious and honest-control seed-organism submissions and routes
+them through the current real production code paths. The runner itself does not
+soften thresholds or change acceptance logic; remediation belongs in the shared
+seed/QD acceptance boundary.
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ if str(TOOLS) not in sys.path:
 import qd_organism  # noqa: E402
 import seed_organism  # noqa: E402
 
-RESULTS_JSON = ROOT / "docs" / "experiments" / "H2-adversarial-tester-results.json"
-STATE_ROOT = ROOT / ".cursiveos" / "h2-adversarial-tester"
+RESULTS_JSON = ROOT / "docs" / "experiments" / "V-verifier-hardening-results.json"
+STATE_ROOT = ROOT / ".cursiveos" / "v-verifier-hardening-tester"
 
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
@@ -160,27 +160,73 @@ def inflated_metrics(machine_id: str = "h2-malicious-rig") -> dict[str, Any]:
     return metrics
 
 
-def acceptance_grade_metrics(machine_id: str = "h2-honest-source-rig") -> dict[str, Any]:
-    """A minimal decision-grade fixture used to seed replay tests."""
-    metrics = inflated_metrics(machine_id)
-    metrics.update(
-        {
-            "source_provenance": "native_full_test_json",
-            "source_result_json": f".cursiveos/h2-adversarial-tester/fixtures/{machine_id}.json",
-            "measurement_quality": {
-                "schema_version": "cursiveos.measurement-quality.h2-fixture.v0.1",
-                "flags": [],
-                "decision_grade": True,
-            },
-            "structured_telemetry": {
-                "network": {"available": True},
-                "coldstart": {"available": True},
-                "sustained": {"available": True},
-                "idle_power": {},
-            },
-        }
+def configure_global_index(*states: Path, name: str) -> Path:
+    global_index = STATE_ROOT / f"{name}-accepted-fingerprints.jsonl"
+    for state in states:
+        config = seed_organism.DEFAULT_CONFIG | {"global_replay_index": str(global_index)}
+        write_json(state / "config.json", config)
+    return global_index
+
+
+def write_detail_logs(run_dir: Path, baseline: dict[str, float], tuned: dict[str, float], *, cpu_only: bool = False) -> dict[str, str]:
+    run_dir.mkdir(parents=True, exist_ok=True)
+    network = run_dir / "network.log"
+    network.write_text(
+        f"""
+--- BASELINE ---
+  TCP CC:    cubic
+  rmem_max:  212992 bytes (0.2 MB)
+    Run 1: {baseline['network_mbps']:.3f} Mbit/s | retransmits: 1 | RTT: 51.0ms
+  Avg: {baseline['network_mbps']:.3f} Mbit/s | retransmits: 1.0 | RTT: 51.0ms
+  Range: {baseline['network_mbps']:.3f} - {baseline['network_mbps']:.3f} Mbit/s
+--- TUNED ---
+  TCP CC:    bbr
+  rmem_max:  16777216 bytes (16.0 MB)
+    Run 1: {tuned['network_mbps']:.3f} Mbit/s | retransmits: 0 | RTT: 50.0ms
+  Avg: {tuned['network_mbps']:.3f} Mbit/s | retransmits: 0.0 | RTT: 50.0ms
+  Range: {tuned['network_mbps']:.3f} - {tuned['network_mbps']:.3f} Mbit/s
+""".strip()
+        + "\n",
+        encoding="utf-8",
     )
-    return metrics
+    coldstart = run_dir / "coldstart.log"
+    coldstart.write_text(
+        f"""
+--- BASELINE ---
+  CPU gov:   schedutil
+  GPU freq:  300 MHz (idle)
+    Call 1: GPU_before=300MHz | load=100.0ms | TTFT=20.0ms | cold_total={baseline['coldstart_ms']:.3f}ms | 40.00 tok/s | tokens:30
+  Avg: load=100.0ms | TTFT=20.0ms | cold_total={baseline['coldstart_ms']:.3f}ms | 40.00 tok/s
+  Load range: 100.0ms - 100.0ms | Cold range: {baseline['coldstart_ms']:.3f}ms - {baseline['coldstart_ms']:.3f}ms
+--- TUNED ---
+  CPU gov:   performance
+  GPU freq:  2000 MHz (idle)
+    Call 1: GPU_before=2000MHz | load=90.0ms | TTFT=10.0ms | cold_total={tuned['coldstart_ms']:.3f}ms | 42.00 tok/s | tokens:30
+  Avg: load=90.0ms | TTFT=10.0ms | cold_total={tuned['coldstart_ms']:.3f}ms | 42.00 tok/s
+  Load range: 90.0ms - 90.0ms | Cold range: {tuned['coldstart_ms']:.3f}ms - {tuned['coldstart_ms']:.3f}ms
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    processor = "100% CPU" if cpu_only else "100% GPU"
+    sustained = run_dir / "sustained.log"
+    sustained.write_text(
+        f"""
+--- BASELINE ---
+  Governor: schedutil
+  Processor: {processor}
+    Pass 1: {baseline['sustained_tokps']:.3f} tok/s | TTFT: 0.100s | tokens: 100
+  Avg: {baseline['sustained_tokps']:.3f} tok/s | TTFT avg: 0.100s | min: {baseline['sustained_tokps']:.3f} | max: {baseline['sustained_tokps']:.3f}
+--- TUNED ---
+  Governor: performance
+  Processor: {processor}
+    Pass 1: {tuned['sustained_tokps']:.3f} tok/s | TTFT: 0.090s | tokens: 100
+  Avg: {tuned['sustained_tokps']:.3f} tok/s | TTFT avg: 0.090s | min: {tuned['sustained_tokps']:.3f} | max: {tuned['sustained_tokps']:.3f}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    return {"network": network.name, "coldstart": coldstart.name, "sustained": sustained.name}
 
 
 def full_test_result(
@@ -188,7 +234,10 @@ def full_test_result(
     machine_id: str,
     tuned: dict[str, float],
     preset_version: str,
-    source: str,
+    source: str = "native_full_test_json",
+    sample_counts: dict[str, int] | None = None,
+    benchmark_context: dict[str, Any] | None = None,
+    hardware: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     baseline = {
         "network_mbps": 930.0,
@@ -197,19 +246,68 @@ def full_test_result(
         "idle_watts": 71.0,
         "memory_refault_s": 10.0,
     }
+    counts = dict(sample_counts or {"network": 3, "coldstart": 3, "sustained": 3, "idle_power": 3})
+    counts.setdefault("idle_power", 3)
     return {
-        "schema_version": "cursiveos.full-test-result.h2.v0.1",
+        "schema_version": "cursiveos.full-test-result.v-phase.v0.1",
         "created_at": "2026-06-29T00:00:00+00:00",
         "machine_id": machine_id,
         "hardware_fingerprint_hash": machine_id,
         "preset_version": preset_version,
-        "wrapper_version": "h2-adversarial",
+        "wrapper_version": "v-verifier-hardening",
         "source_provenance": source,
         "baseline": baseline,
         "variant": tuned,
-        "sample_counts": {"network": 3, "coldstart": 3, "sustained": 3, "idle_power": 3},
+        "sample_counts": counts,
         "regression": good_regression(),
+        "benchmark_context": dict(benchmark_context or {}),
+        "hardware": dict(hardware or {}),
     }
+
+
+def write_full_test_fixture(path: Path, result: dict[str, Any], *, cpu_only: bool = False) -> None:
+    result = copy.deepcopy(result)
+    logs = write_detail_logs(path.parent, result["baseline"], result["variant"], cpu_only=cpu_only)
+    result["telemetry"] = {
+        "detail_logs": logs,
+        "idle_power": {"samples": [result["baseline"].get("idle_watts"), result["variant"].get("idle_watts")]},
+    }
+    write_json(path, result)
+
+
+def load_attached_metrics(path: Path) -> dict[str, Any]:
+    return seed_organism.attach_local_verifier_fields(seed_organism.load_full_test_metrics_json(path), path)
+
+
+def acceptance_grade_metrics(
+    machine_id: str = "h2-honest-source-rig",
+    *,
+    result_path: Path | None = None,
+    tuned: dict[str, float] | None = None,
+    cpu_only: bool = False,
+    sample_counts: dict[str, int] | None = None,
+    benchmark_context: dict[str, Any] | None = None,
+    hardware: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Decision-grade full-test fixture used by replay and honest-control tests."""
+    source = inflated_metrics(machine_id)
+    tuned = dict(tuned or source["variant"])
+    result_path = result_path or (STATE_ROOT / "fixtures" / f"{machine_id}.json")
+    write_full_test_fixture(
+        result_path,
+        full_test_result(
+            machine_id=machine_id,
+            tuned=tuned,
+            preset_version="v-phase-test",
+            sample_counts=sample_counts,
+            benchmark_context=benchmark_context,
+            hardware=hardware,
+        ),
+        cpu_only=cpu_only,
+    )
+    metrics = load_attached_metrics(result_path)
+    metrics["adversarial_claim"] = "decision-grade fixture derived from immutable raw full-test JSON"
+    return metrics
 
 
 def attack_variant(variant_id: str, contributor_id: str = "h2-malicious-contributor") -> dict[str, Any]:
@@ -264,8 +362,18 @@ def classify_gate(bundle: dict[str, Any], *, extra_gate: str | None = None) -> s
         return "minimum_accept_fitness gate"
     if decision == "rejected_unverified_evidence":
         return "evidence/provenance gate"
+    if decision == "rejected_recompute_mismatch":
+        return "verifier recompute gate"
+    if decision == "rejected_unsigned_identity":
+        return "signed identity gate"
     if decision == "rejected_replay":
         return "measurement replay gate"
+    if decision == "rejected_replay_global":
+        return "global replay gate"
+    if decision == "rejected_independence_failure":
+        return "confirmation independence gate"
+    if decision == "rejected_funded_adversary_pattern":
+        return "funded adversary pattern gate"
     if decision == "rejected_invariant":
         return "shared invariant gate"
     if decision == "accepted":
@@ -354,18 +462,20 @@ def mode_a() -> dict[str, Any]:
 
 
 def mode_b() -> dict[str, Any]:
-    state = clean_state("mode-b-replay")
+    source_state = clean_state("mode-b-global-replay-source")
+    attack_state = clean_state("mode-b-global-replay-attack")
+    configure_global_index(source_state, attack_state, name="mode-b-global-replay")
     source_cycle = 210
     attack_cycle = 211
-    source_inputs = state / "inputs" / "source"
+    source_inputs = source_state / "inputs" / "source"
     source_variant_path = source_inputs / "variant-mode-b-source.json"
     source_metrics_path = source_inputs / "metrics-mode-b-source.json"
-    source_metrics = acceptance_grade_metrics("h2-b-source-stardust")
-    source_metrics["adversarial_claim"] = "treated as accepted source measurement for replay duplicate test"
-    write_json(source_variant_path, attack_variant("h2-b-genuine-winning-source", "h2-honest-contributor"))
+    source_metrics = acceptance_grade_metrics("v-b-source-stardust")
+    source_metrics["adversarial_claim"] = "accepted source measurement for global replay duplicate test"
+    write_json(source_variant_path, attack_variant("v-b-genuine-winning-source", "v-honest-contributor"))
     write_json(source_metrics_path, source_metrics)
     source_cli = run_seed_cli(
-        state,
+        source_state,
         [
             "run-variant",
             "--variant",
@@ -378,20 +488,18 @@ def mode_b() -> dict[str, Any]:
     )
     source_bundle = bundle_from_cli_result(source_cli)
 
-    attack_inputs = state / "inputs" / "attack"
+    attack_inputs = attack_state / "inputs" / "attack"
     attack_variant_path = attack_inputs / "variant-mode-b-replay.json"
     attack_metrics_path = attack_inputs / "metrics-mode-b-replay.json"
     replayed = copy.deepcopy(source_metrics)
-    replayed["machine_id"] = "h2-b-fake-independent-laptop"
-    replayed["hardware_fingerprint_hash"] = "h2-b-fake-independent-laptop"
     replayed["replay_attack"] = {
         "copied_from_bundle_hash": source_bundle.get("bundle_hash"),
-        "claim": "same winning metrics resubmitted as a different machine/session",
+        "claim": "same immutable signed raw evidence resubmitted through a different state/account context",
     }
-    write_json(attack_variant_path, attack_variant("h2-b-replay-as-independent"))
+    write_json(attack_variant_path, attack_variant("v-b-global-replay-as-independent"))
     write_json(attack_metrics_path, replayed)
     attack_cli = run_seed_cli(
-        state,
+        attack_state,
         [
             "run-variant",
             "--variant",
@@ -405,23 +513,22 @@ def mode_b() -> dict[str, Any]:
     attack_bundle = bundle_from_cli_result(attack_cli)
     return result_record(
         mode="B",
-        name="replay as independent machine/session",
-        attack="Copied a winning measurement and resubmitted it under a different machine/session identity.",
-        pipeline="seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> replay_gate -> bundle/ledger",
-        state=state,
+        name="global replay as independent contribution",
+        attack="Copied a winning immutable raw measurement and resubmitted it in a separate CursiveRoot state.",
+        pipeline="seed_organism.py CLI: run-variant -> verdict -> replay_gate(local+global) -> bundle/ledger",
+        state=attack_state,
         cycle_id=attack_cycle,
         variant_path=attack_variant_path,
         metrics_path=attack_metrics_path,
         cli=attack_cli,
         bundle=attack_bundle,
         extra={
-            "source_state_dir": rel(state),
+            "source_state_dir": rel(source_state),
             "source_cycle_id": source_cycle,
             "source_bundle": source_bundle,
             "source_cli": source_cli,
         },
     )
-
 
 def qd_guard_probe(state: Path, cycle_id: int) -> dict[str, Any]:
     parent = qd_organism.make_variant(
@@ -565,118 +672,178 @@ def mode_c() -> dict[str, Any]:
     }
 
 
-def mode_d() -> dict[str, Any]:
-    state = clean_state("mode-d-confirmation-sybil")
+def mode_d_funded() -> dict[str, Any]:
+    state = clean_state("mode-d-funded-sybil")
     cycle_id = 230
     inputs = state / "inputs"
-    parent_variant_path = ROOT / "references" / "seed-organism" / "variant.v0.12.json"
-    candidate_variant_path = inputs / "variant-mode-d-sybil-candidate.json"
-    parent_result_path = inputs / "mode-d-parent-result.json"
-    candidate_result_path = inputs / "mode-d-candidate-result.json"
-    same_source = "h2_same_source_near_identical_sybil_sessions"
-    parent_tuned = {
-        "network_mbps": 930.0,
-        "coldstart_ms": 1820.0,
-        "sustained_tokps": 41.0,
-        "idle_watts": 71.0,
-        "memory_refault_s": 10.0,
-    }
-    candidate_tuned = {
+    variant_path = inputs / "variant-mode-d-funded.json"
+    metrics_path = inputs / "metrics-mode-d-funded.json"
+    write_json(variant_path, attack_variant("v-d-funded-confirmation-sybil"))
+
+    tuned = {
         "network_mbps": 930.0,
         "coldstart_ms": 1638.0,
         "sustained_tokps": 42.0,
         "idle_watts": 71.0,
         "memory_refault_s": 10.0,
     }
-    write_json(candidate_variant_path, attack_variant("h2-d-confirmation-sybil"))
-    write_json(
-        parent_result_path,
-        full_test_result(
-            machine_id="h2-d-single-source-rig",
-            tuned=parent_tuned,
-            preset_version="parent-v0.12",
-            source=same_source,
-        ),
-    )
-    write_json(
-        candidate_result_path,
-        full_test_result(
-            machine_id="h2-d-single-source-rig",
-            tuned=candidate_tuned,
-            preset_version="h2-d-confirmation-sybil",
-            source=same_source,
-        ),
-    )
+    # Funded adversary buys/controls multiple identities and raw files, but all
+    # confirmations derive from the same non-identity metric pattern.
+    m1 = acceptance_grade_metrics("v-d-funded-rig-a", result_path=inputs / "funded-a.json", tuned=tuned)
+    m2 = acceptance_grade_metrics("v-d-funded-rig-b", result_path=inputs / "funded-b.json", tuned=tuned)
+    attack_metrics = copy.deepcopy(m1)
+    attack_metrics.update(seed_organism.build_independent_confirmation_aggregation([m1, m2]))
+    attack_metrics["adversarial_claim"] = "funded actor controls two signed identities with duplicated metric derivation"
+    write_json(metrics_path, attack_metrics)
+
     cli = run_seed_cli(
         state,
-        [
-            "screen-variant",
-            "--parent-variant",
-            str(parent_variant_path),
-            "--candidate-variant",
-            str(candidate_variant_path),
-            "--parent-result-json",
-            str(parent_result_path),
-            "--candidate-result-json",
-            str(candidate_result_path),
-            "--confirmations",
-            "3",
-            "--cycle-id",
-            str(cycle_id),
-        ],
+        ["run-variant", "--variant", str(variant_path), "--metrics", str(metrics_path), "--cycle-id", str(cycle_id)],
     )
     bundle = bundle_from_cli_result(cli)
     return result_record(
-        mode="D",
-        name="confirmation Sybil",
-        attack="Asserted three independent confirmations for near-identical same-source measurements via --confirmations 3.",
-        pipeline="seed_organism.py CLI: screen-variant -> comparison_metrics(--confirmations) -> record_evaluation",
+        mode="D-funded",
+        name="funded confirmation Sybil",
+        attack="Multiple signed identities/raw artifacts share the same non-identity metric derivation pattern.",
+        pipeline="seed_organism.py CLI: run-variant -> CursiveRoot aggregation verifier -> funded adversary pattern gate",
         state=state,
         cycle_id=cycle_id,
-        variant_path=candidate_variant_path,
-        metrics_path=candidate_result_path,
+        variant_path=variant_path,
+        metrics_path=metrics_path,
         cli=cli,
         bundle=bundle,
-        deferred_to_trust_layer=True,
         extra={
-            "parent_result_json": rel(parent_result_path),
-            "candidate_result_json": rel(candidate_result_path),
-            "asserted_confirmations": 3,
-            "current_code_limitation": "caller-asserted confirmation_count is now rejected/inconclusive; real confidence aggregation still requires CursiveRoot-derived independent machine/session evidence",
-            "remaining_trust_layer_gap": "system-owned independent confirmation aggregation is not implemented in this local runner",
+            "confirmation_source": attack_metrics.get("confirmation_source"),
+            "confirmation_count": attack_metrics.get("confirmation_count"),
+            "policy_boundary": "V rejects duplicated derivation across bought identities/raw artifacts; real BTC remains simulated and gated.",
         },
     )
 
 
-def h2_status(results: list[dict[str, Any]]) -> str:
-    non_d_failures = [r for r in results if r.get("accepted") and not r.get("deferred_to_trust_layer")]
-    if non_d_failures:
+def mode_h() -> dict[str, Any]:
+    state = clean_state("mode-h-honest-controls")
+    configure_global_index(state, name="mode-h-honest-controls")
+    noisy_cycle = 240
+    weird_cycle = 241
+
+    inputs = state / "inputs"
+
+    noisy_variant_path = inputs / "variant-mode-h-noisy.json"
+    noisy_metrics_path = inputs / "metrics-mode-h-noisy.json"
+    noisy = acceptance_grade_metrics(
+        "v-h-honest-noisy",
+        result_path=inputs / "honest-noisy-result.json",
+        sample_counts={"network": 2, "coldstart": 2, "sustained": 2, "idle_power": 3},
+    )
+    noisy["honest_control"] = "noisy but real lower-repeat measurement; acceptable outcome is accepted or inconclusive, not fraud rejected"
+    write_json(noisy_variant_path, attack_variant("v-h-honest-noisy", "v-honest-control-contributor"))
+    write_json(noisy_metrics_path, noisy)
+    noisy_cli = run_seed_cli(
+        state,
+        ["run-variant", "--variant", str(noisy_variant_path), "--metrics", str(noisy_metrics_path), "--cycle-id", str(noisy_cycle)],
+    )
+    noisy_bundle = bundle_from_cli_result(noisy_cli)
+    noisy_record = result_record(
+        mode="H-noisy",
+        name="honest noisy control",
+        attack="Honest lower-repeat/noisy real measurement; should not be fraud rejected.",
+        pipeline="seed_organism.py CLI: run-variant honest control",
+        state=state,
+        cycle_id=noisy_cycle,
+        variant_path=noisy_variant_path,
+        metrics_path=noisy_metrics_path,
+        cli=noisy_cli,
+        bundle=noisy_bundle,
+    )
+
+    weird_variant_path = inputs / "variant-mode-h-weird-hardware.json"
+    weird_metrics_path = inputs / "metrics-mode-h-weird-hardware.json"
+    weird = acceptance_grade_metrics(
+        "v-h-legacy-cpu-only",
+        result_path=inputs / "honest-weird-hardware-result.json",
+        cpu_only=True,
+        benchmark_context={"hardware_class": "legacy_cpu_only", "legacy_cpu_only_allowed": True},
+        hardware={"hardware_class": "legacy_cpu_only"},
+    )
+    weird["honest_control"] = "honest legacy CPU-only hardware; should not be rejected as fraud solely for CPU-bound processor evidence"
+    write_json(weird_variant_path, attack_variant("v-h-honest-weird-hardware", "v-honest-control-contributor"))
+    write_json(weird_metrics_path, weird)
+    weird_cli = run_seed_cli(
+        state,
+        ["run-variant", "--variant", str(weird_variant_path), "--metrics", str(weird_metrics_path), "--cycle-id", str(weird_cycle)],
+    )
+    weird_bundle = bundle_from_cli_result(weird_cli)
+    weird_record = result_record(
+        mode="H-weird-hardware",
+        name="honest weird hardware control",
+        attack="Honest legacy/CPU-only hardware evidence; should pass or be held inconclusive, not fraud rejected.",
+        pipeline="seed_organism.py CLI: run-variant honest control",
+        state=state,
+        cycle_id=weird_cycle,
+        variant_path=weird_variant_path,
+        metrics_path=weird_metrics_path,
+        cli=weird_cli,
+        bundle=weird_bundle,
+    )
+
+    false_rejections = [
+        r for r in [noisy_record, weird_record]
+        if r.get("pipeline_verdict") not in {"accepted", "inconclusive"}
+    ]
+    return {
+        "mode": "H",
+        "name": "honest false-positive controls",
+        "attack": "No attack: honest noisy and weird-hardware controls establish false-positive boundary.",
+        "pipeline": "seed_organism.py CLI: run-variant honest controls",
+        "pipeline_verdict": "pass" if not false_rejections else "fail",
+        "reason": "honest controls accepted or held inconclusive" if not false_rejections else "honest controls fraud-rejected",
+        "gate_triggered": None if not false_rejections else "false-positive guard",
+        "accepted": not false_rejections,
+        "payout_triggered": bool(noisy_record.get("payout_triggered") or weird_record.get("payout_triggered")),
+        "deferred_to_trust_layer": False,
+        "false_positive_rejections": false_rejections,
+        "subtests": {
+            "honest_noisy": noisy_record,
+            "honest_weird_hardware": weird_record,
+        },
+    }
+
+
+def v_status(results: list[dict[str, Any]]) -> str:
+    fabricated_failures = [
+        r for r in results
+        if r.get("mode") != "H" and (r.get("accepted") or r.get("payout_triggered"))
+    ]
+    h = next((r for r in results if r.get("mode") == "H"), None)
+    honest_failures = [] if h is None else list(h.get("false_positive_rejections") or [])
+    if fabricated_failures or honest_failures:
         return "FAILED"
-    deferred = [r for r in results if r.get("deferred_to_trust_layer")]
-    if deferred:
-        return "PASSED_EXCEPT_MODE_D_DEFERRED_TO_TRUST_LAYER"
     return "PASSED"
 
-
 def main() -> int:
-    results = [mode_a(), mode_b(), mode_c(), mode_d()]
+    if STATE_ROOT.exists():
+        shutil.rmtree(STATE_ROOT)
+    STATE_ROOT.mkdir(parents=True, exist_ok=True)
+    results = [mode_a(), mode_b(), mode_c(), mode_d_funded(), mode_h()]
+
     report = {
-        "schema_version": "cursiveos.experiment.h2-adversarial-tester-results.v0.1",
-        "experiment": "H2 adversarial/dishonest tester",
-        "pre_registered_doc": "docs/experiments/H2-adversarial-tester-results.md",
+        "schema_version": "cursiveos.experiment.v-verifier-hardening-results.v0.1",
+        "experiment": "V verifier-hardening adversarial tester",
+        "pre_registered_doc": "docs/experiments/V-verifier-hardening-results.md",
         "results_json": rel(RESULTS_JSON),
         "state_root": rel(STATE_ROOT),
         "thresholds": {
-            "pass": "zero fabricated bundles reach accepted state or trigger payout across all attack modes; every rejection logs the gate",
-            "fail_kill": "any fabricated-delta bundle reaches accepted",
-            "mode_d_exception": "if confirmation Sybil is not defendable without a trust layer, mark deferred to trust layer; real BTC must stay gated",
+            "pass": "Modes A/B/C and D-funded do not reach accepted or trigger payout; Mode H honest controls are accepted or held inconclusive, not fraud rejected",
+            "fail_kill": "If any fabricated bundle reaches accepted, or if honest contributions are rejected above the registered false-positive rate, V fails. Do not reinterpret after seeing results.",
+            "false_positive_rate_max": "0 of 2 honest controls may be fraud-rejected; inconclusive pending confirmation is allowed for noisy evidence",
+            "real_btc_reward": "simulated and gated throughout",
         },
-        "overall_h2_status": h2_status(results),
+        "overall_v_status": v_status(results),
         "results": results,
     }
     write_json(RESULTS_JSON, report)
     print(json.dumps({
-        "overall_h2_status": report["overall_h2_status"],
+        "overall_v_status": report["overall_v_status"],
         "results_json": rel(RESULTS_JSON),
         "modes": [
             {
@@ -686,6 +853,7 @@ def main() -> int:
                 "payout_triggered": r.get("payout_triggered"),
                 "gate_triggered": r.get("gate_triggered"),
                 "deferred_to_trust_layer": r.get("deferred_to_trust_layer"),
+                "reason": r.get("reason"),
             }
             for r in results
         ],

@@ -50,6 +50,17 @@ The next organism phase is now defined as a measurement-quality pass:
 
 - Added a unit test proving that full-test detail logs are extracted while `sample_counts` remain unchanged for selection confidence.
 
+## V Verifier-Hardening Addendum (2026-06-30)
+
+- Added verifier-side recomputation from immutable raw full-test artifacts; non-recomputable or mismatched summaries reject as `rejected_recompute_mismatch`.
+- Added signed local machine/session identity bound to raw-artifact fingerprints; missing or invalid identity evidence rejects as `rejected_unsigned_identity`.
+- Added local + CursiveRoot/global accepted-fingerprint replay checks; cross-state duplicates reject as `rejected_replay_global`.
+- Added CursiveRoot-owned independent confirmation aggregation that counts only distinct signed identities with distinct raw-artifact/measurement/derivation fingerprints.
+- Added funded-adversary policy detection for bought identities with duplicated non-identity derivation evidence; these reject as `rejected_funded_adversary_pattern` rather than being deferred.
+- Added V adversarial/honest-control harness coverage and regression tests. V Modes A/B/C/D-funded reject by named gates; Mode H honest controls are accepted or held inconclusive, not fraud-rejected.
+
+Real BTC/reward settlement remains simulated and gated. The next implementation step is productionizing the V trust rails in CursiveRoot identity, request queue, and aggregation tables before external tester rollout.
+
 ## Live CursiveRoot Reading
 
 The new analyzer currently sees:

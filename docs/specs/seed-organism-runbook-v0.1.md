@@ -92,16 +92,18 @@ Each evaluated variant writes an audit bundle:
 
 Accepted variants append to `.cursiveos/seed/ledger/ledger.jsonl`. All variants append sensor and regression results whether accepted, rejected, invalid, or inconclusive.
 
-## H2* acceptance hardening notes
+## V verifier-hardening notes
 
-H2* is the current adversarial acceptance audit for this runbook. It hardens the local seed/QD acceptance boundary against dishonest submissions while leaving global trust to CursiveRoot:
+V is the current adversarial acceptance audit for this runbook. It hardens the seed/QD acceptance boundary against dishonest submissions while keeping real BTC/reward simulated and gated:
 
-- Bare positive metric summaries without decision-grade evidence/provenance reject as `rejected_unverified_evidence`.
-- Measurements now carry a `measurement_fingerprint`; duplicate accepted fingerprints in the same local ledger reject as `rejected_replay`.
+- Acceptance-grade metrics must carry immutable raw artifacts; the verifier recomputes summaries from those artifacts and rejects mismatches as `rejected_recompute_mismatch`.
+- Measurements carry signed local machine/session identity bound to the raw-artifact fingerprint; invalid or missing signatures reject as `rejected_unsigned_identity`.
+- Accepted measurement fingerprints are checked both against the local ledger and a CursiveRoot/global replay index; cross-state duplicates reject as `rejected_replay_global`.
 - Parsimony is derived from `parent_genome_knobs` and `genome_knobs`; metadata overclaims reject as `rejected_invariant`.
-- Caller-asserted `--confirmations N` is audit metadata only. Counts above 1 are not acceptance-grade unless emitted by CursiveRoot independent aggregation, so same-source confirmation Sybil attempts remain `inconclusive`.
+- Caller-asserted `--confirmations N` is audit metadata only. Counts above 1 are acceptance-grade only when emitted by CursiveRoot independent aggregation over distinct signed identities and distinct raw-artifact fingerprints.
+- Funded/Sybil-like confirmations with distinct identities but duplicated non-identity metric derivation reject as `rejected_funded_adversary_pattern`.
 
-See `docs/experiments/H2-adversarial-tester-results.md` for the pre-remediation H2 failure, H2* rerun verdicts, and remaining trust-layer gaps. Real BTC/reward settlement must stay disabled until CursiveRoot owns independent identity/session/artifact aggregation.
+See `docs/experiments/H2-adversarial-tester-results.md` for the H2/H2* history and `docs/experiments/V-verifier-hardening-results.md` for the current V pass. Real BTC/reward settlement must stay disabled until the local V trust model is backed by production CursiveRoot identity/session/artifact aggregation.
 
 ## Sensor Direction
 

@@ -3,7 +3,7 @@
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
 **Current candidate:** none — v0.12b-swappiness **rejected** 2026-06-28; v0.13-sched **rejected** 2026-06-27
 **Current wrapper:** v1.4.5 (memory-pressure 5th channel + idle-power gate-only + observe-only concurrency probe)
-**Next focus:** Seed Organism → OS.0 — remove the founder from the loop's center (contributor daemon + requests queue first). H2* has hardened local acceptance gates; the remaining trust work is independent CursiveRoot aggregation. See "Next Phase" section below.
+**Next focus:** Seed Organism → OS.0 — remove the founder from the loop's center (contributor daemon + requests queue first). V has hardened the acceptance referee enough to proceed, while real BTC/reward remains simulated and gated until the trust layer is productionized. See "Next Phase" section below.
 
 
 ---
@@ -39,7 +39,7 @@
 - **G1 — Contributor runtime (daemon). KEYSTONE.** A process that lives on any contributor machine and autonomously: pulls "what should I measure" → runs the screen via the existing harness → uploads → reverts, no SSH/agent babysitting. Embryos exist (`seed-session-linux-test.sh`, `tools/rig-smoke.sh`); productize into an unattended, restartable daemon. Everything else hangs off this.
 - **G2 — Requests / job queue in CursiveRoot. (build with G1).** A table the organism writes ("need N confirmations of candidate X on hardware-class Y") and the daemon + dashboard read. This one object unifies *interaction*, *dashboard*, and future *BTC bounties* into a single coordination spine instead of three separate problems. Makes contributor work non-redundant.
 - **G3 — Autonomous proposer.** Wire `tools/qd_organism.py` (QD/MAP-Elites simulator, already built) to emit real candidate presets into the G2 queue, so the next variant isn't bottlenecked on founder imagination. This is the "self" in self-improvement.
-- **G4 — Trust / independence layer.** Auto-counted confirmations (replace founder-attested `--confirmations N` with independent-bundle counting), hardware/wallet independence, immune/anomaly sensors. H2* now rejects bare fabricated evidence, local replays, and parsimony metadata overclaims, but Mode D remains `inconclusive` until CursiveRoot derives confirmations from independent bundles. **Hard gate in front of money** — believing data from a machine we don't control.
+- **G4 — Trust / independence layer.** Productize the V local trust model: immutable raw-artifact recomputation, signed machine/session identity, global accepted-fingerprint replay index, CursiveRoot-owned independent aggregation, hardware/wallet independence, and immune/anomaly sensors. V rejects fabricated evidence, global replays, parsimony overclaims, and funded confirmation-Sybil derivation patterns. **Hard gate in front of money** — believing data from a machine we don't control.
 - **G5 — Incentive + interface.**
   - **Dashboard → bidirectional:** render the request queue, per-machine lineage, contributions, and placeholder rewards — not just read-only state. (Addresses the "how does a user feed the organism" gap directly.)
   - **BTC payout — gated by G4.** Real (even tiny) payout cannot ship before Sybil detection exists, or it just funds fake benchmark farms. Order is: trust, *then* money.
@@ -53,6 +53,7 @@
 - **Done 2026-06-29:** removed the leaked Windows system-path reference from `HANDOVER.md`.
 - **Done 2026-06-29:** removed the stale default `v0.11-zram-swappiness` candidate from one-paste scripts/docs; explicit historical/new screens now require `CURSIVEOS_CANDIDATE_VARIANT` or `CURSIVEOS_SCREENS`.
 - **Done 2026-06-29:** H2* adversarial remediation documented in `docs/experiments/H2-adversarial-tester-results.md`; A/B/C are rejected by named local gates and D is correctly deferred to the trust layer.
+- **Done 2026-06-30:** V verifier hardening documented in `docs/experiments/V-verifier-hardening-results.md`; A/B/C/D-funded are rejected by named gates and H honest controls are accepted or held inconclusive rather than fraud-rejected.
 - **Open:** 5 `claude/*` branches remain on CursiveResearch, but a 2026-06-29 merge-base check found all 5 are **not merged to `main`**; review/cherry-pick/delete intentionally rather than blind-pruning.
 - **Open:** resolve the 3 open red-team flags in `CursiveResearch/VALIDATION.md`; the BBR single-flow/default-preset issue remains the highest-impact one.
 
@@ -105,12 +106,12 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
   the organism needs and what their machine contributed.
 
 ### 3. Trust / independence layer before money
-- Replace founder-attested `--confirmations N` with auto-counted independent
-  bundles.
-- H2* Mode D is the current acceptance test for this gap: caller-asserted
-  confirmations must stay `inconclusive` until CursiveRoot emits independent
-  aggregation evidence.
-- Track hardware/wallet independence and anomaly/immune signals.
+- Replace founder-attested `--confirmations N` with CursiveRoot-owned
+  independent aggregation over signed identities and immutable raw artifacts.
+- Promote the V local/global replay index and funded-adversary derivation checks
+  into the production CursiveRoot database and key/wallet/hardware model.
+- Track hardware/wallet independence and anomaly/immune signals before any real
+  BTC payout path is enabled.
 - BTC payout remains simulated/placeholder until Sybil resistance exists.
 
 ### 4. First-run external experience + founding operators

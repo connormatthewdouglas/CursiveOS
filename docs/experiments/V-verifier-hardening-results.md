@@ -1,6 +1,6 @@
 # V — Verifier-Hardening Results
 
-Status: **pre-registered before verifier-hardening fixes were written or run**
+Status: **PASSED — pre-registered before verifier-hardening fixes were written or run; results generated after implementation**
 Branch: `h2-adversarial-tester`
 
 ## Purpose
@@ -67,8 +67,31 @@ CursiveRoot-owned aggregation must count confirmations only from distinct signed
 
 - Human-readable results: `docs/experiments/V-verifier-hardening-results.md`
 - Machine-readable results: `docs/experiments/V-verifier-hardening-results.json`
-- Local run state / submitted bundles: `.cursiveos/v-verifier-hardening/`
+- Local run state / submitted bundles: `.cursiveos/v-verifier-hardening-tester/`
 
 ## Results
 
-Not run yet. This document is the pre-registration artifact and must be committed before writing V fixes.
+Command: `python tools/exp_adversarial_tester.py`
+
+Machine-readable artifact: `docs/experiments/V-verifier-hardening-results.json`
+
+Overall status: **PASSED**.
+
+| Mode | Verdict | Gate/source | Accepted? | Simulated payout? | V result |
+|---|---|---|---:|---:|---|
+| A — inflated delta | `rejected_recompute_mismatch` | verifier recompute gate | No | No | PASS |
+| B — global replay | `rejected_replay_global` | global replay gate | No | No | PASS |
+| C — parsimony gaming | `rejected_invariant` | shared invariant gate | No | No | PASS |
+| D-funded — bought identities / Sybil derivation | `rejected_funded_adversary_pattern` | funded adversary pattern gate | No | No | PASS |
+| H1 — honest noisy control | `inconclusive` | confidence gate (`0.60 < 0.65`) | No | No | PASS: held pending confirmation, not fraud-rejected |
+| H2 — honest weird-hardware control | `accepted` | gates passed | Yes | Yes, simulated close-cycle only | PASS: honest contribution accepted |
+
+### Boundary changes proven by V
+
+- **G-A recomputation:** acceptance-grade metrics must carry immutable raw artifacts; forged summaries without recomputable raw evidence are rejected as `rejected_recompute_mismatch`.
+- **G-B global replay:** accepted measurement fingerprints are written to a CursiveRoot/global index; a replay through a separate local state rejects as `rejected_replay_global`.
+- **G-C independent aggregation:** only CursiveRoot-owned aggregation may raise confirmation count above 1, and it counts distinct signed identities with distinct raw-artifact, measurement, and derivation fingerprints.
+- **D-funded policy boundary:** distinct signed identities/raw artifacts with the same non-identity metric derivation are rejected as `rejected_funded_adversary_pattern`; this is not silently deferred.
+- **H false-positive boundary:** the noisy honest control was held `inconclusive` for normal confidence, and the legacy CPU-only/weird-hardware control was accepted when benchmark context explained the shape. Neither was rejected by fraud/referee gates.
+
+Real BTC/reward remains simulated and gated. The accepted honest weird-hardware control payout in the JSON is a fake close-cycle report from the local harness, not a real settlement path.

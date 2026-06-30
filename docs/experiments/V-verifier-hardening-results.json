@@ -1,0 +1,3154 @@
+{
+  "experiment": "V verifier-hardening adversarial tester",
+  "overall_v_status": "PASSED",
+  "pre_registered_doc": "docs/experiments/V-verifier-hardening-results.md",
+  "results": [
+    {
+      "accepted": false,
+      "attack": "Real baseline values with fabricated candidate improvement that clears minimum_accept_fitness.",
+      "cli": {
+        "cmd": [
+          "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+          "--state-dir",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta",
+          "run-variant",
+          "--variant",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\inputs\\variant-mode-a.json",
+          "--metrics",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\inputs\\metrics-mode-a-inflated.json",
+          "--cycle-id",
+          "201"
+        ],
+        "parsed_stdout": {
+          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T020239Z-706b92e4",
+          "bundle_hash": "43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0",
+          "confidence": "0.70",
+          "decision": "rejected_recompute_mismatch",
+          "fitness_score": "0.104878",
+          "reason": "verifier recompute gate: missing immutable raw_artifacts",
+          "variant": "h2-a-inflated-delta"
+        },
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "variant: h2-a-inflated-delta\ndecision: rejected_recompute_mismatch\nreason: verifier recompute gate: missing immutable raw_artifacts\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T020239Z-706b92e4\n"
+      },
+      "cycle_id": 201,
+      "deferred_to_trust_layer": false,
+      "gate_triggered": "verifier recompute gate",
+      "mode": "A",
+      "name": "inflated delta",
+      "payout_report": {
+        "cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta",
+            "close-cycle",
+            "--cycle-id",
+            "201",
+            "--revenue-sats",
+            "100000"
+          ],
+          "parsed_stdout": {
+            "contributors": "0",
+            "cycle": "201",
+            "report": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json",
+            "report_hash": "4155908b1cd49b5e17b06083ec15cccc3af336756764413b5d058ccf375e3cfe"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "cycle: 201\ncontributors: 0\nreport_hash: 4155908b1cd49b5e17b06083ec15cccc3af336756764413b5d058ccf375e3cfe\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json\n"
+        },
+        "contributors": [],
+        "payout_triggered": false,
+        "report_hash": "4155908b1cd49b5e17b06083ec15cccc3af336756764413b5d058ccf375e3cfe",
+        "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json"
+      },
+      "payout_triggered": false,
+      "pipeline": "seed_organism.py CLI: run-variant -> record_evaluation -> verdict -> bundle/ledger",
+      "pipeline_verdict": "rejected_recompute_mismatch",
+      "reason": "verifier recompute gate: missing immutable raw_artifacts",
+      "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta",
+      "submitted_bundle": {
+        "bundle_hash": "43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0",
+        "confidence": 0.7,
+        "decision": "rejected_recompute_mismatch",
+        "fitness_score": 0.104878,
+        "manifest": {
+          "bundle_hash": "43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0",
+          "created_at": "2026-06-30T02:02:39+00:00",
+          "cycle_id": "201",
+          "decision": "rejected_recompute_mismatch",
+          "files": {
+            "metrics.json": "62073ad7a53fff78c034eba51bb945103fde55b9f77f5458cea261179799f1c5",
+            "regression-result.json": "e57f62a7bb0408d3d6fca85c33134833fc6d6a62a55d0a0f1aa7bdfb877942e5",
+            "sensor-result.json": "366bca7d88e929e35aa8f6e01bdd61877fe14c8bf6c19e6190e0f5242abcb9ef",
+            "variant.json": "fc6468737095a869f9debcf4a6b6067f53dabb74006c0d7ae0c8010f2150a272"
+          },
+          "reason": "verifier recompute gate: missing immutable raw_artifacts",
+          "run_id": "706b92e4",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "h2-a-inflated-delta"
+        },
+        "metrics": {
+          "adversarial_claim": "candidate metrics are inflated/fabricated from a real baseline",
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "machine_id": "h2-a-malicious-rig",
+          "preset_version": "h2-test",
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "sample_counts": {
+            "coldstart": 3,
+            "idle_power": 3,
+            "network": 3,
+            "sustained": 3
+          },
+          "schema_version": "seed-organism.metrics.h2.v0.1",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          }
+        },
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T020239Z-706b92e4",
+        "reason": "verifier recompute gate: missing immutable raw_artifacts",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "h2-a-malicious-rig",
+          "passed": true,
+          "regression_result_hash": "d9c4ca7a8bb754dc300c6046ce93a2e81600fb261c9aed63bc54c9da919b7f72",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-30T02:02:39+00:00",
+          "variant_id": "h2-a-inflated-delta"
+        },
+        "sensor_result": {
+          "base_fitness": 0.10487805,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.7,
+          "delta": {
+            "coldstart_pct": 10.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 2.4390243902439024
+          },
+          "fitness_score": 0.10487805,
+          "knobs_removed_vs_parent": 0,
+          "machine_id": "h2-a-malicious-rig",
+          "measurement_fingerprint": "7dcff327f30f2353df0b01f27ecda3a6445e2b256fb13573485c1038ad6014cd",
+          "metric_derivation_fingerprint": "859093f5d9ad67d9397c2da6031a9796c7b8188ca8d54a8b353f2e9a853dd09e",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 0,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [],
+            "passed": true
+          },
+          "preset_version": "h2-a-inflated-delta",
+          "raw_artifact_fingerprint": null,
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "eb5c54fe03aa2177426cc2c48dd35088cde2f4840ad7b0d88ae91a1263c53974",
+          "severe_regressions": [],
+          "timestamp": "2026-06-30T02:02:39+00:00",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          },
+          "variant_id": "h2-a-inflated-delta"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "h2-a-inflated-delta",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.v0.1",
+          "variant_id": "h2-a-inflated-delta"
+        }
+      },
+      "submitted_metrics_file": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\inputs\\metrics-mode-a-inflated.json",
+      "submitted_variant_file": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\inputs\\variant-mode-a.json"
+    },
+    {
+      "accepted": false,
+      "attack": "Copied a winning immutable raw measurement and resubmitted it in a separate CursiveRoot state.",
+      "cli": {
+        "cmd": [
+          "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+          "--state-dir",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack",
+          "run-variant",
+          "--variant",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\inputs\\attack\\variant-mode-b-replay.json",
+          "--metrics",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\inputs\\attack\\metrics-mode-b-replay.json",
+          "--cycle-id",
+          "211"
+        ],
+        "parsed_stdout": {
+          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T020240Z-8abb0631",
+          "bundle_hash": "b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c",
+          "confidence": "0.70",
+          "decision": "rejected_replay_global",
+          "fitness_score": "0.104878",
+          "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
+          "variant": "v-b-global-replay-as-independent"
+        },
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "variant: v-b-global-replay-as-independent\ndecision: rejected_replay_global\nreason: global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T020240Z-8abb0631\n"
+      },
+      "cycle_id": 211,
+      "deferred_to_trust_layer": false,
+      "extra": {
+        "source_bundle": {
+          "bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a",
+          "confidence": 0.7,
+          "decision": "accepted",
+          "fitness_score": 0.104878,
+          "manifest": {
+            "bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a",
+            "created_at": "2026-06-30T02:02:40+00:00",
+            "cycle_id": "210",
+            "decision": "accepted",
+            "files": {
+              "metrics.json": "aa1bf422870785306350480c8917838c375c238987735de2307c55df45bb7718",
+              "regression-result.json": "09806f522b0a6ff3143dbc2b22677a295941390854b2063af4f8978ab67c40e1",
+              "sensor-result.json": "358f01cd32e2a88b7a93ffe489ba376ff9597b4fc9aa7f2517affa9981b4e186",
+              "variant.json": "125c3113a8f224cfc00f597da700824fc7f4f348bd073dbf4f68f3abef3022a7"
+            },
+            "reason": "fitness positive and gates passed",
+            "run_id": "40962567",
+            "schema_version": "seed-organism.bundle-manifest.v0.1",
+            "variant_id": "v-b-genuine-winning-source"
+          },
+          "metrics": {
+            "adversarial_claim": "accepted source measurement for global replay duplicate test",
+            "baseline": {
+              "coldstart_ms": 1820.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 41.0
+            },
+            "benchmark_context": {},
+            "hardware_fingerprint_hash": "v-b-source-stardust",
+            "machine_id": "v-b-source-stardust",
+            "measurement_quality": {
+              "decision_grade": true,
+              "flags": [],
+              "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+              "schema_version": "cursiveos.measurement-quality.v0.2"
+            },
+            "preset_version": "v-phase-test",
+            "raw_artifact_fingerprint": "e7d1d7bf1831d540e8feb990a135e8e7797d94a065cb7e3590fe7bb0b801a15a",
+            "raw_artifacts": [
+              {
+                "immutable": true,
+                "kind": "full_test_result_json",
+                "path": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\v-b-source-stardust.json",
+                "sha256": "c72d9dcd7f9e9674846357fc520ea85685985a8d4ee39f87b4b7e65f2d73b4f0"
+              }
+            ],
+            "regression": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "reverted_cleanly": true
+            },
+            "sample_counts": {
+              "coldstart": 3,
+              "idle_power": 3,
+              "network": 3,
+              "sustained": 3
+            },
+            "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+            "signed_identity": {
+              "identity_public_key": "local-sim-84192eece1e73e6090359011ef28446f",
+              "scheme": "cursiveos-local-sim-signed-nonce-v0.1",
+              "session_nonce": "2da3b5ca7a5f58b1c46514c8",
+              "signature": "32ad96bae8ee2a97ddb631921577cbed63466fe92e7016748ef145df74362d7f"
+            },
+            "source_log": null,
+            "source_provenance": "native_full_test_json",
+            "source_provenance_notes": null,
+            "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\v-b-source-stardust.json",
+            "structured_telemetry": {
+              "coldstart": {
+                "available": true,
+                "baseline": {
+                  "avg_cold_total_ms": 1820.0,
+                  "avg_load_ms": 100.0,
+                  "avg_tokps": 40.0,
+                  "avg_ttft_ms": 20.0,
+                  "calls": [
+                    {
+                      "call": 1,
+                      "cold_total_ms": 1820.0,
+                      "gpu_before": "300MHz",
+                      "load_ms": 100.0,
+                      "tokens": 30.0,
+                      "tokps": 40.0,
+                      "ttft_ms": 20.0
+                    }
+                  ],
+                  "cold_range_ms": [
+                    1820.0,
+                    1820.0
+                  ],
+                  "cpu_governor": "schedutil",
+                  "gpu_freq_before_pass_mhz": 300.0,
+                  "load_range_ms": [
+                    100.0,
+                    100.0
+                  ]
+                },
+                "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\coldstart.log",
+                "tuned": {
+                  "avg_cold_total_ms": 1638.0,
+                  "avg_load_ms": 90.0,
+                  "avg_tokps": 42.0,
+                  "avg_ttft_ms": 10.0,
+                  "calls": [
+                    {
+                      "call": 1,
+                      "cold_total_ms": 1638.0,
+                      "gpu_before": "2000MHz",
+                      "load_ms": 90.0,
+                      "tokens": 30.0,
+                      "tokps": 42.0,
+                      "ttft_ms": 10.0
+                    }
+                  ],
+                  "cold_range_ms": [
+                    1638.0,
+                    1638.0
+                  ],
+                  "cpu_governor": "performance",
+                  "gpu_freq_before_pass_mhz": 2000.0,
+                  "load_range_ms": [
+                    90.0,
+                    90.0
+                  ]
+                }
+              },
+              "idle_power": {
+                "samples": [
+                  71.0,
+                  71.0
+                ]
+              },
+              "network": {
+                "available": true,
+                "baseline": {
+                  "avg_mbps": 930.0,
+                  "avg_retransmits": 1.0,
+                  "avg_rtt_ms": 51.0,
+                  "range_mbps": [
+                    930.0,
+                    930.0
+                  ],
+                  "rmem_max_bytes": 212992,
+                  "runs": [
+                    {
+                      "mbps": 930.0,
+                      "retransmits": 1.0,
+                      "rtt_ms": 51.0,
+                      "run": 1
+                    }
+                  ],
+                  "tcp_congestion_control": "cubic"
+                },
+                "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\network.log",
+                "tuned": {
+                  "avg_mbps": 930.0,
+                  "avg_retransmits": 0.0,
+                  "avg_rtt_ms": 50.0,
+                  "range_mbps": [
+                    930.0,
+                    930.0
+                  ],
+                  "rmem_max_bytes": 16777216,
+                  "runs": [
+                    {
+                      "mbps": 930.0,
+                      "retransmits": 0.0,
+                      "rtt_ms": 50.0,
+                      "run": 1
+                    }
+                  ],
+                  "tcp_congestion_control": "bbr"
+                }
+              },
+              "schema_version": "cursiveos.structured-telemetry.v0.2",
+              "sustained": {
+                "available": true,
+                "baseline": {
+                  "avg_tokps": 41.0,
+                  "avg_ttft_s": 0.1,
+                  "cpu_governor": "schedutil",
+                  "passes": [
+                    {
+                      "pass": 1,
+                      "tokens": 100.0,
+                      "tokps": 41.0,
+                      "ttft_s": 0.1
+                    }
+                  ],
+                  "processor": "100% GPU",
+                  "range_tokps": [
+                    41.0,
+                    41.0
+                  ]
+                },
+                "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\sustained.log",
+                "tuned": {
+                  "avg_tokps": 42.0,
+                  "avg_ttft_s": 0.09,
+                  "cpu_governor": "performance",
+                  "passes": [
+                    {
+                      "pass": 1,
+                      "tokens": 100.0,
+                      "tokps": 42.0,
+                      "ttft_s": 0.09
+                    }
+                  ],
+                  "processor": "100% GPU",
+                  "range_tokps": [
+                    42.0,
+                    42.0
+                  ]
+                }
+              }
+            },
+            "telemetry": {
+              "detail_logs": {
+                "coldstart": "coldstart.log",
+                "network": "network.log",
+                "sustained": "sustained.log"
+              },
+              "idle_power": {
+                "samples": [
+                  71.0,
+                  71.0
+                ]
+              }
+            },
+            "variant": {
+              "coldstart_ms": 1638.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 42.0
+            }
+          },
+          "path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T020240Z-40962567",
+          "reason": "fitness positive and gates passed",
+          "regression_result": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "machine_id": "v-b-source-stardust",
+            "passed": true,
+            "regression_result_hash": "72d33b2e6e6a53eaff0828e97580f905d20437de3a3e2c02a3ba9456db606519",
+            "reverted_cleanly": true,
+            "schema_version": "seed-organism.regression-result.v0.1",
+            "sensor_id": "regression.genesis.v1",
+            "timestamp": "2026-06-30T02:02:40+00:00",
+            "variant_id": "v-b-genuine-winning-source"
+          },
+          "sensor_result": {
+            "base_fitness": 0.10487805,
+            "baseline": {
+              "coldstart_ms": 1820.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 41.0
+            },
+            "confidence": 0.7,
+            "delta": {
+              "coldstart_pct": 10.0,
+              "idle_power_pct": 0.0,
+              "memory_pct": 0.0,
+              "network_pct": 0.0,
+              "sustained_pct": 2.4390243902439024
+            },
+            "fitness_score": 0.10487805,
+            "knobs_removed_vs_parent": 0,
+            "machine_id": "v-b-source-stardust",
+            "measurement_fingerprint": "08ff1cf9f3b55d269eb3ba0d7bd922c5629c3a3ded27ef3b22fa86f79a723d77",
+            "metric_derivation_fingerprint": "0935124011fdc46592912bcf05b83106d178c217be85b4780e3e751c1b304d58",
+            "missing_core_metrics": [],
+            "parsimony_bonus": 0.0,
+            "parsimony_validation": {
+              "claimed_knobs_removed_vs_parent": 0,
+              "derived_knobs_removed_vs_parent": 0,
+              "failures": [],
+              "passed": true
+            },
+            "preset_version": "v-b-genuine-winning-source",
+            "raw_artifact_fingerprint": "e7d1d7bf1831d540e8feb990a135e8e7797d94a065cb7e3590fe7bb0b801a15a",
+            "schema_version": "seed-organism.sensor-result.v0.1",
+            "sensor_id": "perf.genesis.v1",
+            "sensor_result_hash": "00f33faf2a2bebd5b6956ea35a6d5732df481cc081ef7762678bff12eba97e60",
+            "severe_regressions": [],
+            "timestamp": "2026-06-30T02:02:40+00:00",
+            "variant": {
+              "coldstart_ms": 1638.0,
+              "idle_watts": 71.0,
+              "memory_refault_s": 10.0,
+              "network_mbps": 930.0,
+              "sustained_tokps": 42.0
+            },
+            "variant_id": "v-b-genuine-winning-source"
+          },
+          "variant": {
+            "commit_ref": "h2-adversarial-untrusted-submission",
+            "contributor_id": "v-honest-contributor",
+            "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+            "fitness_eligible": true,
+            "parent_variant_id": "parent-baseline-v0.12",
+            "preset_version": "v-b-genuine-winning-source",
+            "rollback_method": "none; synthetic adversarial test fixture",
+            "schema_version": "seed-organism.variant.v0.1",
+            "variant_id": "v-b-genuine-winning-source"
+          }
+        },
+        "source_cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source",
+            "run-variant",
+            "--variant",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\inputs\\source\\variant-mode-b-source.json",
+            "--metrics",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\inputs\\source\\metrics-mode-b-source.json",
+            "--cycle-id",
+            "210"
+          ],
+          "parsed_stdout": {
+            "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T020240Z-40962567",
+            "bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a",
+            "confidence": "0.70",
+            "decision": "accepted",
+            "fitness_score": "0.104878",
+            "reason": "fitness positive and gates passed",
+            "variant": "v-b-genuine-winning-source"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "variant: v-b-genuine-winning-source\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T020240Z-40962567\n"
+        },
+        "source_cycle_id": 210,
+        "source_state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source"
+      },
+      "gate_triggered": "global replay gate",
+      "mode": "B",
+      "name": "global replay as independent contribution",
+      "payout_report": {
+        "cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack",
+            "close-cycle",
+            "--cycle-id",
+            "211",
+            "--revenue-sats",
+            "100000"
+          ],
+          "parsed_stdout": {
+            "contributors": "0",
+            "cycle": "211",
+            "report": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\cycles\\cycle-211-payout.json",
+            "report_hash": "787879eb0a0fbddc6ceeda0bfcc0268896d653f68aa4a1512e0a5370ff88b6a2"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "cycle: 211\ncontributors: 0\nreport_hash: 787879eb0a0fbddc6ceeda0bfcc0268896d653f68aa4a1512e0a5370ff88b6a2\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\cycles\\cycle-211-payout.json\n"
+        },
+        "contributors": [],
+        "payout_triggered": false,
+        "report_hash": "787879eb0a0fbddc6ceeda0bfcc0268896d653f68aa4a1512e0a5370ff88b6a2",
+        "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\cycles\\cycle-211-payout.json"
+      },
+      "payout_triggered": false,
+      "pipeline": "seed_organism.py CLI: run-variant -> verdict -> replay_gate(local+global) -> bundle/ledger",
+      "pipeline_verdict": "rejected_replay_global",
+      "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
+      "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack",
+      "submitted_bundle": {
+        "bundle_hash": "b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c",
+        "confidence": 0.7,
+        "decision": "rejected_replay_global",
+        "fitness_score": 0.104878,
+        "manifest": {
+          "bundle_hash": "b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c",
+          "created_at": "2026-06-30T02:02:40+00:00",
+          "cycle_id": "211",
+          "decision": "rejected_replay_global",
+          "files": {
+            "metrics.json": "c5a728fbe24e9c7302448236bedc793938ef56f3312fee698e51338cbca47112",
+            "regression-result.json": "ccfebbe2b802810dbcca79362e24549421a92663ff9370239ee5c2a34eb2af71",
+            "sensor-result.json": "05c016d8a057bd0ed533b61a9676bc19e093e97062b112e2a8396e64d0f274f7",
+            "variant.json": "bbb538ca5ac857c584f92f3e0fdb0e4a2278f948cb754d37c56d22e5c8c0269c"
+          },
+          "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
+          "run_id": "8abb0631",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "v-b-global-replay-as-independent"
+        },
+        "metrics": {
+          "adversarial_claim": "accepted source measurement for global replay duplicate test",
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "benchmark_context": {},
+          "hardware_fingerprint_hash": "v-b-source-stardust",
+          "machine_id": "v-b-source-stardust",
+          "measurement_quality": {
+            "decision_grade": true,
+            "flags": [],
+            "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+            "schema_version": "cursiveos.measurement-quality.v0.2"
+          },
+          "preset_version": "v-phase-test",
+          "raw_artifact_fingerprint": "e7d1d7bf1831d540e8feb990a135e8e7797d94a065cb7e3590fe7bb0b801a15a",
+          "raw_artifacts": [
+            {
+              "immutable": true,
+              "kind": "full_test_result_json",
+              "path": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\v-b-source-stardust.json",
+              "sha256": "c72d9dcd7f9e9674846357fc520ea85685985a8d4ee39f87b4b7e65f2d73b4f0"
+            }
+          ],
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "replay_attack": {
+            "claim": "same immutable signed raw evidence resubmitted through a different state/account context",
+            "copied_from_bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a"
+          },
+          "sample_counts": {
+            "coldstart": 3,
+            "idle_power": 3,
+            "network": 3,
+            "sustained": 3
+          },
+          "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+          "signed_identity": {
+            "identity_public_key": "local-sim-84192eece1e73e6090359011ef28446f",
+            "scheme": "cursiveos-local-sim-signed-nonce-v0.1",
+            "session_nonce": "2da3b5ca7a5f58b1c46514c8",
+            "signature": "32ad96bae8ee2a97ddb631921577cbed63466fe92e7016748ef145df74362d7f"
+          },
+          "source_log": null,
+          "source_provenance": "native_full_test_json",
+          "source_provenance_notes": null,
+          "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\v-b-source-stardust.json",
+          "structured_telemetry": {
+            "coldstart": {
+              "available": true,
+              "baseline": {
+                "avg_cold_total_ms": 1820.0,
+                "avg_load_ms": 100.0,
+                "avg_tokps": 40.0,
+                "avg_ttft_ms": 20.0,
+                "calls": [
+                  {
+                    "call": 1,
+                    "cold_total_ms": 1820.0,
+                    "gpu_before": "300MHz",
+                    "load_ms": 100.0,
+                    "tokens": 30.0,
+                    "tokps": 40.0,
+                    "ttft_ms": 20.0
+                  }
+                ],
+                "cold_range_ms": [
+                  1820.0,
+                  1820.0
+                ],
+                "cpu_governor": "schedutil",
+                "gpu_freq_before_pass_mhz": 300.0,
+                "load_range_ms": [
+                  100.0,
+                  100.0
+                ]
+              },
+              "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\coldstart.log",
+              "tuned": {
+                "avg_cold_total_ms": 1638.0,
+                "avg_load_ms": 90.0,
+                "avg_tokps": 42.0,
+                "avg_ttft_ms": 10.0,
+                "calls": [
+                  {
+                    "call": 1,
+                    "cold_total_ms": 1638.0,
+                    "gpu_before": "2000MHz",
+                    "load_ms": 90.0,
+                    "tokens": 30.0,
+                    "tokps": 42.0,
+                    "ttft_ms": 10.0
+                  }
+                ],
+                "cold_range_ms": [
+                  1638.0,
+                  1638.0
+                ],
+                "cpu_governor": "performance",
+                "gpu_freq_before_pass_mhz": 2000.0,
+                "load_range_ms": [
+                  90.0,
+                  90.0
+                ]
+              }
+            },
+            "idle_power": {
+              "samples": [
+                71.0,
+                71.0
+              ]
+            },
+            "network": {
+              "available": true,
+              "baseline": {
+                "avg_mbps": 930.0,
+                "avg_retransmits": 1.0,
+                "avg_rtt_ms": 51.0,
+                "range_mbps": [
+                  930.0,
+                  930.0
+                ],
+                "rmem_max_bytes": 212992,
+                "runs": [
+                  {
+                    "mbps": 930.0,
+                    "retransmits": 1.0,
+                    "rtt_ms": 51.0,
+                    "run": 1
+                  }
+                ],
+                "tcp_congestion_control": "cubic"
+              },
+              "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\network.log",
+              "tuned": {
+                "avg_mbps": 930.0,
+                "avg_retransmits": 0.0,
+                "avg_rtt_ms": 50.0,
+                "range_mbps": [
+                  930.0,
+                  930.0
+                ],
+                "rmem_max_bytes": 16777216,
+                "runs": [
+                  {
+                    "mbps": 930.0,
+                    "retransmits": 0.0,
+                    "rtt_ms": 50.0,
+                    "run": 1
+                  }
+                ],
+                "tcp_congestion_control": "bbr"
+              }
+            },
+            "schema_version": "cursiveos.structured-telemetry.v0.2",
+            "sustained": {
+              "available": true,
+              "baseline": {
+                "avg_tokps": 41.0,
+                "avg_ttft_s": 0.1,
+                "cpu_governor": "schedutil",
+                "passes": [
+                  {
+                    "pass": 1,
+                    "tokens": 100.0,
+                    "tokps": 41.0,
+                    "ttft_s": 0.1
+                  }
+                ],
+                "processor": "100% GPU",
+                "range_tokps": [
+                  41.0,
+                  41.0
+                ]
+              },
+              "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\fixtures\\sustained.log",
+              "tuned": {
+                "avg_tokps": 42.0,
+                "avg_ttft_s": 0.09,
+                "cpu_governor": "performance",
+                "passes": [
+                  {
+                    "pass": 1,
+                    "tokens": 100.0,
+                    "tokps": 42.0,
+                    "ttft_s": 0.09
+                  }
+                ],
+                "processor": "100% GPU",
+                "range_tokps": [
+                  42.0,
+                  42.0
+                ]
+              }
+            }
+          },
+          "telemetry": {
+            "detail_logs": {
+              "coldstart": "coldstart.log",
+              "network": "network.log",
+              "sustained": "sustained.log"
+            },
+            "idle_power": {
+              "samples": [
+                71.0,
+                71.0
+              ]
+            }
+          },
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          }
+        },
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T020240Z-8abb0631",
+        "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "v-b-source-stardust",
+          "passed": true,
+          "regression_result_hash": "715c961604fddf636c7538f884f72cabdb21fced1be06baca995db34e44882d4",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-30T02:02:40+00:00",
+          "variant_id": "v-b-global-replay-as-independent"
+        },
+        "sensor_result": {
+          "base_fitness": 0.10487805,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.7,
+          "delta": {
+            "coldstart_pct": 10.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 2.4390243902439024
+          },
+          "fitness_score": 0.10487805,
+          "knobs_removed_vs_parent": 0,
+          "machine_id": "v-b-source-stardust",
+          "measurement_fingerprint": "08ff1cf9f3b55d269eb3ba0d7bd922c5629c3a3ded27ef3b22fa86f79a723d77",
+          "metric_derivation_fingerprint": "0935124011fdc46592912bcf05b83106d178c217be85b4780e3e751c1b304d58",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 0,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [],
+            "passed": true
+          },
+          "preset_version": "v-b-global-replay-as-independent",
+          "raw_artifact_fingerprint": "e7d1d7bf1831d540e8feb990a135e8e7797d94a065cb7e3590fe7bb0b801a15a",
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "61a0c8eade62c72a31f191ab3b948b31aaeb8af04f6a1621fe0f77fe6c46a3f9",
+          "severe_regressions": [],
+          "timestamp": "2026-06-30T02:02:40+00:00",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          },
+          "variant_id": "v-b-global-replay-as-independent"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "v-b-global-replay-as-independent",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.v0.1",
+          "variant_id": "v-b-global-replay-as-independent"
+        }
+      },
+      "submitted_metrics_file": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\inputs\\attack\\metrics-mode-b-replay.json",
+      "submitted_variant_file": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\inputs\\attack\\variant-mode-b-replay.json"
+    },
+    {
+      "accepted": false,
+      "attack": "Claimed knob removals that the genome does not actually reflect.",
+      "deferred_to_trust_layer": false,
+      "gate_triggered": "shared invariant gate",
+      "mode": "C",
+      "name": "parsimony gaming",
+      "payout_triggered": false,
+      "pipeline": "QD guarded path plus direct seed CLI path probe",
+      "pipeline_verdict": "rejected_invariant",
+      "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+      "submitted_bundle": {
+        "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+        "confidence": 0.7,
+        "decision": "rejected_invariant",
+        "fitness_score": 0.0,
+        "manifest": {
+          "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+          "created_at": "2026-06-30T02:02:41+00:00",
+          "cycle_id": "221",
+          "decision": "rejected_invariant",
+          "files": {
+            "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
+            "regression-result.json": "a54a3213dc98ac7f35c5b34018adbb959e3f2348865560532f1fcf7087f1bcc8",
+            "sensor-result.json": "5c51fb8843e700a093acc22ecaf8102259fadbf745ced7eec5f1747c6bd2cc62",
+            "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
+          },
+          "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+          "run_id": "18adb5a8",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        },
+        "metrics": {
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "machine_id": "h2-c-direct-source",
+          "preset_version": "h2-test",
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "sample_counts": {
+            "coldstart": 3,
+            "idle_power": 3,
+            "network": 3,
+            "sustained": 3
+          },
+          "schema_version": "seed-organism.metrics.h2.v0.1",
+          "variant": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          }
+        },
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8",
+        "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "h2-c-direct-source",
+          "passed": true,
+          "regression_result_hash": "849a46ef930f9d8cd72b3a4a8fd628f39ff3b57fe81ddd6f1714a79bfe3484fd",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-30T02:02:41+00:00",
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        },
+        "sensor_result": {
+          "base_fitness": 0.0,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.7,
+          "delta": {
+            "coldstart_pct": 0.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 0.0
+          },
+          "fitness_score": 0.0,
+          "knobs_removed_vs_parent": 0,
+          "machine_id": "h2-c-direct-source",
+          "measurement_fingerprint": "e14240c66e413b84a83edbd98bf69680cedd03a3cf0730c7ba2a61c4ebe14737",
+          "metric_derivation_fingerprint": "e1ef13a0b8a340e542a1a7a197c797e8ba48845d17579515aec41df75efe45a0",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 5,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [
+              "parsimony invariant failed: claimed 5 removed knobs but genome derives 0"
+            ],
+            "passed": false
+          },
+          "preset_version": "h2-c-direct-overdeclared-parsimony",
+          "raw_artifact_fingerprint": null,
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "62505d7b91ddbbfbe91009eda50106d995892882a819b3eeffdcd5a40476d118",
+          "severe_regressions": [],
+          "timestamp": "2026-06-30T02:02:41+00:00",
+          "variant": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "genome_knobs": {
+            "cpu_governor_boost": 0.4,
+            "gpu_idle_pin_mhz": 0.2,
+            "power_cap_relief": 0.0,
+            "scheduler_aggressive": 0.1
+          },
+          "knobs_removed_vs_parent": 5,
+          "mutation_operator": "malicious_parsimony_overclaim",
+          "parent_genome_knobs": {
+            "cpu_governor_boost": 0.4,
+            "gpu_idle_pin_mhz": 0.2,
+            "power_cap_relief": 0.0,
+            "scheduler_aggressive": 0.1
+          },
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "h2-c-direct-overdeclared-parsimony",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.qd-sim.v0.1",
+          "variant_id": "h2-c-direct-overdeclared-parsimony"
+        }
+      },
+      "subtests": {
+        "direct_seed_submission": {
+          "accepted": false,
+          "attack": "Claimed knob removals that the submitted genome did not actually reflect, through run-variant.",
+          "cli": {
+            "cmd": [
+              "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+              "--state-dir",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass",
+              "run-variant",
+              "--variant",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\inputs\\variant-mode-c-direct-overclaim.json",
+              "--metrics",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\inputs\\metrics-mode-c-neutral.json",
+              "--cycle-id",
+              "221"
+            ],
+            "parsed_stdout": {
+              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8",
+              "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+              "confidence": "0.70",
+              "decision": "rejected_invariant",
+              "fitness_score": "0.000000",
+              "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+              "variant": "h2-c-direct-overdeclared-parsimony"
+            },
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "variant: h2-c-direct-overdeclared-parsimony\ndecision: rejected_invariant\nreason: parsimony invariant failed: claimed 5 removed knobs but genome derives 0\nfitness_score: 0.000000\nconfidence: 0.70\nbundle_hash: fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8\n"
+          },
+          "cycle_id": 221,
+          "deferred_to_trust_layer": false,
+          "gate_triggered": "shared invariant gate",
+          "mode": "C-direct",
+          "name": "direct seed parsimony overclaim bypass",
+          "payout_report": {
+            "cli": {
+              "cmd": [
+                "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+                "--state-dir",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass",
+                "close-cycle",
+                "--cycle-id",
+                "221",
+                "--revenue-sats",
+                "100000"
+              ],
+              "parsed_stdout": {
+                "contributors": "0",
+                "cycle": "221",
+                "report": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json",
+                "report_hash": "54f0af108477ad0b73e0788bd12feff75cca588fd6f1be56d9faf97c37db175c"
+              },
+              "returncode": 0,
+              "stderr": "",
+              "stdout": "cycle: 221\ncontributors: 0\nreport_hash: 54f0af108477ad0b73e0788bd12feff75cca588fd6f1be56d9faf97c37db175c\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json\n"
+            },
+            "contributors": [],
+            "payout_triggered": false,
+            "report_hash": "54f0af108477ad0b73e0788bd12feff75cca588fd6f1be56d9faf97c37db175c",
+            "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json"
+          },
+          "payout_triggered": false,
+          "pipeline": "seed_organism.py CLI: run-variant direct acceptance path",
+          "pipeline_verdict": "rejected_invariant",
+          "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+          "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass",
+          "submitted_bundle": {
+            "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+            "confidence": 0.7,
+            "decision": "rejected_invariant",
+            "fitness_score": 0.0,
+            "manifest": {
+              "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+              "created_at": "2026-06-30T02:02:41+00:00",
+              "cycle_id": "221",
+              "decision": "rejected_invariant",
+              "files": {
+                "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
+                "regression-result.json": "a54a3213dc98ac7f35c5b34018adbb959e3f2348865560532f1fcf7087f1bcc8",
+                "sensor-result.json": "5c51fb8843e700a093acc22ecaf8102259fadbf745ced7eec5f1747c6bd2cc62",
+                "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
+              },
+              "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+              "run_id": "18adb5a8",
+              "schema_version": "seed-organism.bundle-manifest.v0.1",
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            },
+            "metrics": {
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "machine_id": "h2-c-direct-source",
+              "preset_version": "h2-test",
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 3,
+                "idle_power": 3,
+                "network": 3,
+                "sustained": 3
+              },
+              "schema_version": "seed-organism.metrics.h2.v0.1",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              }
+            },
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8",
+            "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
+            "regression_result": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "machine_id": "h2-c-direct-source",
+              "passed": true,
+              "regression_result_hash": "849a46ef930f9d8cd72b3a4a8fd628f39ff3b57fe81ddd6f1714a79bfe3484fd",
+              "reverted_cleanly": true,
+              "schema_version": "seed-organism.regression-result.v0.1",
+              "sensor_id": "regression.genesis.v1",
+              "timestamp": "2026-06-30T02:02:41+00:00",
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            },
+            "sensor_result": {
+              "base_fitness": 0.0,
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "confidence": 0.7,
+              "delta": {
+                "coldstart_pct": 0.0,
+                "idle_power_pct": 0.0,
+                "memory_pct": 0.0,
+                "network_pct": 0.0,
+                "sustained_pct": 0.0
+              },
+              "fitness_score": 0.0,
+              "knobs_removed_vs_parent": 0,
+              "machine_id": "h2-c-direct-source",
+              "measurement_fingerprint": "e14240c66e413b84a83edbd98bf69680cedd03a3cf0730c7ba2a61c4ebe14737",
+              "metric_derivation_fingerprint": "e1ef13a0b8a340e542a1a7a197c797e8ba48845d17579515aec41df75efe45a0",
+              "missing_core_metrics": [],
+              "parsimony_bonus": 0.0,
+              "parsimony_validation": {
+                "claimed_knobs_removed_vs_parent": 5,
+                "derived_knobs_removed_vs_parent": 0,
+                "failures": [
+                  "parsimony invariant failed: claimed 5 removed knobs but genome derives 0"
+                ],
+                "passed": false
+              },
+              "preset_version": "h2-c-direct-overdeclared-parsimony",
+              "raw_artifact_fingerprint": null,
+              "schema_version": "seed-organism.sensor-result.v0.1",
+              "sensor_id": "perf.genesis.v1",
+              "sensor_result_hash": "62505d7b91ddbbfbe91009eda50106d995892882a819b3eeffdcd5a40476d118",
+              "severe_regressions": [],
+              "timestamp": "2026-06-30T02:02:41+00:00",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            },
+            "variant": {
+              "commit_ref": "h2-adversarial-untrusted-submission",
+              "contributor_id": "h2-malicious-contributor",
+              "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+              "fitness_eligible": true,
+              "genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "knobs_removed_vs_parent": 5,
+              "mutation_operator": "malicious_parsimony_overclaim",
+              "parent_genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "parent_variant_id": "parent-baseline-v0.12",
+              "preset_version": "h2-c-direct-overdeclared-parsimony",
+              "rollback_method": "none; synthetic adversarial test fixture",
+              "schema_version": "seed-organism.variant.qd-sim.v0.1",
+              "variant_id": "h2-c-direct-overdeclared-parsimony"
+            }
+          },
+          "submitted_metrics_file": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\inputs\\metrics-mode-c-neutral.json",
+          "submitted_variant_file": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\inputs\\variant-mode-c-direct-overclaim.json"
+        },
+        "qd_guarded_submission": {
+          "accepted": false,
+          "after_qd_guard": 0,
+          "before_qd_guard": 5,
+          "claimed_knobs_removed_vs_parent": 5,
+          "cycle_id": 220,
+          "gate_triggered": "QD genome-derived parsimony guard -> minimum_accept_fitness gate",
+          "guard_caught_overclaim": true,
+          "payout_report": {
+            "cli": {
+              "cmd": [
+                "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+                "--state-dir",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded",
+                "close-cycle",
+                "--cycle-id",
+                "220",
+                "--revenue-sats",
+                "100000"
+              ],
+              "parsed_stdout": {
+                "contributors": "0",
+                "cycle": "220",
+                "report": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json",
+                "report_hash": "1b61f4507003bb9d53b62ebe1d40342a03065704951c212a45172991d173c12d"
+              },
+              "returncode": 0,
+              "stderr": "",
+              "stdout": "cycle: 220\ncontributors: 0\nreport_hash: 1b61f4507003bb9d53b62ebe1d40342a03065704951c212a45172991d173c12d\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json\n"
+            },
+            "contributors": [],
+            "payout_triggered": false,
+            "report_hash": "1b61f4507003bb9d53b62ebe1d40342a03065704951c212a45172991d173c12d",
+            "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json"
+          },
+          "pipeline_verdict": "rejected_recompute_mismatch",
+          "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded",
+          "submitted_bundle": {
+            "bundle_hash": "109b0969834b47ef075f55026fa33d2e8cfe97f2602bec2c0a7f77a2a13520e9",
+            "confidence": 0.7,
+            "decision": "rejected_recompute_mismatch",
+            "fitness_score": 0.0,
+            "manifest": {
+              "bundle_hash": "109b0969834b47ef075f55026fa33d2e8cfe97f2602bec2c0a7f77a2a13520e9",
+              "created_at": "2026-06-30T02:02:41+00:00",
+              "cycle_id": "220",
+              "decision": "rejected_recompute_mismatch",
+              "files": {
+                "metrics.json": "9eaab94415c0e6f0a6bc939de9c1719c7b963947f43c44412bd029c23f90b772",
+                "regression-result.json": "447feee1c60882feb55b8e7cf2f35e6555b417658e40d990cead1db2c469d6a8",
+                "sensor-result.json": "703c34da98663d50770cb47a0d042de708849768727d1cdd2bc42a71acd64645",
+                "variant.json": "f8b7cdf02d3bdbde52c5fbf4428ddca5533fd8fc503038c11ed5e3e3a3262f09"
+              },
+              "reason": "verifier recompute gate: missing immutable raw_artifacts",
+              "run_id": "be78c241",
+              "schema_version": "seed-organism.bundle-manifest.v0.1",
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            },
+            "metrics": {
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "machine_id": "h2-c-qd-source",
+              "preset_version": "h2-test",
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 3,
+                "idle_power": 3,
+                "network": 3,
+                "sustained": 3
+              },
+              "schema_version": "seed-organism.metrics.h2.v0.1",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              }
+            },
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\runs\\cycle-220\\h2-c-qd-overdeclared-parsimony-20260630T020241Z-be78c241",
+            "reason": "verifier recompute gate: missing immutable raw_artifacts",
+            "regression_result": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "machine_id": "h2-c-qd-source",
+              "passed": true,
+              "regression_result_hash": "4e41a5ec63dafde92c474cabb6b334d03cd40f6be22cfff0952f2429e93fee71",
+              "reverted_cleanly": true,
+              "schema_version": "seed-organism.regression-result.v0.1",
+              "sensor_id": "regression.genesis.v1",
+              "timestamp": "2026-06-30T02:02:41+00:00",
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            },
+            "sensor_result": {
+              "base_fitness": 0.0,
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "confidence": 0.7,
+              "delta": {
+                "coldstart_pct": 0.0,
+                "idle_power_pct": 0.0,
+                "memory_pct": 0.0,
+                "network_pct": 0.0,
+                "sustained_pct": 0.0
+              },
+              "fitness_score": 0.0,
+              "knobs_removed_vs_parent": 0,
+              "machine_id": "h2-c-qd-source",
+              "measurement_fingerprint": "e14240c66e413b84a83edbd98bf69680cedd03a3cf0730c7ba2a61c4ebe14737",
+              "metric_derivation_fingerprint": "e1ef13a0b8a340e542a1a7a197c797e8ba48845d17579515aec41df75efe45a0",
+              "missing_core_metrics": [],
+              "parsimony_bonus": 0.0,
+              "parsimony_validation": {
+                "claimed_knobs_removed_vs_parent": 0,
+                "derived_knobs_removed_vs_parent": 0,
+                "failures": [],
+                "passed": true
+              },
+              "preset_version": "qd-sim",
+              "raw_artifact_fingerprint": null,
+              "schema_version": "seed-organism.sensor-result.v0.1",
+              "sensor_id": "perf.genesis.v1",
+              "sensor_result_hash": "d7ebe741123cfa4cde2f6cc315676af38d0bfa212052cac4047e26c8891359ff",
+              "severe_regressions": [],
+              "timestamp": "2026-06-30T02:02:41+00:00",
+              "variant": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            },
+            "variant": {
+              "commit_ref": "h2-adversarial-untrusted-submission",
+              "contributor_id": "h2-malicious-contributor",
+              "declared_scope": "quality-diversity simulation only",
+              "fitness_eligible": true,
+              "genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "knobs_removed_vs_parent": 0,
+              "parent_genome_knobs": {
+                "cpu_governor_boost": 0.4,
+                "gpu_idle_pin_mhz": 0.2,
+                "power_cap_relief": 0.0,
+                "scheduler_aggressive": 0.1
+              },
+              "parent_variant_id": "h2-c-qd-parent-active-knobs",
+              "preset_version": "qd-sim",
+              "qd_generation": 0,
+              "rollback_method": "simulation discard",
+              "schema_version": "seed-organism.variant.qd-sim.v0.1",
+              "variant_id": "h2-c-qd-overdeclared-parsimony"
+            }
+          }
+        }
+      }
+    },
+    {
+      "accepted": false,
+      "attack": "Multiple signed identities/raw artifacts share the same non-identity metric derivation pattern.",
+      "cli": {
+        "cmd": [
+          "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+          "--state-dir",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil",
+          "run-variant",
+          "--variant",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\variant-mode-d-funded.json",
+          "--metrics",
+          "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\metrics-mode-d-funded.json",
+          "--cycle-id",
+          "230"
+        ],
+        "parsed_stdout": {
+          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T020241Z-a0fb015b",
+          "bundle_hash": "94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c",
+          "confidence": "0.75",
+          "decision": "rejected_funded_adversary_pattern",
+          "fitness_score": "0.104878",
+          "reason": "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint",
+          "variant": "v-d-funded-confirmation-sybil"
+        },
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "variant: v-d-funded-confirmation-sybil\ndecision: rejected_funded_adversary_pattern\nreason: funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint\nfitness_score: 0.104878\nconfidence: 0.75\nbundle_hash: 94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T020241Z-a0fb015b\n"
+      },
+      "cycle_id": 230,
+      "deferred_to_trust_layer": false,
+      "extra": {
+        "confirmation_count": 2,
+        "confirmation_source": "cursiveroot_independent_aggregation",
+        "policy_boundary": "V rejects duplicated derivation across bought identities/raw artifacts; real BTC remains simulated and gated."
+      },
+      "gate_triggered": "funded adversary pattern gate",
+      "mode": "D-funded",
+      "name": "funded confirmation Sybil",
+      "payout_report": {
+        "cli": {
+          "cmd": [
+            "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+            "--state-dir",
+            "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil",
+            "close-cycle",
+            "--cycle-id",
+            "230",
+            "--revenue-sats",
+            "100000"
+          ],
+          "parsed_stdout": {
+            "contributors": "0",
+            "cycle": "230",
+            "report": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\cycles\\cycle-230-payout.json",
+            "report_hash": "2257b923f95458a3ebe92dfcad20566104dc7af705ef8f63c4b3c2f5e1736362"
+          },
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "cycle: 230\ncontributors: 0\nreport_hash: 2257b923f95458a3ebe92dfcad20566104dc7af705ef8f63c4b3c2f5e1736362\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\cycles\\cycle-230-payout.json\n"
+        },
+        "contributors": [],
+        "payout_triggered": false,
+        "report_hash": "2257b923f95458a3ebe92dfcad20566104dc7af705ef8f63c4b3c2f5e1736362",
+        "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\cycles\\cycle-230-payout.json"
+      },
+      "payout_triggered": false,
+      "pipeline": "seed_organism.py CLI: run-variant -> CursiveRoot aggregation verifier -> funded adversary pattern gate",
+      "pipeline_verdict": "rejected_funded_adversary_pattern",
+      "reason": "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint",
+      "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil",
+      "submitted_bundle": {
+        "bundle_hash": "94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c",
+        "confidence": 0.75,
+        "decision": "rejected_funded_adversary_pattern",
+        "fitness_score": 0.104878,
+        "manifest": {
+          "bundle_hash": "94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c",
+          "created_at": "2026-06-30T02:02:41+00:00",
+          "cycle_id": "230",
+          "decision": "rejected_funded_adversary_pattern",
+          "files": {
+            "metrics.json": "ee65938a7015b44d8cfc3ebf8206dc36a6c8f6d31fcf9382db6549f9f800f571",
+            "regression-result.json": "c1511accdb42c6c6ae7df296b4f317090c8556462019c251ccbe72d2e1477142",
+            "sensor-result.json": "601501cf4dcf6716bcbec738913c8c1f0457be4977fea99e297b170d0712d1bc",
+            "variant.json": "5ad7bd70ecfa288ecdac1ca67310d1eee951aa262484c41bdfee585de1fd6503"
+          },
+          "reason": "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint",
+          "run_id": "a0fb015b",
+          "schema_version": "seed-organism.bundle-manifest.v0.1",
+          "variant_id": "v-d-funded-confirmation-sybil"
+        },
+        "metrics": {
+          "adversarial_claim": "funded actor controls two signed identities with duplicated metric derivation",
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "benchmark_context": {},
+          "confidence": 0.75,
+          "confirmation_aggregation": {
+            "aggregation_hash": "91117aaa31db186df5d50b1b2cb9f690aac568cbf94d07be5b254c62feb52fbf",
+            "aggregation_source": "cursiveroot_owned_local_v_phase",
+            "confirmation_count": 2,
+            "confirmations": [
+              {
+                "adversarial_claim": "decision-grade fixture derived from immutable raw full-test JSON",
+                "baseline": {
+                  "coldstart_ms": 1820.0,
+                  "idle_watts": 71.0,
+                  "memory_refault_s": 10.0,
+                  "network_mbps": 930.0,
+                  "sustained_tokps": 41.0
+                },
+                "benchmark_context": {},
+                "hardware_fingerprint_hash": "v-d-funded-rig-a",
+                "machine_id": "v-d-funded-rig-a",
+                "measurement_quality": {
+                  "decision_grade": true,
+                  "flags": [],
+                  "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+                  "schema_version": "cursiveos.measurement-quality.v0.2"
+                },
+                "preset_version": "v-phase-test",
+                "raw_artifact_fingerprint": "f890e43a5ca856a879d9cf56e23741dfcd44c45cecf8b753063d1b4d958357be",
+                "raw_artifacts": [
+                  {
+                    "immutable": true,
+                    "kind": "full_test_result_json",
+                    "path": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\funded-a.json",
+                    "sha256": "3c595d0fc8d3bac15645fc5f38b289e500e7e07e86c1e09b8ce2a4449edce8bb"
+                  }
+                ],
+                "regression": {
+                  "failures": [],
+                  "full_test_passed": true,
+                  "host_safety_passed": true,
+                  "reverted_cleanly": true
+                },
+                "sample_counts": {
+                  "coldstart": 3,
+                  "idle_power": 3,
+                  "network": 3,
+                  "sustained": 3
+                },
+                "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+                "signed_identity": {
+                  "identity_public_key": "local-sim-1191ce83878e267b5d3ec00140711e98",
+                  "scheme": "cursiveos-local-sim-signed-nonce-v0.1",
+                  "session_nonce": "d3d627da0428b4649c6f8b42",
+                  "signature": "9fe33a073eb99aa3e7e7cd644b338729634fb87b1c0315059cbd42a3796cb547"
+                },
+                "source_log": null,
+                "source_provenance": "native_full_test_json",
+                "source_provenance_notes": null,
+                "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\funded-a.json",
+                "structured_telemetry": {
+                  "coldstart": {
+                    "available": true,
+                    "baseline": {
+                      "avg_cold_total_ms": 1820.0,
+                      "avg_load_ms": 100.0,
+                      "avg_tokps": 40.0,
+                      "avg_ttft_ms": 20.0,
+                      "calls": [
+                        {
+                          "call": 1,
+                          "cold_total_ms": 1820.0,
+                          "gpu_before": "300MHz",
+                          "load_ms": 100.0,
+                          "tokens": 30.0,
+                          "tokps": 40.0,
+                          "ttft_ms": 20.0
+                        }
+                      ],
+                      "cold_range_ms": [
+                        1820.0,
+                        1820.0
+                      ],
+                      "cpu_governor": "schedutil",
+                      "gpu_freq_before_pass_mhz": 300.0,
+                      "load_range_ms": [
+                        100.0,
+                        100.0
+                      ]
+                    },
+                    "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\coldstart.log",
+                    "tuned": {
+                      "avg_cold_total_ms": 1638.0,
+                      "avg_load_ms": 90.0,
+                      "avg_tokps": 42.0,
+                      "avg_ttft_ms": 10.0,
+                      "calls": [
+                        {
+                          "call": 1,
+                          "cold_total_ms": 1638.0,
+                          "gpu_before": "2000MHz",
+                          "load_ms": 90.0,
+                          "tokens": 30.0,
+                          "tokps": 42.0,
+                          "ttft_ms": 10.0
+                        }
+                      ],
+                      "cold_range_ms": [
+                        1638.0,
+                        1638.0
+                      ],
+                      "cpu_governor": "performance",
+                      "gpu_freq_before_pass_mhz": 2000.0,
+                      "load_range_ms": [
+                        90.0,
+                        90.0
+                      ]
+                    }
+                  },
+                  "idle_power": {
+                    "samples": [
+                      71.0,
+                      71.0
+                    ]
+                  },
+                  "network": {
+                    "available": true,
+                    "baseline": {
+                      "avg_mbps": 930.0,
+                      "avg_retransmits": 1.0,
+                      "avg_rtt_ms": 51.0,
+                      "range_mbps": [
+                        930.0,
+                        930.0
+                      ],
+                      "rmem_max_bytes": 212992,
+                      "runs": [
+                        {
+                          "mbps": 930.0,
+                          "retransmits": 1.0,
+                          "rtt_ms": 51.0,
+                          "run": 1
+                        }
+                      ],
+                      "tcp_congestion_control": "cubic"
+                    },
+                    "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\network.log",
+                    "tuned": {
+                      "avg_mbps": 930.0,
+                      "avg_retransmits": 0.0,
+                      "avg_rtt_ms": 50.0,
+                      "range_mbps": [
+                        930.0,
+                        930.0
+                      ],
+                      "rmem_max_bytes": 16777216,
+                      "runs": [
+                        {
+                          "mbps": 930.0,
+                          "retransmits": 0.0,
+                          "rtt_ms": 50.0,
+                          "run": 1
+                        }
+                      ],
+                      "tcp_congestion_control": "bbr"
+                    }
+                  },
+                  "schema_version": "cursiveos.structured-telemetry.v0.2",
+                  "sustained": {
+                    "available": true,
+                    "baseline": {
+                      "avg_tokps": 41.0,
+                      "avg_ttft_s": 0.1,
+                      "cpu_governor": "schedutil",
+                      "passes": [
+                        {
+                          "pass": 1,
+                          "tokens": 100.0,
+                          "tokps": 41.0,
+                          "ttft_s": 0.1
+                        }
+                      ],
+                      "processor": "100% GPU",
+                      "range_tokps": [
+                        41.0,
+                        41.0
+                      ]
+                    },
+                    "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\sustained.log",
+                    "tuned": {
+                      "avg_tokps": 42.0,
+                      "avg_ttft_s": 0.09,
+                      "cpu_governor": "performance",
+                      "passes": [
+                        {
+                          "pass": 1,
+                          "tokens": 100.0,
+                          "tokps": 42.0,
+                          "ttft_s": 0.09
+                        }
+                      ],
+                      "processor": "100% GPU",
+                      "range_tokps": [
+                        42.0,
+                        42.0
+                      ]
+                    }
+                  }
+                },
+                "telemetry": {
+                  "detail_logs": {
+                    "coldstart": "coldstart.log",
+                    "network": "network.log",
+                    "sustained": "sustained.log"
+                  },
+                  "idle_power": {
+                    "samples": [
+                      71.0,
+                      71.0
+                    ]
+                  }
+                },
+                "variant": {
+                  "coldstart_ms": 1638.0,
+                  "idle_watts": 71.0,
+                  "memory_refault_s": 10.0,
+                  "network_mbps": 930.0,
+                  "sustained_tokps": 42.0
+                }
+              },
+              {
+                "adversarial_claim": "decision-grade fixture derived from immutable raw full-test JSON",
+                "baseline": {
+                  "coldstart_ms": 1820.0,
+                  "idle_watts": 71.0,
+                  "memory_refault_s": 10.0,
+                  "network_mbps": 930.0,
+                  "sustained_tokps": 41.0
+                },
+                "benchmark_context": {},
+                "hardware_fingerprint_hash": "v-d-funded-rig-b",
+                "machine_id": "v-d-funded-rig-b",
+                "measurement_quality": {
+                  "decision_grade": true,
+                  "flags": [],
+                  "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+                  "schema_version": "cursiveos.measurement-quality.v0.2"
+                },
+                "preset_version": "v-phase-test",
+                "raw_artifact_fingerprint": "cb9201cc4db415d9da7cf9f2a02eb9c1fbd89d733abb7e798afe79749b489ce4",
+                "raw_artifacts": [
+                  {
+                    "immutable": true,
+                    "kind": "full_test_result_json",
+                    "path": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\funded-b.json",
+                    "sha256": "7a6989f3e5e0b2e15085017c0979788437b2f2d8a08625a68f4d531123af7f95"
+                  }
+                ],
+                "regression": {
+                  "failures": [],
+                  "full_test_passed": true,
+                  "host_safety_passed": true,
+                  "reverted_cleanly": true
+                },
+                "sample_counts": {
+                  "coldstart": 3,
+                  "idle_power": 3,
+                  "network": 3,
+                  "sustained": 3
+                },
+                "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+                "signed_identity": {
+                  "identity_public_key": "local-sim-e28145b1a1d0fbda0862a8c503eb154b",
+                  "scheme": "cursiveos-local-sim-signed-nonce-v0.1",
+                  "session_nonce": "ba6ac7c4ca332e23d3840c41",
+                  "signature": "2150e1023c3507b2bf35aed578484e39f02b0937aabe077771f67096c9611769"
+                },
+                "source_log": null,
+                "source_provenance": "native_full_test_json",
+                "source_provenance_notes": null,
+                "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\funded-b.json",
+                "structured_telemetry": {
+                  "coldstart": {
+                    "available": true,
+                    "baseline": {
+                      "avg_cold_total_ms": 1820.0,
+                      "avg_load_ms": 100.0,
+                      "avg_tokps": 40.0,
+                      "avg_ttft_ms": 20.0,
+                      "calls": [
+                        {
+                          "call": 1,
+                          "cold_total_ms": 1820.0,
+                          "gpu_before": "300MHz",
+                          "load_ms": 100.0,
+                          "tokens": 30.0,
+                          "tokps": 40.0,
+                          "ttft_ms": 20.0
+                        }
+                      ],
+                      "cold_range_ms": [
+                        1820.0,
+                        1820.0
+                      ],
+                      "cpu_governor": "schedutil",
+                      "gpu_freq_before_pass_mhz": 300.0,
+                      "load_range_ms": [
+                        100.0,
+                        100.0
+                      ]
+                    },
+                    "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\coldstart.log",
+                    "tuned": {
+                      "avg_cold_total_ms": 1638.0,
+                      "avg_load_ms": 90.0,
+                      "avg_tokps": 42.0,
+                      "avg_ttft_ms": 10.0,
+                      "calls": [
+                        {
+                          "call": 1,
+                          "cold_total_ms": 1638.0,
+                          "gpu_before": "2000MHz",
+                          "load_ms": 90.0,
+                          "tokens": 30.0,
+                          "tokps": 42.0,
+                          "ttft_ms": 10.0
+                        }
+                      ],
+                      "cold_range_ms": [
+                        1638.0,
+                        1638.0
+                      ],
+                      "cpu_governor": "performance",
+                      "gpu_freq_before_pass_mhz": 2000.0,
+                      "load_range_ms": [
+                        90.0,
+                        90.0
+                      ]
+                    }
+                  },
+                  "idle_power": {
+                    "samples": [
+                      71.0,
+                      71.0
+                    ]
+                  },
+                  "network": {
+                    "available": true,
+                    "baseline": {
+                      "avg_mbps": 930.0,
+                      "avg_retransmits": 1.0,
+                      "avg_rtt_ms": 51.0,
+                      "range_mbps": [
+                        930.0,
+                        930.0
+                      ],
+                      "rmem_max_bytes": 212992,
+                      "runs": [
+                        {
+                          "mbps": 930.0,
+                          "retransmits": 1.0,
+                          "rtt_ms": 51.0,
+                          "run": 1
+                        }
+                      ],
+                      "tcp_congestion_control": "cubic"
+                    },
+                    "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\network.log",
+                    "tuned": {
+                      "avg_mbps": 930.0,
+                      "avg_retransmits": 0.0,
+                      "avg_rtt_ms": 50.0,
+                      "range_mbps": [
+                        930.0,
+                        930.0
+                      ],
+                      "rmem_max_bytes": 16777216,
+                      "runs": [
+                        {
+                          "mbps": 930.0,
+                          "retransmits": 0.0,
+                          "rtt_ms": 50.0,
+                          "run": 1
+                        }
+                      ],
+                      "tcp_congestion_control": "bbr"
+                    }
+                  },
+                  "schema_version": "cursiveos.structured-telemetry.v0.2",
+                  "sustained": {
+                    "available": true,
+                    "baseline": {
+                      "avg_tokps": 41.0,
+                      "avg_ttft_s": 0.1,
+                      "cpu_governor": "schedutil",
+                      "passes": [
+                        {
+                          "pass": 1,
+                          "tokens": 100.0,
+                          "tokps": 41.0,
+                          "ttft_s": 0.1
+                        }
+                      ],
+                      "processor": "100% GPU",
+                      "range_tokps": [
+                        41.0,
+                        41.0
+                      ]
+                    },
+                    "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\sustained.log",
+                    "tuned": {
+                      "avg_tokps": 42.0,
+                      "avg_ttft_s": 0.09,
+                      "cpu_governor": "performance",
+                      "passes": [
+                        {
+                          "pass": 1,
+                          "tokens": 100.0,
+                          "tokps": 42.0,
+                          "ttft_s": 0.09
+                        }
+                      ],
+                      "processor": "100% GPU",
+                      "range_tokps": [
+                        42.0,
+                        42.0
+                      ]
+                    }
+                  }
+                },
+                "telemetry": {
+                  "detail_logs": {
+                    "coldstart": "coldstart.log",
+                    "network": "network.log",
+                    "sustained": "sustained.log"
+                  },
+                  "idle_power": {
+                    "samples": [
+                      71.0,
+                      71.0
+                    ]
+                  }
+                },
+                "variant": {
+                  "coldstart_ms": 1638.0,
+                  "idle_watts": 71.0,
+                  "memory_refault_s": 10.0,
+                  "network_mbps": 930.0,
+                  "sustained_tokps": 42.0
+                }
+              }
+            ],
+            "identity_public_keys": [
+              "local-sim-1191ce83878e267b5d3ec00140711e98",
+              "local-sim-e28145b1a1d0fbda0862a8c503eb154b"
+            ],
+            "measurement_fingerprints": [
+              "5759b74266aa778cec469b55f319ff6aaac7c8c6c6ec7781913839521563f675",
+              "c7bb15e7cbcc38cfbcc46a97cd5b87d811a12ab38d28469e43f0449f91336563"
+            ],
+            "metric_derivation_fingerprints": [
+              "0935124011fdc46592912bcf05b83106d178c217be85b4780e3e751c1b304d58",
+              "0935124011fdc46592912bcf05b83106d178c217be85b4780e3e751c1b304d58"
+            ],
+            "raw_artifact_fingerprints": [
+              "f890e43a5ca856a879d9cf56e23741dfcd44c45cecf8b753063d1b4d958357be",
+              "cb9201cc4db415d9da7cf9f2a02eb9c1fbd89d733abb7e798afe79749b489ce4"
+            ]
+          },
+          "confirmation_count": 2,
+          "confirmation_source": "cursiveroot_independent_aggregation",
+          "hardware_fingerprint_hash": "v-d-funded-rig-a",
+          "machine_id": "v-d-funded-rig-a",
+          "measurement_quality": {
+            "decision_grade": true,
+            "flags": [],
+            "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+            "schema_version": "cursiveos.measurement-quality.v0.2"
+          },
+          "preset_version": "v-phase-test",
+          "raw_artifact_fingerprint": "f890e43a5ca856a879d9cf56e23741dfcd44c45cecf8b753063d1b4d958357be",
+          "raw_artifacts": [
+            {
+              "immutable": true,
+              "kind": "full_test_result_json",
+              "path": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\funded-a.json",
+              "sha256": "3c595d0fc8d3bac15645fc5f38b289e500e7e07e86c1e09b8ce2a4449edce8bb"
+            }
+          ],
+          "regression": {
+            "failures": [],
+            "full_test_passed": true,
+            "host_safety_passed": true,
+            "reverted_cleanly": true
+          },
+          "sample_counts": {
+            "coldstart": 3,
+            "idle_power": 3,
+            "network": 3,
+            "sustained": 3
+          },
+          "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+          "signed_identity": {
+            "identity_public_key": "local-sim-1191ce83878e267b5d3ec00140711e98",
+            "scheme": "cursiveos-local-sim-signed-nonce-v0.1",
+            "session_nonce": "d3d627da0428b4649c6f8b42",
+            "signature": "9fe33a073eb99aa3e7e7cd644b338729634fb87b1c0315059cbd42a3796cb547"
+          },
+          "source_log": null,
+          "source_provenance": "native_full_test_json",
+          "source_provenance_notes": null,
+          "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\funded-a.json",
+          "structured_telemetry": {
+            "coldstart": {
+              "available": true,
+              "baseline": {
+                "avg_cold_total_ms": 1820.0,
+                "avg_load_ms": 100.0,
+                "avg_tokps": 40.0,
+                "avg_ttft_ms": 20.0,
+                "calls": [
+                  {
+                    "call": 1,
+                    "cold_total_ms": 1820.0,
+                    "gpu_before": "300MHz",
+                    "load_ms": 100.0,
+                    "tokens": 30.0,
+                    "tokps": 40.0,
+                    "ttft_ms": 20.0
+                  }
+                ],
+                "cold_range_ms": [
+                  1820.0,
+                  1820.0
+                ],
+                "cpu_governor": "schedutil",
+                "gpu_freq_before_pass_mhz": 300.0,
+                "load_range_ms": [
+                  100.0,
+                  100.0
+                ]
+              },
+              "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\coldstart.log",
+              "tuned": {
+                "avg_cold_total_ms": 1638.0,
+                "avg_load_ms": 90.0,
+                "avg_tokps": 42.0,
+                "avg_ttft_ms": 10.0,
+                "calls": [
+                  {
+                    "call": 1,
+                    "cold_total_ms": 1638.0,
+                    "gpu_before": "2000MHz",
+                    "load_ms": 90.0,
+                    "tokens": 30.0,
+                    "tokps": 42.0,
+                    "ttft_ms": 10.0
+                  }
+                ],
+                "cold_range_ms": [
+                  1638.0,
+                  1638.0
+                ],
+                "cpu_governor": "performance",
+                "gpu_freq_before_pass_mhz": 2000.0,
+                "load_range_ms": [
+                  90.0,
+                  90.0
+                ]
+              }
+            },
+            "idle_power": {
+              "samples": [
+                71.0,
+                71.0
+              ]
+            },
+            "network": {
+              "available": true,
+              "baseline": {
+                "avg_mbps": 930.0,
+                "avg_retransmits": 1.0,
+                "avg_rtt_ms": 51.0,
+                "range_mbps": [
+                  930.0,
+                  930.0
+                ],
+                "rmem_max_bytes": 212992,
+                "runs": [
+                  {
+                    "mbps": 930.0,
+                    "retransmits": 1.0,
+                    "rtt_ms": 51.0,
+                    "run": 1
+                  }
+                ],
+                "tcp_congestion_control": "cubic"
+              },
+              "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\network.log",
+              "tuned": {
+                "avg_mbps": 930.0,
+                "avg_retransmits": 0.0,
+                "avg_rtt_ms": 50.0,
+                "range_mbps": [
+                  930.0,
+                  930.0
+                ],
+                "rmem_max_bytes": 16777216,
+                "runs": [
+                  {
+                    "mbps": 930.0,
+                    "retransmits": 0.0,
+                    "rtt_ms": 50.0,
+                    "run": 1
+                  }
+                ],
+                "tcp_congestion_control": "bbr"
+              }
+            },
+            "schema_version": "cursiveos.structured-telemetry.v0.2",
+            "sustained": {
+              "available": true,
+              "baseline": {
+                "avg_tokps": 41.0,
+                "avg_ttft_s": 0.1,
+                "cpu_governor": "schedutil",
+                "passes": [
+                  {
+                    "pass": 1,
+                    "tokens": 100.0,
+                    "tokps": 41.0,
+                    "ttft_s": 0.1
+                  }
+                ],
+                "processor": "100% GPU",
+                "range_tokps": [
+                  41.0,
+                  41.0
+                ]
+              },
+              "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\sustained.log",
+              "tuned": {
+                "avg_tokps": 42.0,
+                "avg_ttft_s": 0.09,
+                "cpu_governor": "performance",
+                "passes": [
+                  {
+                    "pass": 1,
+                    "tokens": 100.0,
+                    "tokps": 42.0,
+                    "ttft_s": 0.09
+                  }
+                ],
+                "processor": "100% GPU",
+                "range_tokps": [
+                  42.0,
+                  42.0
+                ]
+              }
+            }
+          },
+          "telemetry": {
+            "detail_logs": {
+              "coldstart": "coldstart.log",
+              "network": "network.log",
+              "sustained": "sustained.log"
+            },
+            "idle_power": {
+              "samples": [
+                71.0,
+                71.0
+              ]
+            }
+          },
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          }
+        },
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T020241Z-a0fb015b",
+        "reason": "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint",
+        "regression_result": {
+          "failures": [],
+          "full_test_passed": true,
+          "host_safety_passed": true,
+          "machine_id": "v-d-funded-rig-a",
+          "passed": true,
+          "regression_result_hash": "6ee8d8ba018d65921c083353b71d579d14859f5b12435f3aafa3a6ecf1741def",
+          "reverted_cleanly": true,
+          "schema_version": "seed-organism.regression-result.v0.1",
+          "sensor_id": "regression.genesis.v1",
+          "timestamp": "2026-06-30T02:02:41+00:00",
+          "variant_id": "v-d-funded-confirmation-sybil"
+        },
+        "sensor_result": {
+          "base_fitness": 0.10487805,
+          "baseline": {
+            "coldstart_ms": 1820.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 41.0
+          },
+          "confidence": 0.75,
+          "delta": {
+            "coldstart_pct": 10.0,
+            "idle_power_pct": 0.0,
+            "memory_pct": 0.0,
+            "network_pct": 0.0,
+            "sustained_pct": 2.4390243902439024
+          },
+          "fitness_score": 0.10487805,
+          "knobs_removed_vs_parent": 0,
+          "machine_id": "v-d-funded-rig-a",
+          "measurement_fingerprint": "5759b74266aa778cec469b55f319ff6aaac7c8c6c6ec7781913839521563f675",
+          "metric_derivation_fingerprint": "0935124011fdc46592912bcf05b83106d178c217be85b4780e3e751c1b304d58",
+          "missing_core_metrics": [],
+          "parsimony_bonus": 0.0,
+          "parsimony_validation": {
+            "claimed_knobs_removed_vs_parent": 0,
+            "derived_knobs_removed_vs_parent": 0,
+            "failures": [],
+            "passed": true
+          },
+          "preset_version": "v-d-funded-confirmation-sybil",
+          "raw_artifact_fingerprint": "f890e43a5ca856a879d9cf56e23741dfcd44c45cecf8b753063d1b4d958357be",
+          "schema_version": "seed-organism.sensor-result.v0.1",
+          "sensor_id": "perf.genesis.v1",
+          "sensor_result_hash": "aaa3ccbec7bc91b69d731fb5bd7ed6515337f09bbadcd91459a3094babf4f73c",
+          "severe_regressions": [],
+          "timestamp": "2026-06-30T02:02:41+00:00",
+          "variant": {
+            "coldstart_ms": 1638.0,
+            "idle_watts": 71.0,
+            "memory_refault_s": 10.0,
+            "network_mbps": 930.0,
+            "sustained_tokps": 42.0
+          },
+          "variant_id": "v-d-funded-confirmation-sybil"
+        },
+        "variant": {
+          "commit_ref": "h2-adversarial-untrusted-submission",
+          "contributor_id": "h2-malicious-contributor",
+          "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+          "fitness_eligible": true,
+          "parent_variant_id": "parent-baseline-v0.12",
+          "preset_version": "v-d-funded-confirmation-sybil",
+          "rollback_method": "none; synthetic adversarial test fixture",
+          "schema_version": "seed-organism.variant.v0.1",
+          "variant_id": "v-d-funded-confirmation-sybil"
+        }
+      },
+      "submitted_metrics_file": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\metrics-mode-d-funded.json",
+      "submitted_variant_file": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\inputs\\variant-mode-d-funded.json"
+    },
+    {
+      "accepted": true,
+      "attack": "No attack: honest noisy and weird-hardware controls establish false-positive boundary.",
+      "deferred_to_trust_layer": false,
+      "false_positive_rejections": [],
+      "gate_triggered": null,
+      "mode": "H",
+      "name": "honest false-positive controls",
+      "payout_triggered": true,
+      "pipeline": "seed_organism.py CLI: run-variant honest controls",
+      "pipeline_verdict": "pass",
+      "reason": "honest controls accepted or held inconclusive",
+      "subtests": {
+        "honest_noisy": {
+          "accepted": false,
+          "attack": "Honest lower-repeat/noisy real measurement; should not be fraud rejected.",
+          "cli": {
+            "cmd": [
+              "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+              "--state-dir",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
+              "run-variant",
+              "--variant",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\variant-mode-h-noisy.json",
+              "--metrics",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\metrics-mode-h-noisy.json",
+              "--cycle-id",
+              "240"
+            ],
+            "parsed_stdout": {
+              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T020241Z-689ad7ac",
+              "bundle_hash": "fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45",
+              "confidence": "0.60",
+              "decision": "inconclusive",
+              "fitness_score": "0.104878",
+              "reason": "confidence 0.60 below minimum 0.65",
+              "variant": "v-h-honest-noisy"
+            },
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "variant: v-h-honest-noisy\ndecision: inconclusive\nreason: confidence 0.60 below minimum 0.65\nfitness_score: 0.104878\nconfidence: 0.60\nbundle_hash: fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T020241Z-689ad7ac\n"
+          },
+          "cycle_id": 240,
+          "deferred_to_trust_layer": false,
+          "gate_triggered": "confidence gate",
+          "mode": "H-noisy",
+          "name": "honest noisy control",
+          "payout_report": {
+            "cli": {
+              "cmd": [
+                "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+                "--state-dir",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
+                "close-cycle",
+                "--cycle-id",
+                "240",
+                "--revenue-sats",
+                "100000"
+              ],
+              "parsed_stdout": {
+                "contributors": "0",
+                "cycle": "240",
+                "report": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-240-payout.json",
+                "report_hash": "b3286c728168eab233d801ff16d1092aba926eb00c403596965e6c165e84b8fa"
+              },
+              "returncode": 0,
+              "stderr": "",
+              "stdout": "cycle: 240\ncontributors: 0\nreport_hash: b3286c728168eab233d801ff16d1092aba926eb00c403596965e6c165e84b8fa\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-240-payout.json\n"
+            },
+            "contributors": [],
+            "payout_triggered": false,
+            "report_hash": "b3286c728168eab233d801ff16d1092aba926eb00c403596965e6c165e84b8fa",
+            "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-240-payout.json"
+          },
+          "payout_triggered": false,
+          "pipeline": "seed_organism.py CLI: run-variant honest control",
+          "pipeline_verdict": "inconclusive",
+          "reason": "confidence 0.60 below minimum 0.65",
+          "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
+          "submitted_bundle": {
+            "bundle_hash": "fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45",
+            "confidence": 0.6,
+            "decision": "inconclusive",
+            "fitness_score": 0.104878,
+            "manifest": {
+              "bundle_hash": "fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45",
+              "created_at": "2026-06-30T02:02:41+00:00",
+              "cycle_id": "240",
+              "decision": "inconclusive",
+              "files": {
+                "metrics.json": "2270aa68859a81eede7052dc6a09718d9ac83fc819570aad7712da55fb3f75d6",
+                "regression-result.json": "e39647f4af8fd472c37147578ed30cfa0a60aac3e2aa0a026ed217183b94d6f3",
+                "sensor-result.json": "de052ca23e862ffd18dfb7ae545bb2963414d30a4fca9b7e3f5953f8c8f7b0cb",
+                "variant.json": "55fd993cc17512ec9b6419c6c58c228802b4715be96931f5825769761cdee661"
+              },
+              "reason": "confidence 0.60 below minimum 0.65",
+              "run_id": "689ad7ac",
+              "schema_version": "seed-organism.bundle-manifest.v0.1",
+              "variant_id": "v-h-honest-noisy"
+            },
+            "metrics": {
+              "adversarial_claim": "decision-grade fixture derived from immutable raw full-test JSON",
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "benchmark_context": {},
+              "hardware_fingerprint_hash": "v-h-honest-noisy",
+              "honest_control": "noisy but real lower-repeat measurement; acceptable outcome is accepted or inconclusive, not fraud rejected",
+              "machine_id": "v-h-honest-noisy",
+              "measurement_quality": {
+                "decision_grade": true,
+                "flags": [],
+                "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+                "schema_version": "cursiveos.measurement-quality.v0.2"
+              },
+              "preset_version": "v-phase-test",
+              "raw_artifact_fingerprint": "2ca035c35d254764b8d3f54235c3a85291b555c10dfc44515df26a3ca1cf53d3",
+              "raw_artifacts": [
+                {
+                  "immutable": true,
+                  "kind": "full_test_result_json",
+                  "path": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\honest-noisy-result.json",
+                  "sha256": "f7ad930d9679d2405a29c31c08d91da2c673321574eb46f7beaee0581e445b99"
+                }
+              ],
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 2,
+                "idle_power": 3,
+                "network": 2,
+                "sustained": 2
+              },
+              "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+              "signed_identity": {
+                "identity_public_key": "local-sim-4be088277b87c0f52aef805978187843",
+                "scheme": "cursiveos-local-sim-signed-nonce-v0.1",
+                "session_nonce": "afa8bb1739c711cb1be9d0a2",
+                "signature": "ea5cafb7acc354aec1908ade324acac17268653008140e09e9d6494081df5b1f"
+              },
+              "source_log": null,
+              "source_provenance": "native_full_test_json",
+              "source_provenance_notes": null,
+              "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\honest-noisy-result.json",
+              "structured_telemetry": {
+                "coldstart": {
+                  "available": true,
+                  "baseline": {
+                    "avg_cold_total_ms": 1820.0,
+                    "avg_load_ms": 100.0,
+                    "avg_tokps": 40.0,
+                    "avg_ttft_ms": 20.0,
+                    "calls": [
+                      {
+                        "call": 1,
+                        "cold_total_ms": 1820.0,
+                        "gpu_before": "300MHz",
+                        "load_ms": 100.0,
+                        "tokens": 30.0,
+                        "tokps": 40.0,
+                        "ttft_ms": 20.0
+                      }
+                    ],
+                    "cold_range_ms": [
+                      1820.0,
+                      1820.0
+                    ],
+                    "cpu_governor": "schedutil",
+                    "gpu_freq_before_pass_mhz": 300.0,
+                    "load_range_ms": [
+                      100.0,
+                      100.0
+                    ]
+                  },
+                  "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\coldstart.log",
+                  "tuned": {
+                    "avg_cold_total_ms": 1638.0,
+                    "avg_load_ms": 90.0,
+                    "avg_tokps": 42.0,
+                    "avg_ttft_ms": 10.0,
+                    "calls": [
+                      {
+                        "call": 1,
+                        "cold_total_ms": 1638.0,
+                        "gpu_before": "2000MHz",
+                        "load_ms": 90.0,
+                        "tokens": 30.0,
+                        "tokps": 42.0,
+                        "ttft_ms": 10.0
+                      }
+                    ],
+                    "cold_range_ms": [
+                      1638.0,
+                      1638.0
+                    ],
+                    "cpu_governor": "performance",
+                    "gpu_freq_before_pass_mhz": 2000.0,
+                    "load_range_ms": [
+                      90.0,
+                      90.0
+                    ]
+                  }
+                },
+                "idle_power": {
+                  "samples": [
+                    71.0,
+                    71.0
+                  ]
+                },
+                "network": {
+                  "available": true,
+                  "baseline": {
+                    "avg_mbps": 930.0,
+                    "avg_retransmits": 1.0,
+                    "avg_rtt_ms": 51.0,
+                    "range_mbps": [
+                      930.0,
+                      930.0
+                    ],
+                    "rmem_max_bytes": 212992,
+                    "runs": [
+                      {
+                        "mbps": 930.0,
+                        "retransmits": 1.0,
+                        "rtt_ms": 51.0,
+                        "run": 1
+                      }
+                    ],
+                    "tcp_congestion_control": "cubic"
+                  },
+                  "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\network.log",
+                  "tuned": {
+                    "avg_mbps": 930.0,
+                    "avg_retransmits": 0.0,
+                    "avg_rtt_ms": 50.0,
+                    "range_mbps": [
+                      930.0,
+                      930.0
+                    ],
+                    "rmem_max_bytes": 16777216,
+                    "runs": [
+                      {
+                        "mbps": 930.0,
+                        "retransmits": 0.0,
+                        "rtt_ms": 50.0,
+                        "run": 1
+                      }
+                    ],
+                    "tcp_congestion_control": "bbr"
+                  }
+                },
+                "schema_version": "cursiveos.structured-telemetry.v0.2",
+                "sustained": {
+                  "available": true,
+                  "baseline": {
+                    "avg_tokps": 41.0,
+                    "avg_ttft_s": 0.1,
+                    "cpu_governor": "schedutil",
+                    "passes": [
+                      {
+                        "pass": 1,
+                        "tokens": 100.0,
+                        "tokps": 41.0,
+                        "ttft_s": 0.1
+                      }
+                    ],
+                    "processor": "100% GPU",
+                    "range_tokps": [
+                      41.0,
+                      41.0
+                    ]
+                  },
+                  "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\sustained.log",
+                  "tuned": {
+                    "avg_tokps": 42.0,
+                    "avg_ttft_s": 0.09,
+                    "cpu_governor": "performance",
+                    "passes": [
+                      {
+                        "pass": 1,
+                        "tokens": 100.0,
+                        "tokps": 42.0,
+                        "ttft_s": 0.09
+                      }
+                    ],
+                    "processor": "100% GPU",
+                    "range_tokps": [
+                      42.0,
+                      42.0
+                    ]
+                  }
+                }
+              },
+              "telemetry": {
+                "detail_logs": {
+                  "coldstart": "coldstart.log",
+                  "network": "network.log",
+                  "sustained": "sustained.log"
+                },
+                "idle_power": {
+                  "samples": [
+                    71.0,
+                    71.0
+                  ]
+                }
+              },
+              "variant": {
+                "coldstart_ms": 1638.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 42.0
+              }
+            },
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T020241Z-689ad7ac",
+            "reason": "confidence 0.60 below minimum 0.65",
+            "regression_result": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "machine_id": "v-h-honest-noisy",
+              "passed": true,
+              "regression_result_hash": "494824ca3aea2b284d5af6895bc40a701266f46e3ff87513ce9d3800c2f29448",
+              "reverted_cleanly": true,
+              "schema_version": "seed-organism.regression-result.v0.1",
+              "sensor_id": "regression.genesis.v1",
+              "timestamp": "2026-06-30T02:02:41+00:00",
+              "variant_id": "v-h-honest-noisy"
+            },
+            "sensor_result": {
+              "base_fitness": 0.10487805,
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "confidence": 0.6,
+              "delta": {
+                "coldstart_pct": 10.0,
+                "idle_power_pct": 0.0,
+                "memory_pct": 0.0,
+                "network_pct": 0.0,
+                "sustained_pct": 2.4390243902439024
+              },
+              "fitness_score": 0.10487805,
+              "knobs_removed_vs_parent": 0,
+              "machine_id": "v-h-honest-noisy",
+              "measurement_fingerprint": "2d120f0444ebc9092cb9c1d91493c3c0e3b3dd2144b8ed1d69d864ab3d3c7881",
+              "metric_derivation_fingerprint": "f2740d1e941553d14d195c06fcb1cde9469d5d43a1ef2401da7dcbcb25e0c9ae",
+              "missing_core_metrics": [],
+              "parsimony_bonus": 0.0,
+              "parsimony_validation": {
+                "claimed_knobs_removed_vs_parent": 0,
+                "derived_knobs_removed_vs_parent": 0,
+                "failures": [],
+                "passed": true
+              },
+              "preset_version": "v-h-honest-noisy",
+              "raw_artifact_fingerprint": "2ca035c35d254764b8d3f54235c3a85291b555c10dfc44515df26a3ca1cf53d3",
+              "schema_version": "seed-organism.sensor-result.v0.1",
+              "sensor_id": "perf.genesis.v1",
+              "sensor_result_hash": "609b495836f2c6caa63c2cb2b3cba62c9b5a05462506d35a313573a32d45224a",
+              "severe_regressions": [],
+              "timestamp": "2026-06-30T02:02:41+00:00",
+              "variant": {
+                "coldstart_ms": 1638.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 42.0
+              },
+              "variant_id": "v-h-honest-noisy"
+            },
+            "variant": {
+              "commit_ref": "h2-adversarial-untrusted-submission",
+              "contributor_id": "v-honest-control-contributor",
+              "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+              "fitness_eligible": true,
+              "parent_variant_id": "parent-baseline-v0.12",
+              "preset_version": "v-h-honest-noisy",
+              "rollback_method": "none; synthetic adversarial test fixture",
+              "schema_version": "seed-organism.variant.v0.1",
+              "variant_id": "v-h-honest-noisy"
+            }
+          },
+          "submitted_metrics_file": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\metrics-mode-h-noisy.json",
+          "submitted_variant_file": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\variant-mode-h-noisy.json"
+        },
+        "honest_weird_hardware": {
+          "accepted": true,
+          "attack": "Honest legacy/CPU-only hardware evidence; should pass or be held inconclusive, not fraud rejected.",
+          "cli": {
+            "cmd": [
+              "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+              "--state-dir",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
+              "run-variant",
+              "--variant",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\variant-mode-h-weird-hardware.json",
+              "--metrics",
+              "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\metrics-mode-h-weird-hardware.json",
+              "--cycle-id",
+              "241"
+            ],
+            "parsed_stdout": {
+              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T020242Z-a79ea6c1",
+              "bundle_hash": "3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7",
+              "confidence": "0.70",
+              "decision": "accepted",
+              "fitness_score": "0.104878",
+              "reason": "fitness positive and gates passed",
+              "variant": "v-h-honest-weird-hardware"
+            },
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "variant: v-h-honest-weird-hardware\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T020242Z-a79ea6c1\n"
+          },
+          "cycle_id": 241,
+          "deferred_to_trust_layer": false,
+          "gate_triggered": null,
+          "mode": "H-weird-hardware",
+          "name": "honest weird hardware control",
+          "payout_report": {
+            "cli": {
+              "cmd": [
+                "C:\\Users\\cmdou\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\tools\\seed_organism.py",
+                "--state-dir",
+                "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
+                "close-cycle",
+                "--cycle-id",
+                "241",
+                "--revenue-sats",
+                "100000"
+              ],
+              "parsed_stdout": {
+                "contributors": "1",
+                "cycle": "241",
+                "report": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-241-payout.json",
+                "report_hash": "39288eced837fd07510872b67c3ff517903bf0ad7f5768af89a5b3274772028d"
+              },
+              "returncode": 0,
+              "stderr": "",
+              "stdout": "cycle: 241\ncontributors: 1\nreport_hash: 39288eced837fd07510872b67c3ff517903bf0ad7f5768af89a5b3274772028d\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-241-payout.json\n"
+            },
+            "contributors": [
+              {
+                "contributor_id": "v-honest-control-contributor",
+                "current_cycle_payout_sats": 20000,
+                "cycle_fitness": 0.10487805,
+                "lifetime_fitness": 0.10487805,
+                "lifetime_payout_sats": 80000,
+                "total_payout_sats": 100000
+              }
+            ],
+            "payout_triggered": true,
+            "report_hash": "39288eced837fd07510872b67c3ff517903bf0ad7f5768af89a5b3274772028d",
+            "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-241-payout.json"
+          },
+          "payout_triggered": true,
+          "pipeline": "seed_organism.py CLI: run-variant honest control",
+          "pipeline_verdict": "accepted",
+          "reason": "fitness positive and gates passed",
+          "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
+          "submitted_bundle": {
+            "bundle_hash": "3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7",
+            "confidence": 0.7,
+            "decision": "accepted",
+            "fitness_score": 0.104878,
+            "manifest": {
+              "bundle_hash": "3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7",
+              "created_at": "2026-06-30T02:02:42+00:00",
+              "cycle_id": "241",
+              "decision": "accepted",
+              "files": {
+                "metrics.json": "134b86ff65e24292eab3691a6152dbf5b6093e28871b90c5d94733266ebdf2e9",
+                "regression-result.json": "a9316bc0e3da14a1fbbb794beb0bec1ece4a7e91bafac35f0bec42c1b69478ce",
+                "sensor-result.json": "cf78c6160d0b680c055be77d560f3ac2c6a148ce599929cf503fc22911cdf8f0",
+                "variant.json": "29c3837d77ce91fe935301833bb84400f5a8d30a9df33f707218350e584c6204"
+              },
+              "reason": "fitness positive and gates passed",
+              "run_id": "a79ea6c1",
+              "schema_version": "seed-organism.bundle-manifest.v0.1",
+              "variant_id": "v-h-honest-weird-hardware"
+            },
+            "metrics": {
+              "adversarial_claim": "decision-grade fixture derived from immutable raw full-test JSON",
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "benchmark_context": {
+                "hardware_class": "legacy_cpu_only",
+                "legacy_cpu_only_allowed": true
+              },
+              "hardware_fingerprint_hash": "v-h-legacy-cpu-only",
+              "honest_control": "honest legacy CPU-only hardware; should not be rejected as fraud solely for CPU-bound processor evidence",
+              "machine_id": "v-h-legacy-cpu-only",
+              "measurement_quality": {
+                "decision_grade": true,
+                "flags": [],
+                "note": "Detail pass counts are preserved for audit but do not by themselves create independent selection confidence.",
+                "schema_version": "cursiveos.measurement-quality.v0.2"
+              },
+              "preset_version": "v-phase-test",
+              "raw_artifact_fingerprint": "dbbec6a7071d80dc2a5f139faa55946bf90a54a1fa5c1eb89abcc43ef8c19cdc",
+              "raw_artifacts": [
+                {
+                  "immutable": true,
+                  "kind": "full_test_result_json",
+                  "path": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\honest-weird-hardware-result.json",
+                  "sha256": "f37c8b08379cce37f734b78d6493d4e487b2310609406a9d8f357927ba6aba75"
+                }
+              ],
+              "regression": {
+                "failures": [],
+                "full_test_passed": true,
+                "host_safety_passed": true,
+                "reverted_cleanly": true
+              },
+              "sample_counts": {
+                "coldstart": 3,
+                "idle_power": 3,
+                "network": 3,
+                "sustained": 3
+              },
+              "schema_version": "seed-organism.metrics.from-full-test-json.v0.1",
+              "signed_identity": {
+                "identity_public_key": "local-sim-69b83203e07b458f2156dbda5763e657",
+                "scheme": "cursiveos-local-sim-signed-nonce-v0.1",
+                "session_nonce": "15ed9883dcae98c9b33fe3c1",
+                "signature": "2b63059eddea56b0955ae70a18ad5e1dfebd51837a1dfac337acf4529422db76"
+              },
+              "source_log": null,
+              "source_provenance": "native_full_test_json",
+              "source_provenance_notes": null,
+              "source_result_json": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\honest-weird-hardware-result.json",
+              "structured_telemetry": {
+                "coldstart": {
+                  "available": true,
+                  "baseline": {
+                    "avg_cold_total_ms": 1820.0,
+                    "avg_load_ms": 100.0,
+                    "avg_tokps": 40.0,
+                    "avg_ttft_ms": 20.0,
+                    "calls": [
+                      {
+                        "call": 1,
+                        "cold_total_ms": 1820.0,
+                        "gpu_before": "300MHz",
+                        "load_ms": 100.0,
+                        "tokens": 30.0,
+                        "tokps": 40.0,
+                        "ttft_ms": 20.0
+                      }
+                    ],
+                    "cold_range_ms": [
+                      1820.0,
+                      1820.0
+                    ],
+                    "cpu_governor": "schedutil",
+                    "gpu_freq_before_pass_mhz": 300.0,
+                    "load_range_ms": [
+                      100.0,
+                      100.0
+                    ]
+                  },
+                  "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\coldstart.log",
+                  "tuned": {
+                    "avg_cold_total_ms": 1638.0,
+                    "avg_load_ms": 90.0,
+                    "avg_tokps": 42.0,
+                    "avg_ttft_ms": 10.0,
+                    "calls": [
+                      {
+                        "call": 1,
+                        "cold_total_ms": 1638.0,
+                        "gpu_before": "2000MHz",
+                        "load_ms": 90.0,
+                        "tokens": 30.0,
+                        "tokps": 42.0,
+                        "ttft_ms": 10.0
+                      }
+                    ],
+                    "cold_range_ms": [
+                      1638.0,
+                      1638.0
+                    ],
+                    "cpu_governor": "performance",
+                    "gpu_freq_before_pass_mhz": 2000.0,
+                    "load_range_ms": [
+                      90.0,
+                      90.0
+                    ]
+                  }
+                },
+                "idle_power": {
+                  "samples": [
+                    71.0,
+                    71.0
+                  ]
+                },
+                "network": {
+                  "available": true,
+                  "baseline": {
+                    "avg_mbps": 930.0,
+                    "avg_retransmits": 1.0,
+                    "avg_rtt_ms": 51.0,
+                    "range_mbps": [
+                      930.0,
+                      930.0
+                    ],
+                    "rmem_max_bytes": 212992,
+                    "runs": [
+                      {
+                        "mbps": 930.0,
+                        "retransmits": 1.0,
+                        "rtt_ms": 51.0,
+                        "run": 1
+                      }
+                    ],
+                    "tcp_congestion_control": "cubic"
+                  },
+                  "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\network.log",
+                  "tuned": {
+                    "avg_mbps": 930.0,
+                    "avg_retransmits": 0.0,
+                    "avg_rtt_ms": 50.0,
+                    "range_mbps": [
+                      930.0,
+                      930.0
+                    ],
+                    "rmem_max_bytes": 16777216,
+                    "runs": [
+                      {
+                        "mbps": 930.0,
+                        "retransmits": 0.0,
+                        "rtt_ms": 50.0,
+                        "run": 1
+                      }
+                    ],
+                    "tcp_congestion_control": "bbr"
+                  }
+                },
+                "schema_version": "cursiveos.structured-telemetry.v0.2",
+                "sustained": {
+                  "available": true,
+                  "baseline": {
+                    "avg_tokps": 41.0,
+                    "avg_ttft_s": 0.1,
+                    "cpu_governor": "schedutil",
+                    "passes": [
+                      {
+                        "pass": 1,
+                        "tokens": 100.0,
+                        "tokps": 41.0,
+                        "ttft_s": 0.1
+                      }
+                    ],
+                    "processor": "100% CPU",
+                    "range_tokps": [
+                      41.0,
+                      41.0
+                    ]
+                  },
+                  "log": "C:\\Users\\cmdou\\Cursive\\CursiveOS\\.cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\sustained.log",
+                  "tuned": {
+                    "avg_tokps": 42.0,
+                    "avg_ttft_s": 0.09,
+                    "cpu_governor": "performance",
+                    "passes": [
+                      {
+                        "pass": 1,
+                        "tokens": 100.0,
+                        "tokps": 42.0,
+                        "ttft_s": 0.09
+                      }
+                    ],
+                    "processor": "100% CPU",
+                    "range_tokps": [
+                      42.0,
+                      42.0
+                    ]
+                  }
+                }
+              },
+              "telemetry": {
+                "detail_logs": {
+                  "coldstart": "coldstart.log",
+                  "network": "network.log",
+                  "sustained": "sustained.log"
+                },
+                "idle_power": {
+                  "samples": [
+                    71.0,
+                    71.0
+                  ]
+                }
+              },
+              "variant": {
+                "coldstart_ms": 1638.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 42.0
+              }
+            },
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T020242Z-a79ea6c1",
+            "reason": "fitness positive and gates passed",
+            "regression_result": {
+              "failures": [],
+              "full_test_passed": true,
+              "host_safety_passed": true,
+              "machine_id": "v-h-legacy-cpu-only",
+              "passed": true,
+              "regression_result_hash": "707677f9fa2d51600ac9bb798bf3477cde1f25f5af59e31fb8ea1f655afc2d54",
+              "reverted_cleanly": true,
+              "schema_version": "seed-organism.regression-result.v0.1",
+              "sensor_id": "regression.genesis.v1",
+              "timestamp": "2026-06-30T02:02:42+00:00",
+              "variant_id": "v-h-honest-weird-hardware"
+            },
+            "sensor_result": {
+              "base_fitness": 0.10487805,
+              "baseline": {
+                "coldstart_ms": 1820.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 41.0
+              },
+              "confidence": 0.7,
+              "delta": {
+                "coldstart_pct": 10.0,
+                "idle_power_pct": 0.0,
+                "memory_pct": 0.0,
+                "network_pct": 0.0,
+                "sustained_pct": 2.4390243902439024
+              },
+              "fitness_score": 0.10487805,
+              "knobs_removed_vs_parent": 0,
+              "machine_id": "v-h-legacy-cpu-only",
+              "measurement_fingerprint": "7b64ca4c439b96b33fcb8e6efe24588791ca483ac8f1ca951cfe1b3961f8a578",
+              "metric_derivation_fingerprint": "0935124011fdc46592912bcf05b83106d178c217be85b4780e3e751c1b304d58",
+              "missing_core_metrics": [],
+              "parsimony_bonus": 0.0,
+              "parsimony_validation": {
+                "claimed_knobs_removed_vs_parent": 0,
+                "derived_knobs_removed_vs_parent": 0,
+                "failures": [],
+                "passed": true
+              },
+              "preset_version": "v-h-honest-weird-hardware",
+              "raw_artifact_fingerprint": "dbbec6a7071d80dc2a5f139faa55946bf90a54a1fa5c1eb89abcc43ef8c19cdc",
+              "schema_version": "seed-organism.sensor-result.v0.1",
+              "sensor_id": "perf.genesis.v1",
+              "sensor_result_hash": "52b8f0836a7bca41a0348ec1c1f8e7c297f7846c7378920f2d7b56a332cdb977",
+              "severe_regressions": [],
+              "timestamp": "2026-06-30T02:02:42+00:00",
+              "variant": {
+                "coldstart_ms": 1638.0,
+                "idle_watts": 71.0,
+                "memory_refault_s": 10.0,
+                "network_mbps": 930.0,
+                "sustained_tokps": 42.0
+              },
+              "variant_id": "v-h-honest-weird-hardware"
+            },
+            "variant": {
+              "commit_ref": "h2-adversarial-untrusted-submission",
+              "contributor_id": "v-honest-control-contributor",
+              "declared_scope": "H2 adversarial submission; should not be trusted as measured evidence",
+              "fitness_eligible": true,
+              "parent_variant_id": "parent-baseline-v0.12",
+              "preset_version": "v-h-honest-weird-hardware",
+              "rollback_method": "none; synthetic adversarial test fixture",
+              "schema_version": "seed-organism.variant.v0.1",
+              "variant_id": "v-h-honest-weird-hardware"
+            }
+          },
+          "submitted_metrics_file": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\metrics-mode-h-weird-hardware.json",
+          "submitted_variant_file": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\inputs\\variant-mode-h-weird-hardware.json"
+        }
+      }
+    }
+  ],
+  "results_json": "docs\\experiments\\V-verifier-hardening-results.json",
+  "schema_version": "cursiveos.experiment.v-verifier-hardening-results.v0.1",
+  "state_root": ".cursiveos\\v-verifier-hardening-tester",
+  "thresholds": {
+    "fail_kill": "If any fabricated bundle reaches accepted, or if honest contributions are rejected above the registered false-positive rate, V fails. Do not reinterpret after seeing results.",
+    "false_positive_rate_max": "0 of 2 honest controls may be fraud-rejected; inconclusive pending confirmation is allowed for noisy evidence",
+    "pass": "Modes A/B/C and D-funded do not reach accepted or trigger payout; Mode H honest controls are accepted or held inconclusive, not fraud rejected",
+    "real_btc_reward": "simulated and gated throughout"
+  }
+}

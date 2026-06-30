@@ -1,4 +1,4 @@
-# CursiveOS — Agent Handover (2026-06-29, post-H2* adversarial hardening)
+# CursiveOS — Agent Handover (2026-06-30, post-V verifier hardening)
 
 Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 `docs/action-plan.md`. This file = live operational state.
@@ -14,8 +14,8 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **Idle-power CV (2026-06-28):** Stardust **PASS** (CV 0.016); laptop AC **FAIL** (cold run-1 outlier, CV 1.60); H3 **PASS** (no cross-machine pooling). Idle weight stays **0** fleet-wide until laptop scoped.
 - **Rig automation:** `tools/rig-smoke.sh` — `TAO_SUDO_PASS=`, SCP → `nohup &` → poll `/tmp/rig-smoke-*.out` only (no long SSH one-liners).
 - **v0.12b screen (2026-06-28):** **rejected** on Stardust (mem +0.7% worse, J/token +3.0%).
-- **H2* adversarial hardening (2026-06-29):** `tools/exp_adversarial_tester.py` now reports A/B/C rejected by named local gates; Mode D is `inconclusive` and deferred to CursiveRoot independent aggregation. See `docs/experiments/H2-adversarial-tester-results.md`.
-- **Next:** Seed Organism → OS.0: contributor daemon + CursiveRoot request queue first; trust/independence layer before any real BTC payout.
+- **V verifier hardening (2026-06-30):** `tools/exp_adversarial_tester.py` now reports A/B/C/D-funded rejected by named gates, with Mode H honest controls accepted or held inconclusive rather than fraud-rejected. See `docs/experiments/V-verifier-hardening-results.md` and `.json`.
+- **Next:** Seed Organism → OS.0: contributor daemon + CursiveRoot request queue first; real BTC/reward stays simulated/gated until the local V trust model is backed by production key registry, hardware/wallet independence, and database-backed CursiveRoot aggregation.
 
 ## Lineage
 
@@ -78,9 +78,9 @@ cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh --dry-
 cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh 4 mistral
 ```
 
-## Tier 2 remaining (not started)
+## Tier 2 remaining
 
-- Auto-count confirmations from independent CursiveRoot bundles (not founder-attested `--confirmations N`). H2* Mode D is the red/amber test for this: caller-asserted counts must remain `inconclusive` until system-owned aggregation exists.
+- Productize V trust layer: move local signed-identity/global replay/independent aggregation from fixture/local-file evidence into CursiveRoot DB + key/wallet/hardware independence. Caller-attested `--confirmations N` still cannot create acceptance-grade confidence.
 - `page_cache_state` in harness telemetry
 - CursiveRoot auth hardening before external rollout
 - Daemon MVP + NL shell spec (Transition 1)

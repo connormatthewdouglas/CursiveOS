@@ -73,26 +73,143 @@ def metrics_from_variant(
     }
 
 
-def acceptance_grade_metrics(**kwargs) -> dict:
-    metrics = metrics_from_variant(**kwargs)
-    metrics.update(
-        {
-            "source_provenance": "native_full_test_json",
-            "source_result_json": "logs/fixture-full-test.json",
-            "measurement_quality": {
-                "schema_version": "cursiveos.measurement-quality.fixture.v0.1",
-                "flags": [],
-                "decision_grade": True,
-            },
-            "structured_telemetry": {
-                "network": {"available": True},
-                "coldstart": {"available": True},
-                "sustained": {"available": True},
-                "idle_power": {},
-            },
-        }
+TEST_RAW_ROOT = Path(tempfile.mkdtemp(prefix="cursiveos-seed-test-raw-"))
+
+
+def _metric(metrics: dict, section: str, key: str, default: float = 0.0) -> float:
+    value = metrics.get(section, {}).get(key, default)
+    return float(value if value is not None else default)
+
+
+def _write_decision_grade_full_test_fixture(
+    metrics: dict,
+    *,
+    machine_id: str = "fixture-founder-rig",
+    hardware_class: str | None = None,
+    cpu_only: bool = False,
+    suffix: str = "fixture",
+) -> Path:
+    run_dir = TEST_RAW_ROOT / f"{suffix}-{len(list(TEST_RAW_ROOT.iterdir())):04d}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    baseline = dict(metrics["baseline"])
+    variant = dict(metrics["variant"])
+    sample_counts = dict(metrics.get("sample_counts") or {})
+    sample_counts.setdefault("idle_power", 3)
+    regression = dict(metrics.get("regression") or {})
+
+    network_log = run_dir / "network.log"
+    network_log.write_text(
+        f"""
+--- BASELINE ---
+  TCP CC:    cubic
+  rmem_max:  212992 bytes (0.2 MB)
+    Run 1: {baseline['network_mbps']:.3f} Mbit/s | retransmits: 1 | RTT: 51.0ms
+  Avg: {baseline['network_mbps']:.3f} Mbit/s | retransmits: 1.0 | RTT: 51.0ms
+  Range: {baseline['network_mbps']:.3f} - {baseline['network_mbps']:.3f} Mbit/s
+--- TUNED ---
+  TCP CC:    bbr
+  rmem_max:  16777216 bytes (16.0 MB)
+    Run 1: {variant['network_mbps']:.3f} Mbit/s | retransmits: 0 | RTT: 50.0ms
+  Avg: {variant['network_mbps']:.3f} Mbit/s | retransmits: 0.0 | RTT: 50.0ms
+  Range: {variant['network_mbps']:.3f} - {variant['network_mbps']:.3f} Mbit/s
+""".strip() + "\n",
+        encoding="utf-8",
     )
-    return metrics
+
+    coldstart_log = run_dir / "coldstart.log"
+    coldstart_log.write_text(
+        f"""
+--- BASELINE ---
+  CPU gov:   schedutil
+  GPU freq:  300 MHz (idle)
+    Call 1: GPU_before=300MHz | load=100.0ms | TTFT=20.0ms | cold_total={baseline['coldstart_ms']:.3f}ms | 40.00 tok/s | tokens:30
+  Avg: load=100.0ms | TTFT=20.0ms | cold_total={baseline['coldstart_ms']:.3f}ms | 40.00 tok/s
+  Load range: 100.0ms - 100.0ms | Cold range: {baseline['coldstart_ms']:.3f}ms - {baseline['coldstart_ms']:.3f}ms
+--- TUNED ---
+  CPU gov:   performance
+  GPU freq:  2000 MHz (idle)
+    Call 1: GPU_before=2000MHz | load=90.0ms | TTFT=10.0ms | cold_total={variant['coldstart_ms']:.3f}ms | 42.00 tok/s | tokens:30
+  Avg: load=90.0ms | TTFT=10.0ms | cold_total={variant['coldstart_ms']:.3f}ms | 42.00 tok/s
+  Load range: 90.0ms - 90.0ms | Cold range: {variant['coldstart_ms']:.3f}ms - {variant['coldstart_ms']:.3f}ms
+""".strip() + "\n",
+        encoding="utf-8",
+    )
+
+    processor = "100% CPU" if cpu_only else "100% GPU"
+    sustained_log = run_dir / "sustained.log"
+    sustained_log.write_text(
+        f"""
+--- BASELINE ---
+  Governor: schedutil
+  Processor: {processor}
+    Pass 1: {baseline['sustained_tokps']:.3f} tok/s | TTFT: 0.100s | tokens: 100
+  Avg: {baseline['sustained_tokps']:.3f} tok/s | TTFT avg: 0.100s | min: {baseline['sustained_tokps']:.3f} | max: {baseline['sustained_tokps']:.3f}
+--- TUNED ---
+  Governor: performance
+  Processor: {processor}
+    Pass 1: {variant['sustained_tokps']:.3f} tok/s | TTFT: 0.090s | tokens: 100
+  Avg: {variant['sustained_tokps']:.3f} tok/s | TTFT avg: 0.090s | min: {variant['sustained_tokps']:.3f} | max: {variant['sustained_tokps']:.3f}
+""".strip() + "\n",
+        encoding="utf-8",
+    )
+
+    benchmark_context = {}
+    hardware = {}
+    if hardware_class:
+        benchmark_context["hardware_class"] = hardware_class
+        benchmark_context["legacy_cpu_only_allowed"] = hardware_class in {"legacy_cpu_only", "old_cpu_only", "uncommon_legacy"}
+        hardware["hardware_class"] = hardware_class
+
+    result_path = run_dir / "full-test.json"
+    result_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "cursiveos.full-test-result.fixture.v0.1",
+                "machine_id": machine_id,
+                "hardware_fingerprint_hash": machine_id,
+                "preset_version": metrics.get("preset_version", "v0.8"),
+                "source_provenance": "native_full_test_json",
+                "baseline": baseline,
+                "variant": variant,
+                "sample_counts": sample_counts,
+                "regression": regression,
+                "benchmark_context": benchmark_context,
+                "hardware": hardware,
+                "telemetry": {
+                    "detail_logs": {
+                        "network": network_log.name,
+                        "coldstart": coldstart_log.name,
+                        "sustained": sustained_log.name,
+                    },
+                    "idle_power": {"samples": [baseline.get("idle_watts", 0), variant.get("idle_watts", 0)]},
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return result_path
+
+
+def acceptance_grade_metrics(
+    *,
+    machine_id: str = "fixture-founder-rig",
+    hardware_class: str | None = None,
+    cpu_only: bool = False,
+    **kwargs,
+) -> dict:
+    source = metrics_from_variant(**kwargs)
+    result_path = _write_decision_grade_full_test_fixture(
+        source,
+        machine_id=machine_id,
+        hardware_class=hardware_class,
+        cpu_only=cpu_only,
+        suffix=machine_id,
+    )
+    metrics = seed_organism.load_full_test_metrics_json(result_path)
+    return seed_organism.attach_local_verifier_fields(metrics, result_path)
 
 
 class CoreEvaluationTest(unittest.TestCase):
@@ -148,8 +265,8 @@ class CoreEvaluationTest(unittest.TestCase):
         decision_unverified, reason_unverified = seed_organism.verdict(
             FIXTURE_VARIANT, sensor_unverified, regression_unverified, config, unverified_metrics
         )
-        self.assertEqual(decision_unverified, "rejected_unverified_evidence")
-        self.assertIn("evidence gate", reason_unverified)
+        self.assertEqual(decision_unverified, "rejected_recompute_mismatch")
+        self.assertIn("raw_artifacts", reason_unverified)
 
         bad_metrics = acceptance_grade_metrics(
             regression={"full_test_passed": False, "reverted_cleanly": True, "host_safety_passed": True, "failures": []}
@@ -271,22 +388,22 @@ class CoreEvaluationTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             state = Path(tmp)
             seed_organism.ensure_state(state)
+            config = seed_organism.DEFAULT_CONFIG | {"global_replay_index": str(state / "global-replay.jsonl")}
             first_variant = dict(FIXTURE_VARIANT)
             first_variant["variant_id"] = "first-accepted"
             first_metrics = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0)
             with redirect_stdout(io.StringIO()):
                 first_decision, _ = seed_organism.record_evaluation(
-                    state, seed_organism.DEFAULT_CONFIG, first_variant, first_metrics, 1
+                    state, config, first_variant, first_metrics, 1
                 )
             self.assertEqual(first_decision, "accepted")
 
             replay_variant = dict(FIXTURE_VARIANT)
             replay_variant["variant_id"] = "replay-accepted"
-            replay_metrics = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0)
-            replay_metrics["machine_id"] = "fake-independent-rig"
+            replay_metrics = json.loads(json.dumps(first_metrics))
             with redirect_stdout(io.StringIO()):
                 replay_decision, _ = seed_organism.record_evaluation(
-                    state, seed_organism.DEFAULT_CONFIG, replay_variant, replay_metrics, 1
+                    state, config, replay_variant, replay_metrics, 1
                 )
             self.assertEqual(replay_decision, "rejected_replay")
 
@@ -300,6 +417,90 @@ class CoreEvaluationTest(unittest.TestCase):
         decision, reason = seed_organism.verdict(FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, metrics)
         self.assertEqual(decision, "inconclusive")
         self.assertIn("confirmation independence gate", reason)
+
+    def test_verifier_recompute_rejects_claimed_metric_mismatch(self) -> None:
+        metrics = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0)
+        tampered = json.loads(json.dumps(metrics))
+        tampered["variant"]["coldstart_ms"] = tampered["variant"]["coldstart_ms"] * 0.5
+        sensor = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=tampered, config=seed_organism.DEFAULT_CONFIG)
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, tampered)
+        decision, reason = seed_organism.verdict(FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, tampered)
+        self.assertEqual(decision, "rejected_recompute_mismatch")
+        self.assertIn("variant.coldstart_ms", reason)
+
+    def test_global_replay_index_rejects_duplicate_across_state_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state_a = root / "state-a"
+            state_b = root / "state-b"
+            seed_organism.ensure_state(state_a)
+            seed_organism.ensure_state(state_b)
+            config = seed_organism.DEFAULT_CONFIG | {"global_replay_index": str(root / "accepted-global.jsonl")}
+
+            metrics = acceptance_grade_metrics(
+                coldstart_pct=8.0, sustained_pct=1.0, machine_id="global-replay-fixture"
+            )
+            first_variant = dict(FIXTURE_VARIANT)
+            first_variant["variant_id"] = "global-replay-first"
+            with redirect_stdout(io.StringIO()):
+                first_decision, _ = seed_organism.record_evaluation(state_a, config, first_variant, metrics, 1)
+            self.assertEqual(first_decision, "accepted")
+
+            replay_variant = dict(FIXTURE_VARIANT)
+            replay_variant["variant_id"] = "global-replay-second"
+            with redirect_stdout(io.StringIO()):
+                replay_decision, _ = seed_organism.record_evaluation(state_b, config, replay_variant, metrics, 1)
+            self.assertEqual(replay_decision, "rejected_replay_global")
+
+    def test_independent_aggregation_accepts_only_distinct_signed_raw_evidence(self) -> None:
+        m1 = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0, machine_id="agg-rig-a")
+        m2 = acceptance_grade_metrics(coldstart_pct=8.4, sustained_pct=1.1, machine_id="agg-rig-b")
+        aggregated = json.loads(json.dumps(m1))
+        aggregated.update(seed_organism.build_independent_confirmation_aggregation([m1, m2]))
+        sensor = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=aggregated, config=seed_organism.DEFAULT_CONFIG)
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, aggregated)
+        decision, reason = seed_organism.verdict(FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, aggregated)
+        self.assertEqual(decision, "accepted", reason)
+        self.assertEqual(aggregated["confirmation_source"], "cursiveroot_independent_aggregation")
+
+        replayed = json.loads(json.dumps(m1))
+        replayed.update(seed_organism.build_independent_confirmation_aggregation([m1, m1]))
+        replay_sensor = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=replayed, config=seed_organism.DEFAULT_CONFIG)
+        replay_regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, replayed)
+        replay_decision, replay_reason = seed_organism.verdict(
+            FIXTURE_VARIANT, replay_sensor, replay_regression, seed_organism.DEFAULT_CONFIG, replayed
+        )
+        self.assertIn(replay_decision, {"rejected_replay_global", "rejected_funded_adversary_pattern"})
+        self.assertIn("confirmation independence gate", replay_reason)
+
+    def test_honest_noisy_and_weird_hardware_controls_are_not_fraud_rejected(self) -> None:
+        noisy = acceptance_grade_metrics(
+            coldstart_pct=8.0,
+            sustained_pct=1.0,
+            sample_counts={"network": 2, "coldstart": 2, "sustained": 2},
+            machine_id="honest-noisy-fixture",
+        )
+        noisy_sensor = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=noisy, config=seed_organism.DEFAULT_CONFIG)
+        noisy_regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, noisy)
+        noisy_decision, noisy_reason = seed_organism.verdict(
+            FIXTURE_VARIANT, noisy_sensor, noisy_regression, seed_organism.DEFAULT_CONFIG, noisy
+        )
+        self.assertIn(noisy_decision, {"accepted", "inconclusive"}, noisy_reason)
+
+        weird = acceptance_grade_metrics(
+            coldstart_pct=8.0,
+            sustained_pct=1.0,
+            machine_id="honest-legacy-cpu-fixture",
+            hardware_class="legacy_cpu_only",
+            cpu_only=True,
+        )
+        self.assertEqual(weird["measurement_quality"]["flags"], [])
+        weird_sensor = seed_organism.score_performance(variant=FIXTURE_VARIANT, metrics=weird, config=seed_organism.DEFAULT_CONFIG)
+        weird_regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, weird)
+        weird_decision, weird_reason = seed_organism.verdict(
+            FIXTURE_VARIANT, weird_sensor, weird_regression, seed_organism.DEFAULT_CONFIG, weird
+        )
+        self.assertEqual(weird_decision, "accepted", weird_reason)
 
 
 class FullTestTelemetryExtractionTest(unittest.TestCase):
