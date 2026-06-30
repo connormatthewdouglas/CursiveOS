@@ -21,8 +21,8 @@
           "201"
         ],
         "parsed_stdout": {
-          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T020239Z-706b92e4",
-          "bundle_hash": "43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0",
+          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T043503Z-e021fa4b",
+          "bundle_hash": "022462d6d94d614df63e5aa5c5d526fda6c671a087b2c6fd7a2ed4683e4509ea",
           "confidence": "0.70",
           "decision": "rejected_recompute_mismatch",
           "fitness_score": "0.104878",
@@ -31,7 +31,7 @@
         },
         "returncode": 0,
         "stderr": "",
-        "stdout": "variant: h2-a-inflated-delta\ndecision: rejected_recompute_mismatch\nreason: verifier recompute gate: missing immutable raw_artifacts\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T020239Z-706b92e4\n"
+        "stdout": "variant: h2-a-inflated-delta\ndecision: rejected_recompute_mismatch\nreason: verifier recompute gate: missing immutable raw_artifacts\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 022462d6d94d614df63e5aa5c5d526fda6c671a087b2c6fd7a2ed4683e4509ea\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T043503Z-e021fa4b\n"
       },
       "cycle_id": 201,
       "deferred_to_trust_layer": false,
@@ -55,15 +55,15 @@
             "contributors": "0",
             "cycle": "201",
             "report": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json",
-            "report_hash": "4155908b1cd49b5e17b06083ec15cccc3af336756764413b5d058ccf375e3cfe"
+            "report_hash": "7fa6a1b82a20895d736d0a2b536624f1617ff3d425076e23123ecc6a73d42368"
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "cycle: 201\ncontributors: 0\nreport_hash: 4155908b1cd49b5e17b06083ec15cccc3af336756764413b5d058ccf375e3cfe\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json\n"
+          "stdout": "cycle: 201\ncontributors: 0\nreport_hash: 7fa6a1b82a20895d736d0a2b536624f1617ff3d425076e23123ecc6a73d42368\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json\n"
         },
         "contributors": [],
         "payout_triggered": false,
-        "report_hash": "4155908b1cd49b5e17b06083ec15cccc3af336756764413b5d058ccf375e3cfe",
+        "report_hash": "7fa6a1b82a20895d736d0a2b536624f1617ff3d425076e23123ecc6a73d42368",
         "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\cycles\\cycle-201-payout.json"
       },
       "payout_triggered": false,
@@ -72,23 +72,23 @@
       "reason": "verifier recompute gate: missing immutable raw_artifacts",
       "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta",
       "submitted_bundle": {
-        "bundle_hash": "43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0",
+        "bundle_hash": "022462d6d94d614df63e5aa5c5d526fda6c671a087b2c6fd7a2ed4683e4509ea",
         "confidence": 0.7,
         "decision": "rejected_recompute_mismatch",
         "fitness_score": 0.104878,
         "manifest": {
-          "bundle_hash": "43435c729b3e0ddf0ddb3e1eafb558459a653a78b28293ba9c05ffaf235d0ea0",
-          "created_at": "2026-06-30T02:02:39+00:00",
+          "bundle_hash": "022462d6d94d614df63e5aa5c5d526fda6c671a087b2c6fd7a2ed4683e4509ea",
+          "created_at": "2026-06-30T04:35:03+00:00",
           "cycle_id": "201",
           "decision": "rejected_recompute_mismatch",
           "files": {
             "metrics.json": "62073ad7a53fff78c034eba51bb945103fde55b9f77f5458cea261179799f1c5",
-            "regression-result.json": "e57f62a7bb0408d3d6fca85c33134833fc6d6a62a55d0a0f1aa7bdfb877942e5",
-            "sensor-result.json": "366bca7d88e929e35aa8f6e01bdd61877fe14c8bf6c19e6190e0f5242abcb9ef",
+            "regression-result.json": "b71ddf54c8147177e6a2ef51c0f2fcecdc89ff2c43027f91cd28f05e81914d5d",
+            "sensor-result.json": "75cf7cc0dc27c3244394a1fa2a888ef17909f0190d30d2a4ebfe434c2b3e458e",
             "variant.json": "fc6468737095a869f9debcf4a6b6067f53dabb74006c0d7ae0c8010f2150a272"
           },
           "reason": "verifier recompute gate: missing immutable raw_artifacts",
-          "run_id": "706b92e4",
+          "run_id": "e021fa4b",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "h2-a-inflated-delta"
         },
@@ -124,7 +124,7 @@
             "sustained_tokps": 42.0
           }
         },
-        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T020239Z-706b92e4",
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-a-inflated-delta\\runs\\cycle-201\\h2-a-inflated-delta-20260630T043503Z-e021fa4b",
         "reason": "verifier recompute gate: missing immutable raw_artifacts",
         "regression_result": {
           "failures": [],
@@ -132,11 +132,11 @@
           "host_safety_passed": true,
           "machine_id": "h2-a-malicious-rig",
           "passed": true,
-          "regression_result_hash": "d9c4ca7a8bb754dc300c6046ce93a2e81600fb261c9aed63bc54c9da919b7f72",
+          "regression_result_hash": "bc83dc313fd5b25a2f157d694a57419a8a62181791353947c436ab8d48d0d361",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-30T02:02:39+00:00",
+          "timestamp": "2026-06-30T04:35:03+00:00",
           "variant_id": "h2-a-inflated-delta"
         },
         "sensor_result": {
@@ -173,9 +173,9 @@
           "raw_artifact_fingerprint": null,
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "eb5c54fe03aa2177426cc2c48dd35088cde2f4840ad7b0d88ae91a1263c53974",
+          "sensor_result_hash": "71eca3e87892aa49a20f529d5bc2830833a4b2ac981dbadd5602ad52faac4718",
           "severe_regressions": [],
-          "timestamp": "2026-06-30T02:02:39+00:00",
+          "timestamp": "2026-06-30T04:35:03+00:00",
           "variant": {
             "coldstart_ms": 1638.0,
             "idle_watts": 71.0,
@@ -218,39 +218,39 @@
           "211"
         ],
         "parsed_stdout": {
-          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T020240Z-8abb0631",
-          "bundle_hash": "b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c",
+          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T043503Z-54b8baaf",
+          "bundle_hash": "4a9fdde3b4c6c6ab80c320670683df068288d342199188710b73a79b8a17df02",
           "confidence": "0.70",
           "decision": "rejected_replay_global",
           "fitness_score": "0.104878",
-          "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
+          "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5 for machine v-b-source-stardust",
           "variant": "v-b-global-replay-as-independent"
         },
         "returncode": 0,
         "stderr": "",
-        "stdout": "variant: v-b-global-replay-as-independent\ndecision: rejected_replay_global\nreason: global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T020240Z-8abb0631\n"
+        "stdout": "variant: v-b-global-replay-as-independent\ndecision: rejected_replay_global\nreason: global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5 for machine v-b-source-stardust\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 4a9fdde3b4c6c6ab80c320670683df068288d342199188710b73a79b8a17df02\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T043503Z-54b8baaf\n"
       },
       "cycle_id": 211,
       "deferred_to_trust_layer": false,
       "extra": {
         "source_bundle": {
-          "bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a",
+          "bundle_hash": "ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5",
           "confidence": 0.7,
           "decision": "accepted",
           "fitness_score": 0.104878,
           "manifest": {
-            "bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a",
-            "created_at": "2026-06-30T02:02:40+00:00",
+            "bundle_hash": "ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5",
+            "created_at": "2026-06-30T04:35:03+00:00",
             "cycle_id": "210",
             "decision": "accepted",
             "files": {
               "metrics.json": "aa1bf422870785306350480c8917838c375c238987735de2307c55df45bb7718",
-              "regression-result.json": "09806f522b0a6ff3143dbc2b22677a295941390854b2063af4f8978ab67c40e1",
-              "sensor-result.json": "358f01cd32e2a88b7a93ffe489ba376ff9597b4fc9aa7f2517affa9981b4e186",
+              "regression-result.json": "dfbafc75aed0c6b7fe419b273f68a5582ab45c1803ec0377bfc7c766b14eebe0",
+              "sensor-result.json": "742351172c626389f215794096ccdb2d590dc11a9709426409a9d8973002c770",
               "variant.json": "125c3113a8f224cfc00f597da700824fc7f4f348bd073dbf4f68f3abef3022a7"
             },
             "reason": "fitness positive and gates passed",
-            "run_id": "40962567",
+            "run_id": "e276aeba",
             "schema_version": "seed-organism.bundle-manifest.v0.1",
             "variant_id": "v-b-genuine-winning-source"
           },
@@ -475,7 +475,7 @@
               "sustained_tokps": 42.0
             }
           },
-          "path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T020240Z-40962567",
+          "path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T043503Z-e276aeba",
           "reason": "fitness positive and gates passed",
           "regression_result": {
             "failures": [],
@@ -483,11 +483,11 @@
             "host_safety_passed": true,
             "machine_id": "v-b-source-stardust",
             "passed": true,
-            "regression_result_hash": "72d33b2e6e6a53eaff0828e97580f905d20437de3a3e2c02a3ba9456db606519",
+            "regression_result_hash": "890f2b38dcd712f039fa7c9f80e6c0c8cf2c311fca9ec25289da4bb33e503c37",
             "reverted_cleanly": true,
             "schema_version": "seed-organism.regression-result.v0.1",
             "sensor_id": "regression.genesis.v1",
-            "timestamp": "2026-06-30T02:02:40+00:00",
+            "timestamp": "2026-06-30T04:35:03+00:00",
             "variant_id": "v-b-genuine-winning-source"
           },
           "sensor_result": {
@@ -524,9 +524,9 @@
             "raw_artifact_fingerprint": "e7d1d7bf1831d540e8feb990a135e8e7797d94a065cb7e3590fe7bb0b801a15a",
             "schema_version": "seed-organism.sensor-result.v0.1",
             "sensor_id": "perf.genesis.v1",
-            "sensor_result_hash": "00f33faf2a2bebd5b6956ea35a6d5732df481cc081ef7762678bff12eba97e60",
+            "sensor_result_hash": "164fe9a9b49ce9e5c68b7af02141809da602bff054cb438631afe3c8ed67f201",
             "severe_regressions": [],
-            "timestamp": "2026-06-30T02:02:40+00:00",
+            "timestamp": "2026-06-30T04:35:03+00:00",
             "variant": {
               "coldstart_ms": 1638.0,
               "idle_watts": 71.0,
@@ -563,8 +563,8 @@
             "210"
           ],
           "parsed_stdout": {
-            "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T020240Z-40962567",
-            "bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a",
+            "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T043503Z-e276aeba",
+            "bundle_hash": "ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5",
             "confidence": "0.70",
             "decision": "accepted",
             "fitness_score": "0.104878",
@@ -573,7 +573,7 @@
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "variant: v-b-genuine-winning-source\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T020240Z-40962567\n"
+          "stdout": "variant: v-b-genuine-winning-source\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source\\runs\\cycle-210\\v-b-genuine-winning-source-20260630T043503Z-e276aeba\n"
         },
         "source_cycle_id": 210,
         "source_state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-source"
@@ -598,40 +598,40 @@
             "contributors": "0",
             "cycle": "211",
             "report": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\cycles\\cycle-211-payout.json",
-            "report_hash": "787879eb0a0fbddc6ceeda0bfcc0268896d653f68aa4a1512e0a5370ff88b6a2"
+            "report_hash": "76562e8bb9d43ec4bf477b1b27230042a2367e6e9897df7b390460a2eca695c6"
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "cycle: 211\ncontributors: 0\nreport_hash: 787879eb0a0fbddc6ceeda0bfcc0268896d653f68aa4a1512e0a5370ff88b6a2\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\cycles\\cycle-211-payout.json\n"
+          "stdout": "cycle: 211\ncontributors: 0\nreport_hash: 76562e8bb9d43ec4bf477b1b27230042a2367e6e9897df7b390460a2eca695c6\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\cycles\\cycle-211-payout.json\n"
         },
         "contributors": [],
         "payout_triggered": false,
-        "report_hash": "787879eb0a0fbddc6ceeda0bfcc0268896d653f68aa4a1512e0a5370ff88b6a2",
+        "report_hash": "76562e8bb9d43ec4bf477b1b27230042a2367e6e9897df7b390460a2eca695c6",
         "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\cycles\\cycle-211-payout.json"
       },
       "payout_triggered": false,
       "pipeline": "seed_organism.py CLI: run-variant -> verdict -> replay_gate(local+global) -> bundle/ledger",
       "pipeline_verdict": "rejected_replay_global",
-      "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
+      "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5 for machine v-b-source-stardust",
       "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack",
       "submitted_bundle": {
-        "bundle_hash": "b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c",
+        "bundle_hash": "4a9fdde3b4c6c6ab80c320670683df068288d342199188710b73a79b8a17df02",
         "confidence": 0.7,
         "decision": "rejected_replay_global",
         "fitness_score": 0.104878,
         "manifest": {
-          "bundle_hash": "b167acab402be0d6dcddd5cbab818677b8fdcc5ab2505a9b61a0f27dadf1709c",
-          "created_at": "2026-06-30T02:02:40+00:00",
+          "bundle_hash": "4a9fdde3b4c6c6ab80c320670683df068288d342199188710b73a79b8a17df02",
+          "created_at": "2026-06-30T04:35:03+00:00",
           "cycle_id": "211",
           "decision": "rejected_replay_global",
           "files": {
-            "metrics.json": "c5a728fbe24e9c7302448236bedc793938ef56f3312fee698e51338cbca47112",
-            "regression-result.json": "ccfebbe2b802810dbcca79362e24549421a92663ff9370239ee5c2a34eb2af71",
-            "sensor-result.json": "05c016d8a057bd0ed533b61a9676bc19e093e97062b112e2a8396e64d0f274f7",
+            "metrics.json": "40770804d2100c9530a4092e609d08e2b628ba6c1f3e40dc8827f305bb1ff271",
+            "regression-result.json": "06bc4b674c485a95ffa735b2bdbe17d116c6cc8dd2e3a78e99c1cd3981a120f9",
+            "sensor-result.json": "80b6652d936658d827cb4c38fc001a50253dfc3b6862f59717408b8d9cfa538d",
             "variant.json": "bbb538ca5ac857c584f92f3e0fdb0e4a2278f948cb754d37c56d22e5c8c0269c"
           },
-          "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
-          "run_id": "8abb0631",
+          "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5 for machine v-b-source-stardust",
+          "run_id": "54b8baaf",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "v-b-global-replay-as-independent"
         },
@@ -671,7 +671,7 @@
           },
           "replay_attack": {
             "claim": "same immutable signed raw evidence resubmitted through a different state/account context",
-            "copied_from_bundle_hash": "c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a"
+            "copied_from_bundle_hash": "ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5"
           },
           "sample_counts": {
             "coldstart": 3,
@@ -860,19 +860,19 @@
             "sustained_tokps": 42.0
           }
         },
-        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T020240Z-8abb0631",
-        "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle c73fbed3fc06b45f10731ec280a7ee6eae18a7aa703c5c14a1e0ae1d395fb16a for machine v-b-source-stardust",
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-b-global-replay-attack\\runs\\cycle-211\\v-b-global-replay-as-independent-20260630T043503Z-54b8baaf",
+        "reason": "global replay gate: measurement fingerprint already accepted in CursiveRoot index bundle ed2de8858a531dbdea1062186997fbb81cd662e6b1a5c4bf459a432b9c3b82c5 for machine v-b-source-stardust",
         "regression_result": {
           "failures": [],
           "full_test_passed": true,
           "host_safety_passed": true,
           "machine_id": "v-b-source-stardust",
           "passed": true,
-          "regression_result_hash": "715c961604fddf636c7538f884f72cabdb21fced1be06baca995db34e44882d4",
+          "regression_result_hash": "594d88f60ad4d447073066775f550a92857e25af65404aa0e62de38e2e3fc5f3",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-30T02:02:40+00:00",
+          "timestamp": "2026-06-30T04:35:03+00:00",
           "variant_id": "v-b-global-replay-as-independent"
         },
         "sensor_result": {
@@ -909,9 +909,9 @@
           "raw_artifact_fingerprint": "e7d1d7bf1831d540e8feb990a135e8e7797d94a065cb7e3590fe7bb0b801a15a",
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "61a0c8eade62c72a31f191ab3b948b31aaeb8af04f6a1621fe0f77fe6c46a3f9",
+          "sensor_result_hash": "d0fdb8c9a4fc1f655d4ae8db2a572da057d1f5042554016f719ab7ab1f11c563",
           "severe_regressions": [],
-          "timestamp": "2026-06-30T02:02:40+00:00",
+          "timestamp": "2026-06-30T04:35:03+00:00",
           "variant": {
             "coldstart_ms": 1638.0,
             "idle_watts": 71.0,
@@ -948,23 +948,23 @@
       "pipeline_verdict": "rejected_invariant",
       "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
       "submitted_bundle": {
-        "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+        "bundle_hash": "e4dc3a7061c01a74b4b9011c8fc8e5f49c87bb6c8bfcb026ccb44d64ed20b73b",
         "confidence": 0.7,
         "decision": "rejected_invariant",
         "fitness_score": 0.0,
         "manifest": {
-          "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
-          "created_at": "2026-06-30T02:02:41+00:00",
+          "bundle_hash": "e4dc3a7061c01a74b4b9011c8fc8e5f49c87bb6c8bfcb026ccb44d64ed20b73b",
+          "created_at": "2026-06-30T04:35:04+00:00",
           "cycle_id": "221",
           "decision": "rejected_invariant",
           "files": {
             "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
-            "regression-result.json": "a54a3213dc98ac7f35c5b34018adbb959e3f2348865560532f1fcf7087f1bcc8",
-            "sensor-result.json": "5c51fb8843e700a093acc22ecaf8102259fadbf745ced7eec5f1747c6bd2cc62",
+            "regression-result.json": "93196be7d97e7063588a8e7222d7424212c3671f76683ce8e462e067c46bde34",
+            "sensor-result.json": "ff4aa8352c7b6ad60b43bd66d02a483b21a54b96a86822e112c96d7902227dd9",
             "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
           },
           "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
-          "run_id": "18adb5a8",
+          "run_id": "1f900b5f",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "h2-c-direct-overdeclared-parsimony"
         },
@@ -999,7 +999,7 @@
             "sustained_tokps": 41.0
           }
         },
-        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8",
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T043504Z-1f900b5f",
         "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
         "regression_result": {
           "failures": [],
@@ -1007,11 +1007,11 @@
           "host_safety_passed": true,
           "machine_id": "h2-c-direct-source",
           "passed": true,
-          "regression_result_hash": "849a46ef930f9d8cd72b3a4a8fd628f39ff3b57fe81ddd6f1714a79bfe3484fd",
+          "regression_result_hash": "693df6ac3edba8a5b9dcc6744504964aa22c21af7882b0f41fa90376d46e5ca5",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-30T02:02:41+00:00",
+          "timestamp": "2026-06-30T04:35:04+00:00",
           "variant_id": "h2-c-direct-overdeclared-parsimony"
         },
         "sensor_result": {
@@ -1050,9 +1050,9 @@
           "raw_artifact_fingerprint": null,
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "62505d7b91ddbbfbe91009eda50106d995892882a819b3eeffdcd5a40476d118",
+          "sensor_result_hash": "b7cc8e1cddc46de6eb03e94656d61beb2abd6256dc11e7e9ff2102ab17506b3c",
           "severe_regressions": [],
-          "timestamp": "2026-06-30T02:02:41+00:00",
+          "timestamp": "2026-06-30T04:35:04+00:00",
           "variant": {
             "coldstart_ms": 1820.0,
             "idle_watts": 71.0,
@@ -1107,8 +1107,8 @@
               "221"
             ],
             "parsed_stdout": {
-              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8",
-              "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T043504Z-1f900b5f",
+              "bundle_hash": "e4dc3a7061c01a74b4b9011c8fc8e5f49c87bb6c8bfcb026ccb44d64ed20b73b",
               "confidence": "0.70",
               "decision": "rejected_invariant",
               "fitness_score": "0.000000",
@@ -1117,7 +1117,7 @@
             },
             "returncode": 0,
             "stderr": "",
-            "stdout": "variant: h2-c-direct-overdeclared-parsimony\ndecision: rejected_invariant\nreason: parsimony invariant failed: claimed 5 removed knobs but genome derives 0\nfitness_score: 0.000000\nconfidence: 0.70\nbundle_hash: fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8\n"
+            "stdout": "variant: h2-c-direct-overdeclared-parsimony\ndecision: rejected_invariant\nreason: parsimony invariant failed: claimed 5 removed knobs but genome derives 0\nfitness_score: 0.000000\nconfidence: 0.70\nbundle_hash: e4dc3a7061c01a74b4b9011c8fc8e5f49c87bb6c8bfcb026ccb44d64ed20b73b\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T043504Z-1f900b5f\n"
           },
           "cycle_id": 221,
           "deferred_to_trust_layer": false,
@@ -1141,15 +1141,15 @@
                 "contributors": "0",
                 "cycle": "221",
                 "report": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json",
-                "report_hash": "54f0af108477ad0b73e0788bd12feff75cca588fd6f1be56d9faf97c37db175c"
+                "report_hash": "7b3be53e4062d01a3018b0d7195a47d15b07ff34347bdfcc76260ebe5d020e9f"
               },
               "returncode": 0,
               "stderr": "",
-              "stdout": "cycle: 221\ncontributors: 0\nreport_hash: 54f0af108477ad0b73e0788bd12feff75cca588fd6f1be56d9faf97c37db175c\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json\n"
+              "stdout": "cycle: 221\ncontributors: 0\nreport_hash: 7b3be53e4062d01a3018b0d7195a47d15b07ff34347bdfcc76260ebe5d020e9f\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json\n"
             },
             "contributors": [],
             "payout_triggered": false,
-            "report_hash": "54f0af108477ad0b73e0788bd12feff75cca588fd6f1be56d9faf97c37db175c",
+            "report_hash": "7b3be53e4062d01a3018b0d7195a47d15b07ff34347bdfcc76260ebe5d020e9f",
             "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\cycles\\cycle-221-payout.json"
           },
           "payout_triggered": false,
@@ -1158,23 +1158,23 @@
           "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
           "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass",
           "submitted_bundle": {
-            "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
+            "bundle_hash": "e4dc3a7061c01a74b4b9011c8fc8e5f49c87bb6c8bfcb026ccb44d64ed20b73b",
             "confidence": 0.7,
             "decision": "rejected_invariant",
             "fitness_score": 0.0,
             "manifest": {
-              "bundle_hash": "fa3fdbf8c7f32b13088fae3777cf1983ef3a6fee5ebed023f6c68e9d93598038",
-              "created_at": "2026-06-30T02:02:41+00:00",
+              "bundle_hash": "e4dc3a7061c01a74b4b9011c8fc8e5f49c87bb6c8bfcb026ccb44d64ed20b73b",
+              "created_at": "2026-06-30T04:35:04+00:00",
               "cycle_id": "221",
               "decision": "rejected_invariant",
               "files": {
                 "metrics.json": "a79b5b435fbfd864c2f9ff4727332683131828bda8d6e664b8efa0d16dd83922",
-                "regression-result.json": "a54a3213dc98ac7f35c5b34018adbb959e3f2348865560532f1fcf7087f1bcc8",
-                "sensor-result.json": "5c51fb8843e700a093acc22ecaf8102259fadbf745ced7eec5f1747c6bd2cc62",
+                "regression-result.json": "93196be7d97e7063588a8e7222d7424212c3671f76683ce8e462e067c46bde34",
+                "sensor-result.json": "ff4aa8352c7b6ad60b43bd66d02a483b21a54b96a86822e112c96d7902227dd9",
                 "variant.json": "ca774686187f68cc381f4cd7e6e399ff2199bf4d1b5377c68e96b759b2416467"
               },
               "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
-              "run_id": "18adb5a8",
+              "run_id": "1f900b5f",
               "schema_version": "seed-organism.bundle-manifest.v0.1",
               "variant_id": "h2-c-direct-overdeclared-parsimony"
             },
@@ -1209,7 +1209,7 @@
                 "sustained_tokps": 41.0
               }
             },
-            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T020241Z-18adb5a8",
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-direct-seed-bypass\\runs\\cycle-221\\h2-c-direct-overdeclared-parsimony-20260630T043504Z-1f900b5f",
             "reason": "parsimony invariant failed: claimed 5 removed knobs but genome derives 0",
             "regression_result": {
               "failures": [],
@@ -1217,11 +1217,11 @@
               "host_safety_passed": true,
               "machine_id": "h2-c-direct-source",
               "passed": true,
-              "regression_result_hash": "849a46ef930f9d8cd72b3a4a8fd628f39ff3b57fe81ddd6f1714a79bfe3484fd",
+              "regression_result_hash": "693df6ac3edba8a5b9dcc6744504964aa22c21af7882b0f41fa90376d46e5ca5",
               "reverted_cleanly": true,
               "schema_version": "seed-organism.regression-result.v0.1",
               "sensor_id": "regression.genesis.v1",
-              "timestamp": "2026-06-30T02:02:41+00:00",
+              "timestamp": "2026-06-30T04:35:04+00:00",
               "variant_id": "h2-c-direct-overdeclared-parsimony"
             },
             "sensor_result": {
@@ -1260,9 +1260,9 @@
               "raw_artifact_fingerprint": null,
               "schema_version": "seed-organism.sensor-result.v0.1",
               "sensor_id": "perf.genesis.v1",
-              "sensor_result_hash": "62505d7b91ddbbfbe91009eda50106d995892882a819b3eeffdcd5a40476d118",
+              "sensor_result_hash": "b7cc8e1cddc46de6eb03e94656d61beb2abd6256dc11e7e9ff2102ab17506b3c",
               "severe_regressions": [],
-              "timestamp": "2026-06-30T02:02:41+00:00",
+              "timestamp": "2026-06-30T04:35:04+00:00",
               "variant": {
                 "coldstart_ms": 1820.0,
                 "idle_watts": 71.0,
@@ -1326,37 +1326,37 @@
                 "contributors": "0",
                 "cycle": "220",
                 "report": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json",
-                "report_hash": "1b61f4507003bb9d53b62ebe1d40342a03065704951c212a45172991d173c12d"
+                "report_hash": "346e458184c2357242331c7c004eab87f523973cda02111b2da57e0969a28456"
               },
               "returncode": 0,
               "stderr": "",
-              "stdout": "cycle: 220\ncontributors: 0\nreport_hash: 1b61f4507003bb9d53b62ebe1d40342a03065704951c212a45172991d173c12d\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json\n"
+              "stdout": "cycle: 220\ncontributors: 0\nreport_hash: 346e458184c2357242331c7c004eab87f523973cda02111b2da57e0969a28456\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json\n"
             },
             "contributors": [],
             "payout_triggered": false,
-            "report_hash": "1b61f4507003bb9d53b62ebe1d40342a03065704951c212a45172991d173c12d",
+            "report_hash": "346e458184c2357242331c7c004eab87f523973cda02111b2da57e0969a28456",
             "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\cycles\\cycle-220-payout.json"
           },
           "pipeline_verdict": "rejected_recompute_mismatch",
           "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded",
           "submitted_bundle": {
-            "bundle_hash": "109b0969834b47ef075f55026fa33d2e8cfe97f2602bec2c0a7f77a2a13520e9",
+            "bundle_hash": "9b97b079708a91d6b5ef4d1ac94630ebba9b3b76f42fbae62b04060ed78ace75",
             "confidence": 0.7,
             "decision": "rejected_recompute_mismatch",
             "fitness_score": 0.0,
             "manifest": {
-              "bundle_hash": "109b0969834b47ef075f55026fa33d2e8cfe97f2602bec2c0a7f77a2a13520e9",
-              "created_at": "2026-06-30T02:02:41+00:00",
+              "bundle_hash": "9b97b079708a91d6b5ef4d1ac94630ebba9b3b76f42fbae62b04060ed78ace75",
+              "created_at": "2026-06-30T04:35:04+00:00",
               "cycle_id": "220",
               "decision": "rejected_recompute_mismatch",
               "files": {
                 "metrics.json": "9eaab94415c0e6f0a6bc939de9c1719c7b963947f43c44412bd029c23f90b772",
-                "regression-result.json": "447feee1c60882feb55b8e7cf2f35e6555b417658e40d990cead1db2c469d6a8",
-                "sensor-result.json": "703c34da98663d50770cb47a0d042de708849768727d1cdd2bc42a71acd64645",
+                "regression-result.json": "1dbb25886ae8334ba77186a09a0599439a103e895f33dca24277aa1f674bbd03",
+                "sensor-result.json": "10e4776a7aa50193020480cdacd07276638be674d6d46043c5e8e6204d8aa12c",
                 "variant.json": "f8b7cdf02d3bdbde52c5fbf4428ddca5533fd8fc503038c11ed5e3e3a3262f09"
               },
               "reason": "verifier recompute gate: missing immutable raw_artifacts",
-              "run_id": "be78c241",
+              "run_id": "bb4fe5b6",
               "schema_version": "seed-organism.bundle-manifest.v0.1",
               "variant_id": "h2-c-qd-overdeclared-parsimony"
             },
@@ -1391,7 +1391,7 @@
                 "sustained_tokps": 41.0
               }
             },
-            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\runs\\cycle-220\\h2-c-qd-overdeclared-parsimony-20260630T020241Z-be78c241",
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-c-qd-guarded\\runs\\cycle-220\\h2-c-qd-overdeclared-parsimony-20260630T043504Z-bb4fe5b6",
             "reason": "verifier recompute gate: missing immutable raw_artifacts",
             "regression_result": {
               "failures": [],
@@ -1399,11 +1399,11 @@
               "host_safety_passed": true,
               "machine_id": "h2-c-qd-source",
               "passed": true,
-              "regression_result_hash": "4e41a5ec63dafde92c474cabb6b334d03cd40f6be22cfff0952f2429e93fee71",
+              "regression_result_hash": "fdae39f7edd5ba866ddbd5e408b08b5eda93df6ee791b3d3ef0b9ca5a7116575",
               "reverted_cleanly": true,
               "schema_version": "seed-organism.regression-result.v0.1",
               "sensor_id": "regression.genesis.v1",
-              "timestamp": "2026-06-30T02:02:41+00:00",
+              "timestamp": "2026-06-30T04:35:04+00:00",
               "variant_id": "h2-c-qd-overdeclared-parsimony"
             },
             "sensor_result": {
@@ -1440,9 +1440,9 @@
               "raw_artifact_fingerprint": null,
               "schema_version": "seed-organism.sensor-result.v0.1",
               "sensor_id": "perf.genesis.v1",
-              "sensor_result_hash": "d7ebe741123cfa4cde2f6cc315676af38d0bfa212052cac4047e26c8891359ff",
+              "sensor_result_hash": "3197827851da673650f02622a8ff5c6f554bc9ed1debc9a72dba1a8013e88619",
               "severe_regressions": [],
-              "timestamp": "2026-06-30T02:02:41+00:00",
+              "timestamp": "2026-06-30T04:35:04+00:00",
               "variant": {
                 "coldstart_ms": 1820.0,
                 "idle_watts": 71.0,
@@ -1499,8 +1499,8 @@
           "230"
         ],
         "parsed_stdout": {
-          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T020241Z-a0fb015b",
-          "bundle_hash": "94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c",
+          "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T043505Z-7677f2d8",
+          "bundle_hash": "7d03fad44df548430438c22b5cd746cf78a53239d02f9cf16988e68fd5eca77d",
           "confidence": "0.75",
           "decision": "rejected_funded_adversary_pattern",
           "fitness_score": "0.104878",
@@ -1509,7 +1509,7 @@
         },
         "returncode": 0,
         "stderr": "",
-        "stdout": "variant: v-d-funded-confirmation-sybil\ndecision: rejected_funded_adversary_pattern\nreason: funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint\nfitness_score: 0.104878\nconfidence: 0.75\nbundle_hash: 94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T020241Z-a0fb015b\n"
+        "stdout": "variant: v-d-funded-confirmation-sybil\ndecision: rejected_funded_adversary_pattern\nreason: funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint\nfitness_score: 0.104878\nconfidence: 0.75\nbundle_hash: 7d03fad44df548430438c22b5cd746cf78a53239d02f9cf16988e68fd5eca77d\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T043505Z-7677f2d8\n"
       },
       "cycle_id": 230,
       "deferred_to_trust_layer": false,
@@ -1538,15 +1538,15 @@
             "contributors": "0",
             "cycle": "230",
             "report": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\cycles\\cycle-230-payout.json",
-            "report_hash": "2257b923f95458a3ebe92dfcad20566104dc7af705ef8f63c4b3c2f5e1736362"
+            "report_hash": "347a683c6a8888ea705202740c07a1f28c06efad250ef7bb85c1222d2b8e4be0"
           },
           "returncode": 0,
           "stderr": "",
-          "stdout": "cycle: 230\ncontributors: 0\nreport_hash: 2257b923f95458a3ebe92dfcad20566104dc7af705ef8f63c4b3c2f5e1736362\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\cycles\\cycle-230-payout.json\n"
+          "stdout": "cycle: 230\ncontributors: 0\nreport_hash: 347a683c6a8888ea705202740c07a1f28c06efad250ef7bb85c1222d2b8e4be0\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\cycles\\cycle-230-payout.json\n"
         },
         "contributors": [],
         "payout_triggered": false,
-        "report_hash": "2257b923f95458a3ebe92dfcad20566104dc7af705ef8f63c4b3c2f5e1736362",
+        "report_hash": "347a683c6a8888ea705202740c07a1f28c06efad250ef7bb85c1222d2b8e4be0",
         "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\cycles\\cycle-230-payout.json"
       },
       "payout_triggered": false,
@@ -1555,23 +1555,23 @@
       "reason": "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint",
       "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil",
       "submitted_bundle": {
-        "bundle_hash": "94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c",
+        "bundle_hash": "7d03fad44df548430438c22b5cd746cf78a53239d02f9cf16988e68fd5eca77d",
         "confidence": 0.75,
         "decision": "rejected_funded_adversary_pattern",
         "fitness_score": 0.104878,
         "manifest": {
-          "bundle_hash": "94a89c04d9486c9fe7bcf71c54bf6857365a0a35664993953941b2341b742d6c",
-          "created_at": "2026-06-30T02:02:41+00:00",
+          "bundle_hash": "7d03fad44df548430438c22b5cd746cf78a53239d02f9cf16988e68fd5eca77d",
+          "created_at": "2026-06-30T04:35:05+00:00",
           "cycle_id": "230",
           "decision": "rejected_funded_adversary_pattern",
           "files": {
             "metrics.json": "ee65938a7015b44d8cfc3ebf8206dc36a6c8f6d31fcf9382db6549f9f800f571",
-            "regression-result.json": "c1511accdb42c6c6ae7df296b4f317090c8556462019c251ccbe72d2e1477142",
-            "sensor-result.json": "601501cf4dcf6716bcbec738913c8c1f0457be4977fea99e297b170d0712d1bc",
+            "regression-result.json": "458d849132cce260230caa5c162db709447ae69b32f24b842e00874e7be0b2c9",
+            "sensor-result.json": "94309749a7eb4678fe8ec9d6bc260d9c1ba5a8b5cc4aa237fed22a155ab74aeb",
             "variant.json": "5ad7bd70ecfa288ecdac1ca67310d1eee951aa262484c41bdfee585de1fd6503"
           },
           "reason": "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint",
-          "run_id": "a0fb015b",
+          "run_id": "7677f2d8",
           "schema_version": "seed-organism.bundle-manifest.v0.1",
           "variant_id": "v-d-funded-confirmation-sybil"
         },
@@ -2264,7 +2264,7 @@
             "sustained_tokps": 42.0
           }
         },
-        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T020241Z-a0fb015b",
+        "path": ".cursiveos\\v-verifier-hardening-tester\\mode-d-funded-sybil\\runs\\cycle-230\\v-d-funded-confirmation-sybil-20260630T043505Z-7677f2d8",
         "reason": "funded adversary pattern gate: distinct identities/raw artifacts share the same non-identity metric derivation fingerprint",
         "regression_result": {
           "failures": [],
@@ -2272,11 +2272,11 @@
           "host_safety_passed": true,
           "machine_id": "v-d-funded-rig-a",
           "passed": true,
-          "regression_result_hash": "6ee8d8ba018d65921c083353b71d579d14859f5b12435f3aafa3a6ecf1741def",
+          "regression_result_hash": "1ca354053d5c826daa46d4c63e143bf28cdcbb59bca25011c13775a342a40cbe",
           "reverted_cleanly": true,
           "schema_version": "seed-organism.regression-result.v0.1",
           "sensor_id": "regression.genesis.v1",
-          "timestamp": "2026-06-30T02:02:41+00:00",
+          "timestamp": "2026-06-30T04:35:05+00:00",
           "variant_id": "v-d-funded-confirmation-sybil"
         },
         "sensor_result": {
@@ -2313,9 +2313,9 @@
           "raw_artifact_fingerprint": "f890e43a5ca856a879d9cf56e23741dfcd44c45cecf8b753063d1b4d958357be",
           "schema_version": "seed-organism.sensor-result.v0.1",
           "sensor_id": "perf.genesis.v1",
-          "sensor_result_hash": "aaa3ccbec7bc91b69d731fb5bd7ed6515337f09bbadcd91459a3094babf4f73c",
+          "sensor_result_hash": "da4c98f8f767fe9575b8fc5699362ed518ee800cbb74357f7f0b32325f2ef676",
           "severe_regressions": [],
-          "timestamp": "2026-06-30T02:02:41+00:00",
+          "timestamp": "2026-06-30T04:35:05+00:00",
           "variant": {
             "coldstart_ms": 1638.0,
             "idle_watts": 71.0,
@@ -2371,8 +2371,8 @@
               "240"
             ],
             "parsed_stdout": {
-              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T020241Z-689ad7ac",
-              "bundle_hash": "fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45",
+              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T043505Z-47b906cd",
+              "bundle_hash": "225c623d4cf8a2f42fc02c94b92087b61854907e89ad82102b8a0d15436161d2",
               "confidence": "0.60",
               "decision": "inconclusive",
               "fitness_score": "0.104878",
@@ -2381,7 +2381,7 @@
             },
             "returncode": 0,
             "stderr": "",
-            "stdout": "variant: v-h-honest-noisy\ndecision: inconclusive\nreason: confidence 0.60 below minimum 0.65\nfitness_score: 0.104878\nconfidence: 0.60\nbundle_hash: fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T020241Z-689ad7ac\n"
+            "stdout": "variant: v-h-honest-noisy\ndecision: inconclusive\nreason: confidence 0.60 below minimum 0.65\nfitness_score: 0.104878\nconfidence: 0.60\nbundle_hash: 225c623d4cf8a2f42fc02c94b92087b61854907e89ad82102b8a0d15436161d2\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T043505Z-47b906cd\n"
           },
           "cycle_id": 240,
           "deferred_to_trust_layer": false,
@@ -2405,15 +2405,15 @@
                 "contributors": "0",
                 "cycle": "240",
                 "report": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-240-payout.json",
-                "report_hash": "b3286c728168eab233d801ff16d1092aba926eb00c403596965e6c165e84b8fa"
+                "report_hash": "84c25a90ef4182ea623cf4d48f7c47404f07271981f3c657364b82bf4f54206f"
               },
               "returncode": 0,
               "stderr": "",
-              "stdout": "cycle: 240\ncontributors: 0\nreport_hash: b3286c728168eab233d801ff16d1092aba926eb00c403596965e6c165e84b8fa\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-240-payout.json\n"
+              "stdout": "cycle: 240\ncontributors: 0\nreport_hash: 84c25a90ef4182ea623cf4d48f7c47404f07271981f3c657364b82bf4f54206f\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-240-payout.json\n"
             },
             "contributors": [],
             "payout_triggered": false,
-            "report_hash": "b3286c728168eab233d801ff16d1092aba926eb00c403596965e6c165e84b8fa",
+            "report_hash": "84c25a90ef4182ea623cf4d48f7c47404f07271981f3c657364b82bf4f54206f",
             "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-240-payout.json"
           },
           "payout_triggered": false,
@@ -2422,23 +2422,23 @@
           "reason": "confidence 0.60 below minimum 0.65",
           "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
           "submitted_bundle": {
-            "bundle_hash": "fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45",
+            "bundle_hash": "225c623d4cf8a2f42fc02c94b92087b61854907e89ad82102b8a0d15436161d2",
             "confidence": 0.6,
             "decision": "inconclusive",
             "fitness_score": 0.104878,
             "manifest": {
-              "bundle_hash": "fe41deef0ceb47162b68f144558907b57e422fa1bb0052c7e7caa2b6d57fca45",
-              "created_at": "2026-06-30T02:02:41+00:00",
+              "bundle_hash": "225c623d4cf8a2f42fc02c94b92087b61854907e89ad82102b8a0d15436161d2",
+              "created_at": "2026-06-30T04:35:05+00:00",
               "cycle_id": "240",
               "decision": "inconclusive",
               "files": {
                 "metrics.json": "2270aa68859a81eede7052dc6a09718d9ac83fc819570aad7712da55fb3f75d6",
-                "regression-result.json": "e39647f4af8fd472c37147578ed30cfa0a60aac3e2aa0a026ed217183b94d6f3",
-                "sensor-result.json": "de052ca23e862ffd18dfb7ae545bb2963414d30a4fca9b7e3f5953f8c8f7b0cb",
+                "regression-result.json": "5c226df9abcf6044310dd78ddfe3ae377fdc8317390dfc6e364a4f6683a57be3",
+                "sensor-result.json": "1182ebf5e19a59601ad2f496c73a44fe154979c191d099091a657fff0efd217d",
                 "variant.json": "55fd993cc17512ec9b6419c6c58c228802b4715be96931f5825769761cdee661"
               },
               "reason": "confidence 0.60 below minimum 0.65",
-              "run_id": "689ad7ac",
+              "run_id": "47b906cd",
               "schema_version": "seed-organism.bundle-manifest.v0.1",
               "variant_id": "v-h-honest-noisy"
             },
@@ -2664,7 +2664,7 @@
                 "sustained_tokps": 42.0
               }
             },
-            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T020241Z-689ad7ac",
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-240\\v-h-honest-noisy-20260630T043505Z-47b906cd",
             "reason": "confidence 0.60 below minimum 0.65",
             "regression_result": {
               "failures": [],
@@ -2672,11 +2672,11 @@
               "host_safety_passed": true,
               "machine_id": "v-h-honest-noisy",
               "passed": true,
-              "regression_result_hash": "494824ca3aea2b284d5af6895bc40a701266f46e3ff87513ce9d3800c2f29448",
+              "regression_result_hash": "d5074b01c3047621c53f0cd8095cb81cbcf8f548575ba87bedc48f24b093896c",
               "reverted_cleanly": true,
               "schema_version": "seed-organism.regression-result.v0.1",
               "sensor_id": "regression.genesis.v1",
-              "timestamp": "2026-06-30T02:02:41+00:00",
+              "timestamp": "2026-06-30T04:35:05+00:00",
               "variant_id": "v-h-honest-noisy"
             },
             "sensor_result": {
@@ -2713,9 +2713,9 @@
               "raw_artifact_fingerprint": "2ca035c35d254764b8d3f54235c3a85291b555c10dfc44515df26a3ca1cf53d3",
               "schema_version": "seed-organism.sensor-result.v0.1",
               "sensor_id": "perf.genesis.v1",
-              "sensor_result_hash": "609b495836f2c6caa63c2cb2b3cba62c9b5a05462506d35a313573a32d45224a",
+              "sensor_result_hash": "d7f4e674c4d0a354459f0a61614cce03f09caabfed741b7701c6237feb632824",
               "severe_regressions": [],
-              "timestamp": "2026-06-30T02:02:41+00:00",
+              "timestamp": "2026-06-30T04:35:05+00:00",
               "variant": {
                 "coldstart_ms": 1638.0,
                 "idle_watts": 71.0,
@@ -2758,8 +2758,8 @@
               "241"
             ],
             "parsed_stdout": {
-              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T020242Z-a79ea6c1",
-              "bundle_hash": "3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7",
+              "bundle": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T043506Z-30b2f14d",
+              "bundle_hash": "284de5bdcbe41ce5dfec1c8fa14f45ff4c75897534170f2e5b832071774d3d87",
               "confidence": "0.70",
               "decision": "accepted",
               "fitness_score": "0.104878",
@@ -2768,7 +2768,7 @@
             },
             "returncode": 0,
             "stderr": "",
-            "stdout": "variant: v-h-honest-weird-hardware\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T020242Z-a79ea6c1\n"
+            "stdout": "variant: v-h-honest-weird-hardware\ndecision: accepted\nreason: fitness positive and gates passed\nfitness_score: 0.104878\nconfidence: 0.70\nbundle_hash: 284de5bdcbe41ce5dfec1c8fa14f45ff4c75897534170f2e5b832071774d3d87\nbundle: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T043506Z-30b2f14d\n"
           },
           "cycle_id": 241,
           "deferred_to_trust_layer": false,
@@ -2792,11 +2792,11 @@
                 "contributors": "1",
                 "cycle": "241",
                 "report": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-241-payout.json",
-                "report_hash": "39288eced837fd07510872b67c3ff517903bf0ad7f5768af89a5b3274772028d"
+                "report_hash": "4077f7dfde17995ec7f97d3718518d136c4570a2ac9e3ed4c8e001716044364e"
               },
               "returncode": 0,
               "stderr": "",
-              "stdout": "cycle: 241\ncontributors: 1\nreport_hash: 39288eced837fd07510872b67c3ff517903bf0ad7f5768af89a5b3274772028d\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-241-payout.json\n"
+              "stdout": "cycle: 241\ncontributors: 1\nreport_hash: 4077f7dfde17995ec7f97d3718518d136c4570a2ac9e3ed4c8e001716044364e\nreport: .cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-241-payout.json\n"
             },
             "contributors": [
               {
@@ -2809,7 +2809,7 @@
               }
             ],
             "payout_triggered": true,
-            "report_hash": "39288eced837fd07510872b67c3ff517903bf0ad7f5768af89a5b3274772028d",
+            "report_hash": "4077f7dfde17995ec7f97d3718518d136c4570a2ac9e3ed4c8e001716044364e",
             "report_path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\cycles\\cycle-241-payout.json"
           },
           "payout_triggered": true,
@@ -2818,23 +2818,23 @@
           "reason": "fitness positive and gates passed",
           "state_dir": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls",
           "submitted_bundle": {
-            "bundle_hash": "3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7",
+            "bundle_hash": "284de5bdcbe41ce5dfec1c8fa14f45ff4c75897534170f2e5b832071774d3d87",
             "confidence": 0.7,
             "decision": "accepted",
             "fitness_score": 0.104878,
             "manifest": {
-              "bundle_hash": "3a549a7ce29ef9ca4fcce0426dee0d312189bb33989a108582a2ccb5bd1bc7c7",
-              "created_at": "2026-06-30T02:02:42+00:00",
+              "bundle_hash": "284de5bdcbe41ce5dfec1c8fa14f45ff4c75897534170f2e5b832071774d3d87",
+              "created_at": "2026-06-30T04:35:06+00:00",
               "cycle_id": "241",
               "decision": "accepted",
               "files": {
                 "metrics.json": "134b86ff65e24292eab3691a6152dbf5b6093e28871b90c5d94733266ebdf2e9",
-                "regression-result.json": "a9316bc0e3da14a1fbbb794beb0bec1ece4a7e91bafac35f0bec42c1b69478ce",
-                "sensor-result.json": "cf78c6160d0b680c055be77d560f3ac2c6a148ce599929cf503fc22911cdf8f0",
+                "regression-result.json": "45e60d41c81e6c36528db360b37f2b092ecfb4ce5fd0ac9ac519dddb375f2bbc",
+                "sensor-result.json": "f0f2b395aa0ecd7a413928a538e97f96e1197118cccd07ee0eba7277b36200c0",
                 "variant.json": "29c3837d77ce91fe935301833bb84400f5a8d30a9df33f707218350e584c6204"
               },
               "reason": "fitness positive and gates passed",
-              "run_id": "a79ea6c1",
+              "run_id": "30b2f14d",
               "schema_version": "seed-organism.bundle-manifest.v0.1",
               "variant_id": "v-h-honest-weird-hardware"
             },
@@ -3063,7 +3063,7 @@
                 "sustained_tokps": 42.0
               }
             },
-            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T020242Z-a79ea6c1",
+            "path": ".cursiveos\\v-verifier-hardening-tester\\mode-h-honest-controls\\runs\\cycle-241\\v-h-honest-weird-hardware-20260630T043506Z-30b2f14d",
             "reason": "fitness positive and gates passed",
             "regression_result": {
               "failures": [],
@@ -3071,11 +3071,11 @@
               "host_safety_passed": true,
               "machine_id": "v-h-legacy-cpu-only",
               "passed": true,
-              "regression_result_hash": "707677f9fa2d51600ac9bb798bf3477cde1f25f5af59e31fb8ea1f655afc2d54",
+              "regression_result_hash": "ba6bb1cc2ceec014133ad45661e6d72fb65d847eba517b5f96d32109c6deec8a",
               "reverted_cleanly": true,
               "schema_version": "seed-organism.regression-result.v0.1",
               "sensor_id": "regression.genesis.v1",
-              "timestamp": "2026-06-30T02:02:42+00:00",
+              "timestamp": "2026-06-30T04:35:06+00:00",
               "variant_id": "v-h-honest-weird-hardware"
             },
             "sensor_result": {
@@ -3112,9 +3112,9 @@
               "raw_artifact_fingerprint": "dbbec6a7071d80dc2a5f139faa55946bf90a54a1fa5c1eb89abcc43ef8c19cdc",
               "schema_version": "seed-organism.sensor-result.v0.1",
               "sensor_id": "perf.genesis.v1",
-              "sensor_result_hash": "52b8f0836a7bca41a0348ec1c1f8e7c297f7846c7378920f2d7b56a332cdb977",
+              "sensor_result_hash": "811ca13ad9d521beea19768db9b9e2d2e70a73b74bdd8d1b50a0bdf7a56e5208",
               "severe_regressions": [],
-              "timestamp": "2026-06-30T02:02:42+00:00",
+              "timestamp": "2026-06-30T04:35:06+00:00",
               "variant": {
                 "coldstart_ms": 1638.0,
                 "idle_watts": 71.0,
