@@ -1,93 +1,228 @@
 <!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CursiveRoot — the living organism</title>
+<title>CursiveRoot — OS.0 nervous system</title>
 <!--
-  CursiveRoot dashboard — a single static page, no backend, no build step.
-  It reads the PUBLIC CursiveRoot data (Supabase REST, publishable key) and
-  shows the organism's state in plain language. Deploy on GitHub Pages, or
-  just open it. To change what it shows, edit this one file.
+  CursiveRoot dashboard — static, read-only, no build step.
+  This page reads public CursiveRoot data from Supabase and renders the OS.0
+  organism state: fleet, request queue, daemon jobs, accepted bundles, and
+  simulated rewards. Keep all dynamic fields escaped: public data is untrusted.
 -->
 <style>
   :root{
-    --bg:#0f1115; --panel:#171a21; --line:#262b36; --ink:#e7ebf2; --mut:#9aa4b2;
-    --good:#43d17a; --warn:#f2c14e; --accent:#6ea8fe;
+    --bg0:#07090d;
+    --bg1:#0d1220;
+    --panel:rgba(18,24,38,.74);
+    --panel2:rgba(12,17,28,.88);
+    --line:rgba(148,163,184,.18);
+    --line2:rgba(148,163,184,.28);
+    --ink:#edf3ff;
+    --mut:#9fb0c7;
+    --soft:#cfdbeb;
+    --good:#48e29b;
+    --warn:#ffd166;
+    --bad:#ff6b7a;
+    --accent:#74a8ff;
+    --violet:#a78bfa;
+    --cyan:#4fd1ff;
+    --shadow:0 24px 80px rgba(0,0,0,.45);
+    --r:22px;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 64px}
-  h1{font-size:30px;margin:0 0 4px} h2{font-size:20px;margin:34px 0 12px}
-  .sub{color:var(--mut);margin:0 0 20px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
-  .stat .n{font-size:28px;font-weight:700} .stat .l{color:var(--mut);font-size:13px}
-  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600}
-  .pill.accepted{background:rgba(67,209,122,.15);color:var(--good)}
-  .pill.rejected{background:rgba(242,193,78,.15);color:var(--warn)}
-  .pill.baseline{background:rgba(110,168,254,.15);color:var(--accent)}
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
-  th{color:var(--mut);font-weight:600}
-  .num{font-variant-numeric:tabular-nums;text-align:right}
-  .good{color:var(--good)} .mut{color:var(--mut)}
-  .note{background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.3);border-radius:10px;padding:12px 16px;color:#f5e6bf;font-size:14px}
-  .lineage{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .gene{background:#11141a;border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:120px}
-  .gene b{display:block;font-size:16px} .gene span{color:var(--mut);font-size:12px}
-  .arrow{color:var(--mut);font-size:22px}
-  a{color:var(--accent)}
-  footer{color:var(--mut);font-size:13px;margin-top:36px;border-top:1px solid var(--line);padding-top:16px}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    color:var(--ink);
+    font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:
+      radial-gradient(circle at 18% -10%, rgba(79,209,255,.25), transparent 34rem),
+      radial-gradient(circle at 78% 2%, rgba(167,139,250,.22), transparent 32rem),
+      radial-gradient(circle at 50% 108%, rgba(72,226,155,.10), transparent 26rem),
+      linear-gradient(180deg,var(--bg1),var(--bg0) 42%,#05070a);
+    min-height:100vh;
+  }
+  body:before{
+    content:""; position:fixed; inset:0; pointer-events:none; opacity:.34;
+    background-image:
+      linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:72px 72px;
+    mask-image:linear-gradient(180deg,rgba(0,0,0,.75),transparent 74%);
+  }
+  a{color:var(--cyan);text-decoration:none} a:hover{text-decoration:underline}
+  .wrap{max-width:1240px;margin:0 auto;padding:28px 20px 72px;position:relative}
+  .hero{
+    display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr); gap:20px;
+    align-items:stretch; margin:18px 0 22px;
+  }
+  .hero-main,.panel,.stat,.rail,.card{
+    border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025)),var(--panel);
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(16px);
+  }
+  .hero-main{border-radius:32px;padding:34px 34px 30px;position:relative;overflow:hidden;min-height:330px}
+  .hero-main:after{
+    content:""; position:absolute; right:-80px; top:-100px; width:360px; height:360px; border-radius:50%;
+    background:radial-gradient(circle,rgba(116,168,255,.28),transparent 64%);
+  }
+  .kicker{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;position:relative;z-index:1}
+  .chip,.pill{
+    display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);border-radius:999px;
+    padding:6px 11px;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--soft);
+    background:rgba(255,255,255,.045);
+  }
+  .dot{width:8px;height:8px;border-radius:99px;background:var(--good);box-shadow:0 0 18px var(--good)}
+  .dot.warn{background:var(--warn);box-shadow:0 0 18px var(--warn)}
+  .dot.bad{background:var(--bad);box-shadow:0 0 18px var(--bad)}
+  h1{font-size:clamp(38px,7vw,82px);line-height:.92;letter-spacing:-.075em;margin:0 0 18px;position:relative;z-index:1}
+  h1 .thin{font-weight:500;color:#b7c5db}
+  .sub{font-size:18px;max-width:760px;color:#c6d2e5;margin:0;position:relative;z-index:1}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px;position:relative;z-index:1}
+  .button{border:1px solid var(--line2);border-radius:14px;padding:10px 14px;color:var(--ink);background:rgba(255,255,255,.06);font-weight:800;font-size:13px;text-decoration:none}
+  .button.primary{background:linear-gradient(135deg,rgba(79,209,255,.28),rgba(167,139,250,.26));border-color:rgba(116,168,255,.5)}
+  .status-stack{display:grid;gap:14px}
+  .rail{border-radius:28px;padding:20px;background:linear-gradient(180deg,rgba(8,12,20,.88),rgba(11,16,26,.78))}
+  .rail h3,.panel h2{margin:0 0 10px;font-size:16px;letter-spacing:-.02em}
+  .rail p,.panel p{margin:0;color:var(--mut)}
+  .meter{height:8px;border-radius:99px;background:rgba(148,163,184,.14);overflow:hidden;margin:14px 0 8px}
+  .meter span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--violet));width:68%}
+  .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:18px 0 26px}
+  .stat{border-radius:var(--r);padding:18px 18px;min-height:118px}
+  .stat .l{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.11em;font-weight:800}
+  .stat .n{font-size:36px;font-weight:900;letter-spacing:-.055em;margin-top:10px;font-variant-numeric:tabular-nums}
+  .stat .s{color:var(--mut);font-size:13px;margin-top:2px}
+  .section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:34px 0 12px}
+  .section-head h2{font-size:24px;line-height:1.05;margin:0;letter-spacing:-.045em}
+  .section-head p{margin:0;color:var(--mut);max-width:620px}
+  .panel{border-radius:var(--r);padding:20px;overflow:hidden}
+  .queue-grid{display:grid;grid-template-columns:1.1fr 1.1fr .9fr;gap:14px}
+  .card{border-radius:18px;padding:16px;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02)),var(--panel2);box-shadow:none;margin:10px 0 0}
+  .card:first-child{margin-top:0}
+  .row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .title{font-weight:900;letter-spacing:-.02em}
+  .mut{color:var(--mut)} .good{color:var(--good)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+  .pill.good{border-color:rgba(72,226,155,.32);background:rgba(72,226,155,.10);color:var(--good)}
+  .pill.warn{border-color:rgba(255,209,102,.32);background:rgba(255,209,102,.10);color:var(--warn)}
+  .pill.bad{border-color:rgba(255,107,122,.32);background:rgba(255,107,122,.10);color:var(--bad)}
+  .pill.info{border-color:rgba(116,168,255,.32);background:rgba(116,168,255,.10);color:#aecdff}
+  .lineage{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .gene{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:13px 15px;min-width:140px}
+  .gene b{display:block;font-size:17px;letter-spacing:-.02em}.gene span{color:var(--mut);font-size:12px}.arrow{color:var(--mut);font-size:22px}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:680px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:900;text-transform:uppercase;letter-spacing:.08em;font-size:11px;background:rgba(255,255,255,.025)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .note{border:1px solid rgba(255,209,102,.28);background:linear-gradient(180deg,rgba(255,209,102,.095),rgba(255,209,102,.035));border-radius:18px;padding:15px 16px;color:#ffe8ac;font-size:14px}
   .loading{color:var(--mut)}
+  footer{color:var(--mut);font-size:13px;margin-top:38px;border-top:1px solid var(--line);padding-top:18px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  @media (max-width:980px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.queue-grid,.twocol{grid-template-columns:1fr}}
+  @media (max-width:560px){.wrap{padding:16px 12px 48px}.hero-main{padding:24px 20px;border-radius:24px}.grid{grid-template-columns:1fr}.section-head{display:block}.stat .n{font-size:32px}}
 </style>
 
 <div class="wrap">
-  <h1>CursiveRoot</h1>
-  <p class="sub">The shared memory of CursiveOS — a Linux performance "organism" that keeps the changes that measurably help and discards the ones that don't. This page shows what it has learned so far, in plain language.</p>
+  <section class="hero">
+    <div class="hero-main">
+      <div class="kicker">
+        <span class="chip"><span class="dot"></span> OS.0 alpha spine online</span>
+        <span class="chip"><span class="dot warn"></span> simulated rewards only</span>
+        <span class="chip">Linux-first selection truth</span>
+      </div>
+      <h1>CursiveRoot <span class="thin">nervous system</span></h1>
+      <p class="sub">A live view of CursiveOS becoming an organism: requests enter the queue, Linux daemon hosts claim work, evidence bundles return to CursiveRoot, and only verified improvements move toward trust.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="#queue">View request queue</a>
+        <a class="button" href="#evidence">Inspect evidence</a>
+        <a class="button" href="https://github.com/connormatthewdouglas/CursiveOS">CursiveOS repo</a>
+      </div>
+    </div>
+    <div class="status-stack">
+      <div class="rail">
+        <h3>Trust rail</h3>
+        <p>No payout-eligible work in this phase. The dashboard exposes simulated economics while verifier/replay/identity hardening matures.</p>
+        <div class="meter"><span style="width:42%"></span></div>
+        <p class="mono mut">stage: simulated_not_payout_eligible</p>
+      </div>
+      <div class="rail">
+        <h3>Selection rail</h3>
+        <p>Linux bare-metal data can inform OS.0. Windows/WSL stays protocol-smoke or observe-only and cannot enter selection truth.</p>
+        <div class="meter"><span style="width:68%"></span></div>
+        <p class="mono mut">scope: linux_bare_metal</p>
+      </div>
+    </div>
+  </section>
 
   <div class="grid" id="stats">
-    <div class="stat"><div class="n loading">…</div><div class="l">machines contributing</div></div>
-    <div class="stat"><div class="n loading">…</div><div class="l">measurements recorded</div></div>
-    <div class="stat"><div class="n loading">…</div><div class="l">improvements accepted</div></div>
-    <div class="stat"><div class="n loading">…</div><div class="l">cycles closed</div></div>
+    <div class="stat"><div class="l">machines</div><div class="n loading">…</div><div class="s">physical fleet</div></div>
+    <div class="stat"><div class="l">measurements</div><div class="n loading">…</div><div class="s">recorded runs</div></div>
+    <div class="stat"><div class="l">requests</div><div class="n loading">…</div><div class="s">open work orders</div></div>
+    <div class="stat"><div class="l">jobs</div><div class="n loading">…</div><div class="s">claimed/running</div></div>
+    <div class="stat"><div class="l">accepted</div><div class="n loading">…</div><div class="s">seed bundles</div></div>
   </div>
 
-  <h2>Current best configuration</h2>
+  <div class="section-head" id="queue">
+    <div><h2>OS.0 work queue</h2></div>
+    <p>Requests are explicit, Linux-scoped, and simulated-reward only. Daemons do not invent work; they claim queued screens and return raw evidence.</p>
+  </div>
+  <div class="queue-grid">
+    <div class="panel"><h2>Open requests</h2><div id="requests"><span class="loading">Loading…</span></div></div>
+    <div class="panel"><h2>Daemon jobs</h2><div id="jobs"><span class="loading">Loading…</span></div></div>
+    <div class="panel"><h2>Fleet heartbeats</h2><div id="heartbeats"><span class="loading">Loading…</span></div></div>
+  </div>
+
+  <div class="section-head">
+    <div><h2>Current best configuration</h2></div>
+    <p>The lineage remains deliberately conservative: simplification and measured memory-channel gains matter more than noisy single-host speed claims.</p>
+  </div>
   <div class="panel" id="lineage">
     <div class="lineage">
-      <div class="gene"><b>v0.8</b><span>genesis baseline</span></div>
+      <div class="gene"><b>v0.9</b><span>simplified parent</span></div>
       <div class="arrow">→</div>
-      <div class="gene" style="border-color:var(--good)"><b>v0.9 <span class="pill accepted">current</span></b><span>v0.8 minus the GPU frequency pin</span></div>
+      <div class="gene"><b>v0.11</b><span>zram + swappiness</span></div>
+      <div class="arrow">→</div>
+      <div class="gene" style="border-color:rgba(72,226,155,.55)"><b>v0.12 <span class="pill good">current</span></b><span>canonical parent baseline</span></div>
+      <div class="arrow">↯</div>
+      <div class="gene" style="border-color:rgba(255,209,102,.45)"><b>v0.12b</b><span>queued candidate</span></div>
     </div>
-    <p class="mut" style="margin:12px 0 0;font-size:14px">Why v0.9 was kept: across two machines and counterbalanced repeats it matched v0.8 on every measured axis (cold-start, network, power) while removing one invasive, inert setting — equal results, simpler and safer. The organism accepted it because it is a genuine simplification, not because it was faster.</p>
+    <p class="mut" style="margin-top:14px">v0.12 is the accepted parent stack. v0.12b tests a narrower memory-axis hypothesis: swappiness 60 → 100 with zram retained, without allowing this alpha queue to become payout truth.</p>
   </div>
 
-  <h2>Latest accepted improvement</h2>
-  <div class="panel" id="accepted"><span class="loading">Loading…</span></div>
+  <div class="twocol" id="evidence" style="margin-top:14px">
+    <div class="panel"><h2>Latest accepted bundle</h2><div id="accepted"><span class="loading">Loading…</span></div></div>
+    <div class="panel"><h2>Simulated reward</h2><div id="payout"><span class="loading">Loading…</span></div></div>
+  </div>
+  <div class="note" style="margin-top:14px">⚠ <b>Not real money.</b> Payouts are a simulation that proves the accounting machinery works before any real Bitcoin is involved. No OS.0 queue request is payout-eligible.</div>
 
-  <h2>Simulated reward</h2>
-  <div class="panel" id="payout"><span class="loading">Loading…</span></div>
-  <div class="note">⚠ <b>Not real money.</b> Payouts are a simulation that proves the economic machinery works before any real Bitcoin is involved. No one is paid real funds. "Sats" here are pretend accounting units.</div>
-
-  <h2>The fleet</h2>
+  <div class="section-head">
+    <div><h2>The fleet</h2></div>
+    <p>Physical machines are deduplicated across fingerprint aliases so the fleet count stays honest.</p>
+  </div>
   <div class="panel" id="machines"><span class="loading">Loading…</span></div>
 
-  <h2>Recent measurements</h2>
+  <div class="section-head">
+    <div><h2>Recent measurements</h2></div>
+    <p>Live benchmark rows are evidence, not marketing copy. Single-host gains stay provisional until repeated and independently confirmed.</p>
+  </div>
   <div class="panel" style="overflow-x:auto"><table id="runs"><tbody><tr><td class="loading">Loading…</td></tr></tbody></table></div>
 
-  <h2>How to read these numbers (honestly)</h2>
-  <div class="panel" style="font-size:14px">
-    <ul style="margin:0;padding-left:20px">
-      <li><b>Cold-start</b> = how fast the machine produces the first AI token after idle. Lower is better; this is the project's most reliable measurement.</li>
-      <li><b>Network</b> figures come from a <b>lab simulation (loopback)</b>, not a real internet link. On real hardware the gain is essentially "switch TCP to BBR" — real under packet loss, but not a CursiveOS invention. Treat the big percentages as lab-only.</li>
-      <li><b>Idle power</b> is the machine's package power at rest (watts). Lower is better.</li>
-      <li>A result on <b>one machine is not a fleet result</b> — gains can be hardware-specific (e.g. the cold-start win is large on the Arc desktop, ~zero on the laptop).</li>
-    </ul>
+  <div class="section-head">
+    <div><h2>Honest reading guide</h2></div>
+  </div>
+  <div class="panel">
+    <div class="queue-grid">
+      <div class="card"><div class="title">Cold-start</div><p class="mut">First-token responsiveness after idle. Lower is better; currently the strongest AI-operator UX metric.</p></div>
+      <div class="card"><div class="title">Memory pressure</div><p class="mut">Refault behavior under cgroup pressure. v0.11/v0.12 moved here because zram only matters if the kernel actually swaps.</p></div>
+      <div class="card"><div class="title">Network</div><p class="mut">Loopback lab simulation. BBR under packet loss is real, but giant percentages are lab-only unless verified on real links.</p></div>
+    </div>
   </div>
 
   <footer>
-    Live data from CursiveRoot · read-only · <span id="updated"></span><br>
-    Code: <a href="https://github.com/connormatthewdouglas/CursiveOS">CursiveOS</a> · research corpus: <a href="https://github.com/connormatthewdouglas/CursiveResearch">CursiveResearch</a>
+    <div>Live data from CursiveRoot · read-only public dashboard · <span id="updated"></span></div>
+    <div><a href="https://github.com/connormatthewdouglas/CursiveResearch">CursiveResearch</a> · <a href="https://github.com/connormatthewdouglas/CursiveOS">CursiveOS</a></div>
   </footer>
 </div>
 
@@ -96,71 +231,116 @@ const URL = "https://iovvktpuoinmjdgfxgvm.supabase.co/rest/v1";
 const KEY = "sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn";
 const H = { apikey: KEY, Authorization: "Bearer " + KEY };
 const q = (path) => fetch(`${URL}/${path}`, { headers: H }).then(r => r.ok ? r.json() : []);
-const esc = s => String(s ?? "").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
-const pct = v => v==null ? "—" : (v>=0?"+":"") + Number(v).toFixed(1) + "%";
-const when = s => s ? new Date(s).toLocaleString() : "";
+const esc = s => String(s ?? "").replace(/[<>&"']/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"}[c]));
+const short = (s,n=12) => String(s ?? "").slice(0,n) || "—";
+const pct = v => v==null ? "—" : (Number(v)>=0?"+":"") + Number(v).toFixed(1) + "%";
+const num = v => v==null ? "—" : Number(v).toLocaleString();
+const when = s => s ? new Date(s).toLocaleString() : "—";
+const statusClass = s => /complete|accepted|open/.test(String(s)) ? "good" : /fail|reject|cancel|ineligible/.test(String(s)) ? "bad" : "warn";
+
+function cardEmpty(text){ return `<div class="card"><p class="mut">${esc(text)}</p></div>`; }
+function variantLabel(id){ return String(id ?? "").replace(/^candidate-/,"").replace(/^parent-baseline-/,"") || "—"; }
+
+function renderRequests(requests){
+  const open = requests.filter(r => r.status === "open").slice(0,5);
+  if (!open.length) return cardEmpty("No open requests. The queue is idle or the OS.0 migration has not been applied yet.");
+  return open.map(r => `<div class="card">
+    <div class="row"><div><div class="title">${esc(variantLabel(r.parent_variant_id))} → ${esc(variantLabel(r.candidate_variant_id))}</div><div class="mono mut">${esc(r.request_key || r.request_id)}</div></div><span class="pill ${statusClass(r.status)}">${esc(r.status)}</span></div>
+    <p class="mut" style="margin-top:10px">${esc(r.notes || "Explicit screen request")}</p>
+    <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap"><span class="pill info">${esc(r.selection_scope)}</span><span class="pill warn">${esc(r.trust_scope)}</span><span class="pill info">cycle ${esc(r.cycle_id)}</span></div>
+  </div>`).join("");
+}
+
+function renderJobs(jobs){
+  const rows = jobs.slice(0,6);
+  if (!rows.length) return cardEmpty("No daemon jobs recorded yet. Once the laptop daemon claims a request, it will appear here.");
+  return rows.map(j => `<div class="card">
+    <div class="row"><div><div class="title">job ${esc(short(j.job_id,8))}</div><div class="mono mut">machine ${esc(short(j.machine_id,12))}</div></div><span class="pill ${statusClass(j.status)}">${esc(j.status)}</span></div>
+    <p class="mut" style="margin-top:10px">bundle: <span class="mono">${esc(short(j.result_bundle_hash,16))}</span></p>
+    <p class="mut mono" style="margin-top:6px">heartbeat ${esc(when(j.last_heartbeat_at))}</p>
+  </div>`).join("");
+}
+
+function renderHeartbeats(caps){
+  const rows = caps.slice(0,5);
+  if (!rows.length) return cardEmpty("No daemon capability heartbeats yet. Capability probes are local until the OS.0 migration is applied.");
+  return rows.map(c => `<div class="card">
+    <div class="row"><div><div class="title">${esc(short(c.machine_id,14))}</div><div class="mut">${esc(c.os_name || c.platform || "linux host")}</div></div><span class="pill info">${esc(c.daemon_version || "daemon")}</span></div>
+    <p class="mut" style="margin-top:10px">${esc(c.cpu || "unknown CPU")}</p>
+    <p class="mut mono" style="margin-top:6px">last seen ${esc(when(c.last_seen_at))}</p>
+  </div>`).join("");
+}
 
 async function main(){
-  const [runs, machines, accepted, payouts, aliases] = await Promise.all([
-    q("runs?select=machine_id,preset_version,network_delta_pct,coldstart_delta_pct,power_delta_w,created_at&order=created_at.desc&limit=20"),
+  const [runs, machines, accepted, payouts, aliases, requests, jobs, caps, allRuns] = await Promise.all([
+    q("runs?select=machine_id,preset_version,network_delta_pct,coldstart_delta_pct,power_delta_w,created_at&order=created_at.desc&limit=24"),
     q("machines?select=machine_id,cpu,gpu,os&order=created_at.desc"),
     q("seed_bundles?decision=eq.accepted&select=variant_id,confidence,fitness_score,reason,machine_id,created_at&order=created_at.desc&limit=5"),
     q("seed_payout_reports?select=cycle_id,simulated_revenue_sats,contributor_count,report,created_at&order=created_at.desc&limit=5"),
     q("machine_aliases?select=alias,machine_id"),
+    q("measurement_requests?select=request_id,request_key,status,parent_variant_id,candidate_variant_id,cycle_id,selection_scope,trust_scope,notes,created_at&order=priority.desc,created_at.asc&limit=20"),
+    q("measurement_jobs?select=job_id,request_id,machine_id,status,result_bundle_hash,last_heartbeat_at,claimed_at,finished_at&order=claimed_at.desc&limit=20"),
+    q("machine_capabilities?select=machine_id,daemon_version,platform,os_name,kernel,cpu,gpu,selection_scopes,last_seen_at&order=last_seen_at.desc&limit=20"),
+    q("runs?select=id")
   ]);
 
-  // Collapse hardware fingerprints (rebuilds / fingerprint-scheme changes) to
-  // their canonical PHYSICAL machine, so the count is honest (not inflated).
-  const aliasTo = Object.fromEntries(aliases.map(a => [a.alias, a.machine_id]));
-  const aliasKeys = new Set(aliases.map(a => a.alias));
+  const aliasTo = Object.fromEntries((aliases || []).map(a => [a.alias, a.machine_id]));
+  const aliasKeys = new Set((aliases || []).map(a => a.alias));
   const canon = id => aliasTo[id] || id || "";
-  const physical = machines.filter(m => !aliasKeys.has(m.machine_id));
-  const fpCount = id => 1 + aliases.filter(a => a.machine_id === id).length;
+  const physical = (machines || []).filter(m => !aliasKeys.has(m.machine_id));
+  const fpCount = id => 1 + (aliases || []).filter(a => a.machine_id === id).length;
+  const openRequests = (requests || []).filter(r => r.status === "open").length;
+  const activeJobs = (jobs || []).filter(j => ["claimed","running","planned"].includes(j.status)).length;
 
-  // stats
-  const allRuns = await q("runs?select=id");
   const cells = document.querySelectorAll("#stats .n");
-  cells[0].textContent = physical.length;
-  cells[1].textContent = allRuns.length;
-  cells[2].textContent = accepted.length;
-  cells[3].textContent = payouts.length;
-  cells.forEach(c=>c.classList.remove("loading"));
+  [physical.length, (allRuns || []).length, openRequests, activeJobs, (accepted || []).length].forEach((value, i) => {
+    cells[i].textContent = num(value);
+    cells[i].classList.remove("loading");
+  });
 
-  // accepted
-  const a = accepted[0];
+  document.getElementById("requests").innerHTML = renderRequests(requests || []);
+  document.getElementById("jobs").innerHTML = renderJobs(jobs || []);
+  document.getElementById("heartbeats").innerHTML = renderHeartbeats(caps || []);
+
+  const a = (accepted || [])[0];
   document.getElementById("accepted").innerHTML = a ? `
-    <div><span class="pill accepted">accepted</span> <b>${esc(a.variant_id)}</b></div>
-    <p style="margin:10px 0 0">${esc(a.reason)}</p>
-    <p class="mut" style="margin:8px 0 0;font-size:14px">confidence ${Number(a.confidence).toFixed(2)} · fitness ${Number(a.fitness_score).toFixed(3)} · measured on ${esc(a.machine_id)} · ${when(a.created_at)}</p>`
-    : `<span class="mut">No accepted improvements yet — the organism is still screening candidates.</span>`;
+    <div class="row"><div><div class="title">${esc(a.variant_id)}</div><div class="mono mut">${esc(when(a.created_at))}</div></div><span class="pill good">accepted</span></div>
+    <p style="margin-top:10px">${esc(a.reason)}</p>
+    <p class="mut" style="margin-top:8px">confidence ${Number(a.confidence).toFixed(2)} · fitness ${Number(a.fitness_score).toFixed(3)} · machine ${esc(short(a.machine_id,16))}</p>`
+    : `<p class="mut">No accepted improvements yet — the organism is still screening candidates.</p>`;
 
-  // payout
-  const p = payouts[0];
+  const p = (payouts || [])[0];
   let contrib = "";
-  try { const cs = (p.report.contributors)||[]; contrib = cs.map(c=>`${esc(c.contributor_id)}: ${c.total_payout_sats} sats`).join(" · "); } catch(e){}
+  try { contrib = ((p && p.report && p.report.contributors) || []).map(c => `${esc(c.contributor_id)}: ${num(c.total_payout_sats)} sats`).join(" · "); } catch(e){}
   document.getElementById("payout").innerHTML = p ? `
-    <div><b>${Number(p.simulated_revenue_sats).toLocaleString()}</b> simulated sats · cycle ${esc(p.cycle_id)} · ${p.contributor_count} contributor(s)</div>
-    ${contrib?`<p class="mut" style="margin:8px 0 0;font-size:14px">${contrib}</p>`:""}`
-    : `<span class="mut">No cycle has closed yet.</span>`;
+    <div class="title">${num(p.simulated_revenue_sats)} simulated sats</div>
+    <p class="mut" style="margin-top:8px">cycle ${esc(p.cycle_id)} · ${esc(p.contributor_count)} contributor(s) · ${esc(when(p.created_at))}</p>
+    ${contrib ? `<p class="mut" style="margin-top:8px">${contrib}</p>` : ""}`
+    : `<p class="mut">No simulated cycle has closed yet.</p>`;
 
-  // machines
-  document.getElementById("machines").innerHTML = physical.length ? `<table><thead><tr><th>physical machine</th><th>CPU</th><th>GPU</th><th class="num">fingerprints</th></tr></thead><tbody>${
-    physical.map(m=>`<tr><td class="mut">${esc((m.machine_id||"").slice(0,16))}</td><td>${esc(m.cpu)}</td><td>${esc(m.gpu)}</td><td class="num mut">${fpCount(m.machine_id)}</td></tr>`).join("")
-  }</tbody></table><p class="mut" style="margin:10px 0 0;font-size:13px">${physical.length} physical machines have contributed. "Fingerprints" counts identity changes across GPU rebuilds and fingerprint-scheme updates — collapsed here so the count is honest.</p>` : `<span class="mut">No machines yet.</span>`;
+  document.getElementById("machines").innerHTML = physical.length ? `<table><thead><tr><th>physical machine</th><th>CPU</th><th>GPU</th><th>OS</th><th class="num">fingerprints</th></tr></thead><tbody>${
+    physical.map(m => `<tr><td class="mono mut">${esc(short(m.machine_id,16))}</td><td>${esc(m.cpu)}</td><td>${esc(m.gpu)}</td><td>${esc(m.os)}</td><td class="num mut">${fpCount(m.machine_id)}</td></tr>`).join("")
+  }</tbody></table>` : `<p class="mut">No machines yet.</p>`;
 
-  // runs
-  document.getElementById("runs").innerHTML = `<thead><tr><th>when</th><th>machine</th><th>config</th><th class="num">cold-start</th><th class="num">network (lab)</th><th class="num">power</th></tr></thead><tbody>${
-    runs.map(r=>`<tr>
-      <td class="mut">${when(r.created_at).split(",")[0]}</td>
-      <td class="mut">${esc(canon(r.machine_id).slice(0,12))}</td>
+  document.getElementById("runs").innerHTML = `<thead><tr><th>when</th><th>machine</th><th>config</th><th class="num">cold-start</th><th class="num">network lab</th><th class="num">power</th></tr></thead><tbody>${
+    (runs || []).map(r => `<tr>
+      <td class="mut">${esc(when(r.created_at).split(",")[0])}</td>
+      <td class="mono mut">${esc(short(canon(r.machine_id),12))}</td>
       <td>${esc(r.preset_version)}</td>
-      <td class="num ${r.coldstart_delta_pct<0?'good':''}">${pct(r.coldstart_delta_pct)}</td>
-      <td class="num">${pct(r.network_delta_pct)}</td>
-      <td class="num">${r.power_delta_w==null?"—":(r.power_delta_w>0?"+":"")+Number(r.power_delta_w).toFixed(1)+"W"}</td>
+      <td class="num ${r.coldstart_delta_pct < 0 ? "good" : ""}">${esc(pct(r.coldstart_delta_pct))}</td>
+      <td class="num">${esc(pct(r.network_delta_pct))}</td>
+      <td class="num">${r.power_delta_w == null ? "—" : esc((Number(r.power_delta_w)>0?"+":"") + Number(r.power_delta_w).toFixed(1) + "W")}</td>
     </tr>`).join("")
   }</tbody>`;
 
   document.getElementById("updated").textContent = "updated " + new Date().toLocaleString();
 }
-main().catch(e => { document.getElementById("accepted").textContent = "Could not load live data: " + e; });
+
+main().catch(e => {
+  for (const id of ["requests","jobs","heartbeats","accepted","payout","machines"]) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `<p class="bad">Could not load live data: ${esc(e && e.message ? e.message : e)}</p>`;
+  }
+});
 </script>
+</html>

@@ -1,0 +1,83 @@
+name: Apply CursiveRoot migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_file:
+        description: "Migration file to apply (default: changed SQL files on this ref)"
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/*.sql"
+      - ".github/workflows/apply-migrations.yml"
+
+concurrency:
+  group: cursiveroot-apply-migrations
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Verify database secret
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL" || { echo "::error::Missing secret SUPABASE_DB_URL"; exit 1; }
+
+      - name: Install PostgreSQL client
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Apply migration files
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          INPUT_MIGRATION_FILE: ${{ inputs.migration_file }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          export PGSSLMODE=require
+
+          if [ -n "${INPUT_MIGRATION_FILE:-}" ]; then
+            files="$INPUT_MIGRATION_FILE"
+          elif [ "${BEFORE_SHA:-}" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE_SHA:-}" 2>/dev/null; then
+            files="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA" -- 'supabase/migrations/*.sql' | sort)"
+          else
+            files="$(git diff --name-only HEAD~1 HEAD -- 'supabase/migrations/*.sql' | sort)"
+          fi
+
+          if [ -z "$files" ]; then
+            echo "No migration files selected."
+            exit 0
+          fi
+
+          for f in $files; do
+            test -f "$f" || { echo "::error::Migration file not found: $f"; exit 1; }
+            echo "Applying $f"
+            psql "$SUPABASE_DB_URL" --set=ON_ERROR_STOP=1 --file="$f"
+          done
+
+      - name: Verify OS.0 queue schema
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          export PGSSLMODE=require
+          psql "$SUPABASE_DB_URL" --set=ON_ERROR_STOP=1 --tuples-only --no-align <<'SQL'
+          select 'machine_capabilities=' || count(*) from information_schema.tables where table_schema='public' and table_name='machine_capabilities';
+          select 'measurement_requests=' || count(*) from information_schema.tables where table_schema='public' and table_name='measurement_requests';
+          select 'measurement_jobs=' || count(*) from information_schema.tables where table_schema='public' and table_name='measurement_jobs';
+          select 'seed_request_count=' || count(*) from public.measurement_requests where request_key='os0-alpha-v0.12-vs-v0.12b-swappiness-normal';
+          SQL

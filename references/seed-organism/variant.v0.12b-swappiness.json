@@ -1,0 +1,15 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.12b-swappiness",
+  "parent_variant_id": "parent-baseline-v0.12",
+  "contributor_id": "local-founder",
+  "commit_ref": "candidate-v0.12b-swappiness",
+  "preset_version": "v0.12b-swappiness",
+  "preset_path": "presets/cursiveos-presets-v0.12b-swappiness.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "knobs_removed_vs_parent": 0,
+  "declared_scope": "Cycle-4 OS.0 queue seed candidate: canonical v0.12 stack with zram retained and vm.swappiness raised from 60 to 100.",
+  "hypothesis": "More aggressive reclaim into zram may improve the memory-pressure refault channel on memory-constrained Linux hosts without regressing cold-start, sustained inference, network, idle/load power, or safe revert behavior.",
+  "rollback_method": "Preset delegates apply/undo/dry-run to the v0.11 zram+swappiness stack with CURSIVEOS_SWAPPINESS=100; harness reverts at run end."
+}
