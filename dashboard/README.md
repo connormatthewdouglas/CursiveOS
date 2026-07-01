@@ -1,8 +1,9 @@
 # CursiveRoot Dashboard
 
 A single static page (`index.html`) that shows the organism's live state — current
-config, lineage, latest accepted improvement, simulated reward, the fleet, and
-recent measurements — in plain language for a non-technical reader.
+config, lineage, OS.0 request queue, daemon jobs, contribution history, latest
+accepted improvement, simulated reward, the fleet, and recent measurements — in
+plain language for a non-technical reader.
 
 ## Design (deliberately minimal)
 - **No backend, no build step, no framework.** One HTML file with inline CSS + vanilla JS.

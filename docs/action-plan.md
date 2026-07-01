@@ -100,6 +100,8 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
 - This replaces founder-picked/manual screens as the default workflow.
 
 ### 2. Add a dashboard request/contribution panel
+- **Panel v1 shipped 2026-07-01:** dashboard renders recent requests (including completed ones), daemon jobs joined to request/candidate metadata, per-machine contribution history, alias-collapsed machine ids, and placeholder/simulated reward labels.
+- Remaining before broad external operator use: authenticated/bidirectional request creation, explicit operator install/run CTA, and trust-hardened write policies.
 - Render open requests, per-machine contribution history, lineage, and placeholder
   rewards from CursiveRoot.
 - Make the dashboard bidirectional enough that an external operator can see what

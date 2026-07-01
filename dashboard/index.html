@@ -166,11 +166,12 @@
 
   <div class="section-head" id="queue">
     <div><h2>OS.0 work queue</h2></div>
-    <p>Requests are explicit, Linux-scoped, and simulated-reward only. Daemons do not invent work; they claim queued screens and return raw evidence.</p>
+    <p>Requests are explicit, Linux-scoped, and simulated-reward only. Daemons do not invent work; they claim queued screens and return raw evidence. Completed requests stay visible so an operator can see what the organism asked for and what their machine contributed.</p>
   </div>
   <div class="queue-grid">
-    <div class="panel"><h2>Open requests</h2><div id="requests"><span class="loading">Loading…</span></div></div>
+    <div class="panel"><h2>Requests</h2><div id="requests"><span class="loading">Loading…</span></div></div>
     <div class="panel"><h2>Daemon jobs</h2><div id="jobs"><span class="loading">Loading…</span></div></div>
+    <div class="panel"><h2>Contribution history</h2><div id="contributions"><span class="loading">Loading…</span></div></div>
     <div class="panel"><h2>Fleet heartbeats</h2><div id="heartbeats"><span class="loading">Loading…</span></div></div>
   </div>
 
@@ -186,9 +187,9 @@
       <div class="arrow">→</div>
       <div class="gene" style="border-color:rgba(72,226,155,.55)"><b>v0.12 <span class="pill good">current</span></b><span>canonical parent baseline</span></div>
       <div class="arrow">↯</div>
-      <div class="gene" style="border-color:rgba(255,209,102,.45)"><b>v0.12b</b><span>queued candidate</span></div>
+      <div class="gene" style="border-color:rgba(255,209,102,.45)"><b>v0.12b</b><span>alpha request candidate</span></div>
     </div>
-    <p class="mut" style="margin-top:14px">v0.12 is the accepted parent stack. v0.12b tests a narrower memory-axis hypothesis: swappiness 60 → 100 with zram retained, without allowing this alpha queue to become payout truth.</p>
+    <p class="mut" style="margin-top:14px">v0.12 is the accepted parent stack. v0.12b is an OS.0 alpha queue seed that exercises the request → daemon → evidence path for a narrower memory-axis hypothesis; this does not make alpha queue output payout truth.</p>
   </div>
 
   <div class="twocol" id="evidence" style="margin-top:14px">
@@ -241,26 +242,71 @@ const statusClass = s => /complete|accepted|open/.test(String(s)) ? "good" : /fa
 function cardEmpty(text){ return `<div class="card"><p class="mut">${esc(text)}</p></div>`; }
 function variantLabel(id){ return String(id ?? "").replace(/^candidate-/,"").replace(/^parent-baseline-/,"") || "—"; }
 
+function statusRank(status){
+  return ({open:0, claimed:1, running:2, planned:3, complete:4, failed:5, upload_failed:5, ineligible:5, cancelled:6})[status] ?? 9;
+}
+function rewardLabel(value){
+  const sats = Number(value || 0);
+  return sats > 0 ? `${num(sats)} placeholder sats` : "simulated reward only";
+}
+function requestMap(requests){ return Object.fromEntries((requests || []).map(r => [r.request_id, r])); }
+function requestSort(a,b){
+  const rank = statusRank(a.status) - statusRank(b.status);
+  if (rank) return rank;
+  return isoMs(b.updated_at || b.created_at) - isoMs(a.updated_at || a.created_at);
+}
+
 function renderRequests(requests){
-  const open = requests.filter(r => r.status === "open").slice(0,5);
-  if (!open.length) return cardEmpty("No open requests. The queue is idle or the OS.0 migration has not been applied yet.");
-  return open.map(r => `<div class="card">
+  const rows = [...(requests || [])].sort(requestSort).slice(0,6);
+  if (!rows.length) return cardEmpty("No measurement requests yet. The queue is idle or the OS.0 migration has not been applied yet.");
+  return rows.map(r => `<div class="card">
     <div class="row"><div><div class="title">${esc(variantLabel(r.parent_variant_id))} → ${esc(variantLabel(r.candidate_variant_id))}</div><div class="mono mut">${esc(r.request_key || r.request_id)}</div></div><span class="pill ${statusClass(r.status)}">${esc(r.status)}</span></div>
     <p class="mut" style="margin-top:10px">${esc(r.notes || "Explicit screen request")}</p>
-    <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap"><span class="pill info">${esc(r.selection_scope)}</span><span class="pill warn">${esc(r.trust_scope)}</span><span class="pill info">cycle ${esc(r.cycle_id)}</span></div>
+    <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap"><span class="pill info">${esc(r.selection_scope)}</span><span class="pill warn">${esc(r.trust_scope)}</span><span class="pill info">cycle ${esc(r.cycle_id)}</span><span class="pill warn">${esc(rewardLabel(r.reward_sats_placeholder))}</span></div>
+    <p class="mut mono" style="margin-top:8px">requested by ${esc(r.requested_by || "organism")} · updated ${esc(when(r.updated_at || r.created_at))}</p>
   </div>`).join("");
 }
 
-function renderJobs(jobs, canon){
+function renderJobs(jobs, canon, requests=[]){
+  const reqs = requestMap(requests);
   const rows = jobs.slice(0,6);
-  if (!rows.length) return cardEmpty("No daemon jobs recorded yet. Once the laptop daemon claims a request, it will appear here.");
+  if (!rows.length) return cardEmpty("No daemon jobs recorded yet. Once a daemon claims a request, it will appear here.");
   return rows.map(j => {
     const machine = canon(j.machine_id);
     const aliasNote = machine && j.machine_id && machine !== j.machine_id ? ` <span class="mut">alias ${esc(short(j.machine_id,8))}</span>` : "";
+    const req = reqs[j.request_id] || {};
+    const title = req.candidate_variant_id ? `${variantLabel(req.parent_variant_id)} → ${variantLabel(req.candidate_variant_id)}` : `job ${short(j.job_id,8)}`;
+    const detail = j.failure_reason ? `failure: ${j.failure_reason}` : `bundle: ${short(j.result_bundle_hash,16)}`;
     return `<div class="card">
-    <div class="row"><div><div class="title">job ${esc(short(j.job_id,8))}</div><div class="mono mut">machine ${esc(short(machine || j.machine_id,12))}${aliasNote}</div></div><span class="pill ${statusClass(j.status)}">${esc(j.status)}</span></div>
-    <p class="mut" style="margin-top:10px">bundle: <span class="mono">${esc(short(j.result_bundle_hash,16))}</span></p>
+    <div class="row"><div><div class="title">${esc(title)}</div><div class="mono mut">machine ${esc(short(machine || j.machine_id,12))}${aliasNote}</div></div><span class="pill ${statusClass(j.status)}">${esc(j.status)}</span></div>
+    <p class="mut" style="margin-top:10px">${esc(detail)}</p>
     <p class="mut mono" style="margin-top:6px">heartbeat ${esc(when(j.last_heartbeat_at))}</p>
+  </div>`;
+  }).join("");
+}
+
+function contributionRows(jobs, requests, canon){
+  const reqs = requestMap(requests);
+  return (jobs || []).map(j => {
+    const req = reqs[j.request_id] || {};
+    const machine = canon(j.machine_id);
+    return { job: j, request: req, canonical_machine_id: machine || j.machine_id || "", alias_machine_id: machine && j.machine_id && machine !== j.machine_id ? j.machine_id : null };
+  }).sort((a,b) => isoMs(b.job.finished_at || b.job.claimed_at) - isoMs(a.job.finished_at || a.job.claimed_at));
+}
+
+function renderContributions(jobs, requests, canon){
+  const rows = contributionRows(jobs, requests, canon).slice(0,6);
+  if (!rows.length) return cardEmpty("No contributions yet. When a daemon plans, completes, or rejects a request, this panel will join the job back to the request.");
+  return rows.map(row => {
+    const j = row.job;
+    const r = row.request;
+    const aliasNote = row.alias_machine_id ? ` <span class="mut">alias ${esc(short(row.alias_machine_id,8))}</span>` : "";
+    const variant = r.candidate_variant_id ? `${variantLabel(r.parent_variant_id)} → ${variantLabel(r.candidate_variant_id)}` : `request ${short(j.request_id,8)}`;
+    const evidence = j.result_bundle_hash ? `bundle ${short(j.result_bundle_hash,16)}` : (j.failure_reason ? `failure ${j.failure_reason}` : "no bundle yet");
+    return `<div class="card">
+    <div class="row"><div><div class="title">${esc(variant)}</div><div class="mono mut">machine ${esc(short(row.canonical_machine_id,12))}${aliasNote}</div></div><span class="pill ${statusClass(j.status)}">${esc(j.status)}</span></div>
+    <p class="mut" style="margin-top:10px">${esc(evidence)} · ${esc(rewardLabel(r.reward_sats_placeholder))}</p>
+    <p class="mut mono" style="margin-top:6px">claimed ${esc(when(j.claimed_at))} · finished ${esc(when(j.finished_at))}</p>
   </div>`;
   }).join("");
 }
@@ -319,8 +365,8 @@ async function main(){
     q("seed_bundles?decision=eq.accepted&select=variant_id,confidence,fitness_score,reason,machine_id,created_at&order=created_at.desc&limit=5"),
     q("seed_payout_reports?select=cycle_id,simulated_revenue_sats,contributor_count,report,created_at&order=created_at.desc&limit=5"),
     q("machine_aliases?select=alias,machine_id"),
-    q("measurement_requests?select=request_id,request_key,status,parent_variant_id,candidate_variant_id,cycle_id,selection_scope,trust_scope,notes,created_at&order=priority.desc,created_at.asc&limit=20"),
-    q("measurement_jobs?select=job_id,request_id,machine_id,status,result_bundle_hash,last_heartbeat_at,claimed_at,finished_at&order=claimed_at.desc&limit=20"),
+    q("measurement_requests?select=request_id,request_key,status,parent_variant_id,candidate_variant_id,cycle_id,selection_scope,trust_scope,reward_sats_placeholder,requested_by,notes,created_at,updated_at&order=priority.desc,created_at.asc&limit=20"),
+    q("measurement_jobs?select=job_id,request_id,machine_id,status,result_bundle_hash,result_summary,failure_reason,claimed_at,started_at,finished_at,last_heartbeat_at&order=claimed_at.desc&limit=20"),
     q("machine_capabilities?select=machine_id,daemon_version,platform,os_name,kernel,cpu,gpu,selection_scopes,last_seen_at&order=last_seen_at.desc&limit=20"),
     q("runs?select=id")
   ]);
@@ -339,7 +385,8 @@ async function main(){
   });
 
   document.getElementById("requests").innerHTML = renderRequests(requests || []);
-  document.getElementById("jobs").innerHTML = renderJobs(jobs || [], canon);
+  document.getElementById("jobs").innerHTML = renderJobs(jobs || [], canon, requests || []);
+  document.getElementById("contributions").innerHTML = renderContributions(jobs || [], requests || [], canon);
   document.getElementById("heartbeats").innerHTML = renderHeartbeats(canonicalCaps);
 
   const a = (accepted || [])[0];
@@ -377,7 +424,7 @@ async function main(){
 }
 
 main().catch(e => {
-  for (const id of ["requests","jobs","heartbeats","accepted","payout","machines"]) {
+  for (const id of ["requests","jobs","contributions","heartbeats","accepted","payout","machines"]) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = `<p class="bad">Could not load live data: ${esc(e && e.message ? e.message : e)}</p>`;
   }

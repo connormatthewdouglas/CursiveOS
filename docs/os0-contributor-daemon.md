@@ -27,7 +27,8 @@ Windows/WSL probes may test protocol plumbing later, but they must not enter Lin
 - `references/seed-organism/variant.v0.12b-swappiness.json`
   - explicit candidate metadata for the first OS.0 queue seed
 - `dashboard/index.html`
-  - polished static dashboard with OS.0 queue, jobs, heartbeats, evidence, fleet, and simulated reward sections
+  - polished static dashboard with OS.0 queue, jobs, contribution history, heartbeats, evidence, fleet, and simulated reward sections
+  - closed requests remain visible and daemon jobs are joined back to their request/candidate/reward metadata so an operator can see both what the organism asked for and what their machine contributed
 
 ## Local dry-run
 
