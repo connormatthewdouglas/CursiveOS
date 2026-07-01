@@ -62,8 +62,10 @@ The V verifier-hardening pass extends H2*: fabricated evidence is rejected by
 raw-artifact recompute, cross-state replays by a CursiveRoot/global fingerprint
 index, parsimony overclaims by invariant gates, and funded confirmation-Sybil
 patterns by independent-aggregation policy. Honest noisy/weird-hardware controls
-are accepted or held inconclusive rather than fraud-rejected, and real BTC/reward
-remains simulated/gated.
+are accepted or held inconclusive rather than fraud-rejected. The first OS.0 DB
+trust spine now stores signed identity keys, raw-artifact replay pointers, and
+trust evaluations in CursiveRoot. Real BTC/reward remains simulated/gated until
+production Sybil resistance exists.
 
 To run an explicit historical screen on a Linux box, name the candidate:
 
@@ -220,7 +222,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Two-year claim window.** Accruals must be claimed within two years or redistribute to active claimants. Lifetime fitness itself is permanent.
 - **Forks inherit obligations.** The lifetime ledger is Bitcoin-anchored; forks that use the genome owe the same payments to the same contributors.
 
-**Current status (June 26, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 has **2 accepted variants** (v0.9c cycle 1, v0.11 cycle 3) with simulated payout reports. Parent preset v0.12. Harness v1.4.5 with memory channel integrated. Hub API remains older MVP scaffolding. Public insert/read must be hardened before broader testing.
+**Current status (July 1, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 has **2 accepted variants** (v0.9c cycle 1, v0.11 cycle 3) with simulated payout reports. Parent preset v0.12. Harness v1.4.5 with memory channel integrated. CursiveRoot now includes the OS.0 request/job queue and trust-spine tables; public-alpha write paths remain simulated/not payout eligible and must be auth-hardened before broader testing.
 
 ---
 
@@ -234,6 +236,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Done** → CursiveRoot: live hardware/performance database
 - **Done** → Decision-grade CursiveRoot analyzer: cohort signal, organism state, and data hygiene reporting
 - **Done** → V verifier-hardening: raw-artifact recompute, signed local identity, global replay index, independent aggregation policy, D-funded rejection, and H false-positive controls
+- **Done** → OS.0 trust spine v1: CursiveRoot tables for identity keys, raw-artifact index, and trust evaluations with `payout_eligible` hard-disabled
 - **Done** → v3.3 economic architecture specified (white paper v2.4)
 - **Done** → Agent architecture specified (measurement daemon + natural-language shell)
 - **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)

@@ -39,7 +39,7 @@
 - **G1 — Contributor runtime (daemon). KEYSTONE.** A process that lives on any contributor machine and autonomously: pulls "what should I measure" → runs the screen via the existing harness → uploads → reverts, no SSH/agent babysitting. Embryos exist (`seed-session-linux-test.sh`, `tools/rig-smoke.sh`); productize into an unattended, restartable daemon. Everything else hangs off this.
 - **G2 — Requests / job queue in CursiveRoot. (build with G1).** A table the organism writes ("need N confirmations of candidate X on hardware-class Y") and the daemon + dashboard read. This one object unifies *interaction*, *dashboard*, and future *BTC bounties* into a single coordination spine instead of three separate problems. Makes contributor work non-redundant.
 - **G3 — Autonomous proposer.** Wire `tools/qd_organism.py` (QD/MAP-Elites simulator, already built) to emit real candidate presets into the G2 queue, so the next variant isn't bottlenecked on founder imagination. This is the "self" in self-improvement.
-- **G4 — Trust / independence layer.** Productize the V local trust model: immutable raw-artifact recomputation, signed machine/session identity, global accepted-fingerprint replay index, CursiveRoot-owned independent aggregation, hardware/wallet independence, and immune/anomaly sensors. V rejects fabricated evidence, global replays, parsimony overclaims, and funded confirmation-Sybil derivation patterns. **Hard gate in front of money** — believing data from a machine we don't control.
+- **G4 — Trust / independence layer.** Productize the V local trust model: immutable raw-artifact recomputation, signed machine/session identity, global accepted-fingerprint replay index, CursiveRoot-owned independent aggregation, hardware/wallet independence, and immune/anomaly sensors. V rejects fabricated evidence, global replays, parsimony overclaims, and funded confirmation-Sybil derivation patterns. **Sprint 3 shipped the first CursiveRoot DB trust spine** (`os0_identity_keys`, `os0_raw_artifact_index`, `os0_trust_evaluations`) while keeping payout eligibility hard-disabled. Hardware/wallet independence and production aggregation remain the hard gate in front of money.
 - **G5 — Incentive + interface.**
   - **Dashboard → bidirectional:** render the request queue, per-machine lineage, contributions, and placeholder rewards — not just read-only state. (Addresses the "how does a user feed the organism" gap directly.)
   - **BTC payout — gated by G4.** Real (even tiny) payout cannot ship before Sybil detection exists, or it just funds fake benchmark farms. Order is: trust, *then* money.
@@ -69,10 +69,13 @@
 
 Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bundles** and **2 simulated payout reports** (cycles 1 and 3). The seed organism closes variant → measure → gate → ledger → simulated payout → inheritance on founder rigs. Dashboard: https://connormatthewdouglas.github.io/CursiveOS/
 
-**CursiveRoot status at June 26, 2026:**
+**CursiveRoot status at July 1, 2026:**
 - Accepted bundles: v0.9c-cpu-retained (cycle 1), v0.11-zram-swappiness (cycle 3).
 - Harness v1.4.5 uploads runs with memory columns + detail bundles.
-- Public insert/read policy acceptable for controlled Phase 0 only; harden before external rollout.
+- Payout reports remain simulated/not real money.
+- OS.0 request/job queue tables and trust-spine tables are live; trust rows remain
+  simulated/not payout eligible pending auth, wallet/hardware independence, and
+  production aggregation hardening.
 
 **Infrastructure status at June 10, 2026:**
 - **Data durability incident:** the free-tier auto-pause + resume left CursiveRoot looking empty for 1–2 hours before the async restore completed. A daily encrypted backup + keep-alive GitHub Action now prevents the pause and keeps independent backups. See `docs/specs/cursiveroot-data-durability-v1.md`. ⚠️ Requires two repo secrets (`SUPABASE_DB_URL`, `BACKUP_PASSPHRASE`) — not yet configured.
@@ -108,10 +111,16 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
   the organism needs and what their machine contributed.
 
 ### 3. Trust / independence layer before money
+- **Trust spine v1 shipped 2026-07-01:** CursiveRoot stores signed identity keys,
+  raw-artifact replay pointers, and local V trust evaluations in
+  `os0_identity_keys`, `os0_raw_artifact_index`, and `os0_trust_evaluations`.
+  Seed bundle upload writes those rows alongside `seed_bundles`; `payout_eligible`
+  is constrained false at the database layer.
 - Replace founder-attested `--confirmations N` with CursiveRoot-owned
   independent aggregation over signed identities and immutable raw artifacts.
-- Promote the V local/global replay index and funded-adversary derivation checks
-  into the production CursiveRoot database and key/wallet/hardware model.
+- Continue promoting the V local/global replay index and funded-adversary
+  derivation checks into production CursiveRoot aggregation plus the
+  key/wallet/hardware model.
 - Track hardware/wallet independence and anomaly/immune signals before any real
   BTC payout path is enabled.
 - BTC payout remains simulated/placeholder until Sybil resistance exists.

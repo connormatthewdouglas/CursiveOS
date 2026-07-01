@@ -17,7 +17,8 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **V verifier hardening (2026-06-30):** `tools/exp_adversarial_tester.py` now reports A/B/C/D-funded rejected by named gates, with Mode H honest controls accepted or held inconclusive rather than fraud-rejected. See `docs/experiments/V-verifier-hardening-results.md` and `.json`.
 - **OS.0 identity contract (2026-07-01):** wrapper + contributor daemon canonical machine ids are `sha256(HW_ID_TUPLE + "\\n")[:16]` (`fingerprint_version=2`). See `docs/os0-machine-identity-contract.md`; dashboard tests collapse aliases and count only `claimed/running` daemon jobs as active.
 - **OS.0 dashboard contribution panel (2026-07-01):** dashboard keeps completed requests visible, joins jobs back to request/candidate/reward metadata, and renders per-machine contribution history with alias collapse. This is still read-only/public-alpha and simulated reward only.
-- **Next:** Seed Organism → OS.0: contributor daemon + CursiveRoot request queue first; real BTC/reward stays simulated/gated until the local V trust model is backed by production key registry, hardware/wallet independence, and database-backed CursiveRoot aggregation.
+- **OS.0 trust spine (2026-07-01):** CursiveRoot now has database-backed `os0_identity_keys`, `os0_raw_artifact_index`, and `os0_trust_evaluations`; seed bundle upload writes identity/raw-artifact/trust rows alongside bundles. `payout_eligible` is hard-constrained false.
+- **Next:** exercise trust-spine upload/readback with live accepted bundles, add dashboard/operator visibility for trust rows, and continue hardware/wallet independence hardening before any real BTC/reward path.
 
 ## Lineage
 
@@ -82,7 +83,7 @@ cd ~/CursiveOS && bash benchmarks/benchmark-inference-concurrency-v0.1.sh 4 mist
 
 ## Tier 2 remaining
 
-- Productize V trust layer: move local signed-identity/global replay/independent aggregation from fixture/local-file evidence into CursiveRoot DB + key/wallet/hardware independence. Caller-attested `--confirmations N` still cannot create acceptance-grade confidence.
+- Productize V trust layer: first CursiveRoot DB trust spine is live (`os0_identity_keys`, `os0_raw_artifact_index`, `os0_trust_evaluations`), but key/wallet/hardware independence and production aggregation still need hardening. Caller-attested `--confirmations N` still cannot create acceptance-grade confidence.
 - `page_cache_state` in harness telemetry
 - CursiveRoot auth hardening before external rollout
 - Daemon MVP + NL shell spec (Transition 1)

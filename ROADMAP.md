@@ -4,19 +4,19 @@
 
 This roadmap describes what CursiveOS is becoming. It's organized around four transitions — each one changes what the project fundamentally is, not just what features it has. Every architectural decision in the current specifications is sized for the end state, which is why some choices look overbuilt for where the project is now. They're sized for where it's going.
 
-## Where We Are: Pre-Transition-One (June 26, 2026)
+## Where We Are: Pre-Transition-One (July 1, 2026)
 
 The current state of the project:
 
 - Canonical parent preset **v0.12** (v0.9 stack + zram + swappiness=60), promoted from accepted v0.11 (cycle 3, 2026-06-26)
 - Harness **v1.4.5** with five measured channels (network gate-only, cold-start, sustained, idle power, memory-pressure); concurrency probe observe-only
 - Benchmark suite: network, cold-start, sustained, memory-pressure, concurrency-inference (prototype)
-- CursiveRoot: live database with **2 accepted mutation bundles** and **2 simulated payout reports**
+- CursiveRoot: live database with **2 accepted mutation bundles**, **2 simulated payout reports**, OS.0 request/job queue tables, and OS.0 trust-spine tables for identity keys/raw artifacts/trust evaluations
 - Layer 5 economics v3.3 specified; Hub API remains MVP scaffolding
-- Phase 0 seed organism: selection loop demonstrated (cycles 1 and 3 closed); next measurement gap = concurrency inference sensor
+- Phase 0 seed organism: selection loop demonstrated (cycles 1 and 3 closed); current OS.0 work is daemon/request coordination plus database-backed trust aggregation before money
 - Hub rebuild in progress
 
-The immediate engineering frontier is validating parallel-stream inference throughput (concurrency sensor) so scheduler-class mutations can be measured above the single-stream sustained noise floor.
+The immediate engineering frontier is turning the request/job queue plus trust spine into an unattended contributor loop: daemon claims, artifact upload, CursiveRoot aggregation, dashboard visibility, and simulated rewards that stay gated from real money until Sybil resistance is production-grade.
 
 What exists today is a set of shell scripts and a measurement apparatus. It is not yet an operating system. Making it one is Transition 1.
 
