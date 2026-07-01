@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +54,27 @@ def fixture_request(**overrides):
 
 
 class ContributorDaemonContractTest(unittest.TestCase):
+    def test_machine_fingerprint_matches_full_test_wrapper_v2_contract(self):
+        cpu = "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz"
+        board_vendor = "LENOVO"
+        board_name = "LNVNB161216"
+        gpu_ids = "[10de:1f9d][8086:9a49]"
+        material = f"{cpu}|{board_vendor}|{board_name}|{gpu_ids}"
+
+        machine_id, fingerprint_material = daemon.machine_fingerprint(cpu, board_vendor, board_name, gpu_ids)
+
+        self.assertEqual(material, fingerprint_material)
+        self.assertEqual("42e7c7257af11f46", machine_id)
+        self.assertEqual(hashlib.sha256((material + "\n").encode()).hexdigest()[:16], machine_id)
+        self.assertNotEqual(hashlib.sha256(material.encode()).hexdigest()[:16], machine_id)
+
+    def test_machine_fingerprint_fallback_hashes_like_full_test_wrapper(self):
+        with mock.patch.object(daemon, "first_existing_text", return_value="fixture-machine-id"):
+            machine_id, material = daemon.machine_fingerprint("unknown", "unknown", "unknown", "nogpu")
+
+        self.assertEqual("machineid|fixture-machine-id", material)
+        self.assertEqual(hashlib.sha256((material + "\n").encode()).hexdigest()[:16], machine_id)
+
     def test_fixture_request_matches_linux_bare_metal_caps(self):
         ok, failures, normalized = daemon.request_match(FAKE_CAPS, fixture_request())
         self.assertTrue(ok, failures)

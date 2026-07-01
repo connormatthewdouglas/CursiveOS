@@ -76,6 +76,17 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()
 
 
+def full_test_fingerprint(text: str) -> str:
+    """Mirror cursiveos-full-test-v1.4.sh's canonical HW hash.
+
+    The shell wrapper computes `echo "$HW_ID_TUPLE" | sha256sum`, which hashes
+    the tuple plus echo's trailing newline. The daemon must use the same byte
+    contract so machine_capabilities / measurement_jobs join cleanly to the
+    benchmark rows and seed bundles produced by that wrapper.
+    """
+    return sha256_text(text + "\n")
+
+
 def run_text(cmd: list[str], *, timeout: int = 5) -> str:
     try:
         res = subprocess.run(cmd, text=True, capture_output=True, timeout=timeout, check=False)
@@ -162,7 +173,7 @@ def machine_fingerprint(cpu_model: str, board_vendor: str, board_name: str, gpu_
     if material == "unknown|unknown|unknown|nogpu":
         machine_id = first_existing_text(["/etc/machine-id"], default=socket.gethostname())
         material = f"machineid|{machine_id}"
-    return sha256_text(material)[:16], material
+    return full_test_fingerprint(material)[:16], material
 
 
 def collect_capabilities() -> dict[str, Any]:
@@ -211,6 +222,8 @@ def collect_capabilities() -> dict[str, Any]:
         "collected_at": now_iso(),
         "hostname": socket.gethostname(),
         "machine_id": machine_id,
+        "fingerprint_version": 2,
+        "fingerprint_hash_semantics": "sha256(hw_id_tuple + newline); mirrors cursiveos-full-test-v1.4.sh echo|sha256sum",
         "fingerprint_material_sha256": sha256_text(fingerprint_material),
         "platform": "linux" if is_linux else system.lower() or "unknown",
         "os": {
