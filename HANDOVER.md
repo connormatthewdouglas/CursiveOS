@@ -15,6 +15,7 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **Rig automation:** `tools/rig-smoke.sh` — `TAO_SUDO_PASS=`, SCP → `nohup &` → poll `/tmp/rig-smoke-*.out` only (no long SSH one-liners).
 - **v0.12b screen (2026-06-28):** **rejected** on Stardust (mem +0.7% worse, J/token +3.0%).
 - **V verifier hardening (2026-06-30):** `tools/exp_adversarial_tester.py` now reports A/B/C/D-funded rejected by named gates, with Mode H honest controls accepted or held inconclusive rather than fraud-rejected. See `docs/experiments/V-verifier-hardening-results.md` and `.json`.
+- **OS.0 identity contract (2026-07-01):** wrapper + contributor daemon canonical machine ids are `sha256(HW_ID_TUPLE + "\\n")[:16]` (`fingerprint_version=2`). See `docs/os0-machine-identity-contract.md`; dashboard tests collapse aliases and count only `claimed/running` daemon jobs as active.
 - **Next:** Seed Organism → OS.0: contributor daemon + CursiveRoot request queue first; real BTC/reward stays simulated/gated until the local V trust model is backed by production key registry, hardware/wallet independence, and database-backed CursiveRoot aggregation.
 
 ## Lineage

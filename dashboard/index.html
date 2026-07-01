@@ -284,6 +284,19 @@ function isoMs(value){
   return Number.isFinite(t) ? t : 0;
 }
 
+function aliasLookup(aliases){ return Object.fromEntries((aliases || []).map(a => [a.alias, a.machine_id])); }
+function aliasKeySet(aliases){ return new Set((aliases || []).map(a => a.alias)); }
+function canonicalizer(aliases){
+  const aliasTo = aliasLookup(aliases);
+  return id => aliasTo[id] || id || "";
+}
+function physicalMachines(machines, aliases){
+  const aliasKeys = aliasKeySet(aliases);
+  return (machines || []).filter(m => !aliasKeys.has(m.machine_id));
+}
+function fingerprintCount(machineId, aliases){ return 1 + (aliases || []).filter(a => a.machine_id === machineId).length; }
+function activeJobCount(jobs){ return (jobs || []).filter(j => ["claimed","running"].includes(j.status)).length; }
+
 function collapseCapabilities(caps, canon){
   const byMachine = new Map();
   for (const cap of caps || []) {
@@ -312,14 +325,12 @@ async function main(){
     q("runs?select=id")
   ]);
 
-  const aliasTo = Object.fromEntries((aliases || []).map(a => [a.alias, a.machine_id]));
-  const aliasKeys = new Set((aliases || []).map(a => a.alias));
-  const canon = id => aliasTo[id] || id || "";
-  const physical = (machines || []).filter(m => !aliasKeys.has(m.machine_id));
-  const fpCount = id => 1 + (aliases || []).filter(a => a.machine_id === id).length;
+  const canon = canonicalizer(aliases || []);
+  const physical = physicalMachines(machines || [], aliases || []);
+  const fpCount = id => fingerprintCount(id, aliases || []);
   const canonicalCaps = collapseCapabilities(caps || [], canon);
   const openRequests = (requests || []).filter(r => r.status === "open").length;
-  const activeJobs = (jobs || []).filter(j => ["claimed","running"].includes(j.status)).length;
+  const activeJobs = activeJobCount(jobs || []);
 
   const cells = document.querySelectorAll("#stats .n");
   [physical.length, (allRuns || []).length, openRequests, activeJobs, (accepted || []).length].forEach((value, i) => {
