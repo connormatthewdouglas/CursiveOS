@@ -251,24 +251,52 @@ function renderRequests(requests){
   </div>`).join("");
 }
 
-function renderJobs(jobs){
+function renderJobs(jobs, canon){
   const rows = jobs.slice(0,6);
   if (!rows.length) return cardEmpty("No daemon jobs recorded yet. Once the laptop daemon claims a request, it will appear here.");
-  return rows.map(j => `<div class="card">
-    <div class="row"><div><div class="title">job ${esc(short(j.job_id,8))}</div><div class="mono mut">machine ${esc(short(j.machine_id,12))}</div></div><span class="pill ${statusClass(j.status)}">${esc(j.status)}</span></div>
+  return rows.map(j => {
+    const machine = canon(j.machine_id);
+    const aliasNote = machine && j.machine_id && machine !== j.machine_id ? ` <span class="mut">alias ${esc(short(j.machine_id,8))}</span>` : "";
+    return `<div class="card">
+    <div class="row"><div><div class="title">job ${esc(short(j.job_id,8))}</div><div class="mono mut">machine ${esc(short(machine || j.machine_id,12))}${aliasNote}</div></div><span class="pill ${statusClass(j.status)}">${esc(j.status)}</span></div>
     <p class="mut" style="margin-top:10px">bundle: <span class="mono">${esc(short(j.result_bundle_hash,16))}</span></p>
     <p class="mut mono" style="margin-top:6px">heartbeat ${esc(when(j.last_heartbeat_at))}</p>
-  </div>`).join("");
+  </div>`;
+  }).join("");
 }
 
 function renderHeartbeats(caps){
   const rows = caps.slice(0,5);
   if (!rows.length) return cardEmpty("No daemon capability heartbeats yet. Capability probes are local until the OS.0 migration is applied.");
-  return rows.map(c => `<div class="card">
-    <div class="row"><div><div class="title">${esc(short(c.machine_id,14))}</div><div class="mut">${esc(c.os_name || c.platform || "linux host")}</div></div><span class="pill info">${esc(c.daemon_version || "daemon")}</span></div>
+  return rows.map(c => {
+    const machine = c.canonical_machine_id || c.machine_id;
+    const aliasNote = c.alias_machine_id ? ` <span class="mut">alias ${esc(short(c.alias_machine_id,8))}</span>` : "";
+    return `<div class="card">
+    <div class="row"><div><div class="title">${esc(short(machine,14))}${aliasNote}</div><div class="mut">${esc(c.os_name || c.platform || "linux host")}</div></div><span class="pill info">${esc(c.daemon_version || "daemon")}</span></div>
     <p class="mut" style="margin-top:10px">${esc(c.cpu || "unknown CPU")}</p>
     <p class="mut mono" style="margin-top:6px">last seen ${esc(when(c.last_seen_at))}</p>
-  </div>`).join("");
+  </div>`;
+  }).join("");
+}
+
+function isoMs(value){
+  const t = Date.parse(value || "");
+  return Number.isFinite(t) ? t : 0;
+}
+
+function collapseCapabilities(caps, canon){
+  const byMachine = new Map();
+  for (const cap of caps || []) {
+    const canonical = canon(cap.machine_id);
+    const row = {
+      ...cap,
+      canonical_machine_id: canonical,
+      alias_machine_id: canonical && cap.machine_id && canonical !== cap.machine_id ? cap.machine_id : null
+    };
+    const prior = byMachine.get(canonical);
+    if (!prior || isoMs(row.last_seen_at) >= isoMs(prior.last_seen_at)) byMachine.set(canonical, row);
+  }
+  return [...byMachine.values()].sort((a,b) => isoMs(b.last_seen_at) - isoMs(a.last_seen_at));
 }
 
 async function main(){
@@ -289,8 +317,9 @@ async function main(){
   const canon = id => aliasTo[id] || id || "";
   const physical = (machines || []).filter(m => !aliasKeys.has(m.machine_id));
   const fpCount = id => 1 + (aliases || []).filter(a => a.machine_id === id).length;
+  const canonicalCaps = collapseCapabilities(caps || [], canon);
   const openRequests = (requests || []).filter(r => r.status === "open").length;
-  const activeJobs = (jobs || []).filter(j => ["claimed","running","planned"].includes(j.status)).length;
+  const activeJobs = (jobs || []).filter(j => ["claimed","running"].includes(j.status)).length;
 
   const cells = document.querySelectorAll("#stats .n");
   [physical.length, (allRuns || []).length, openRequests, activeJobs, (accepted || []).length].forEach((value, i) => {
@@ -299,8 +328,8 @@ async function main(){
   });
 
   document.getElementById("requests").innerHTML = renderRequests(requests || []);
-  document.getElementById("jobs").innerHTML = renderJobs(jobs || []);
-  document.getElementById("heartbeats").innerHTML = renderHeartbeats(caps || []);
+  document.getElementById("jobs").innerHTML = renderJobs(jobs || [], canon);
+  document.getElementById("heartbeats").innerHTML = renderHeartbeats(canonicalCaps);
 
   const a = (accepted || [])[0];
   document.getElementById("accepted").innerHTML = a ? `
