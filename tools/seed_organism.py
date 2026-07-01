@@ -1827,6 +1827,237 @@ def payout_payload(report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def metric_evidence_objects(metrics: dict[str, Any], role: str = "metrics") -> list[tuple[str, dict[str, Any]]]:
+    """Return all raw evidence objects addressable by the OS.0 trust index.
+
+    The top-level metrics object is the selection summary. Paired screens may also
+    carry parent/candidate source runs, and independently aggregated confirmations
+    carry the underlying per-machine evidence CursiveRoot must be able to replay.
+    """
+    out: list[tuple[str, dict[str, Any]]] = [(role, metrics)]
+    runs = metrics.get("source_runs")
+    if isinstance(runs, dict):
+        for run_role in ("parent", "candidate"):
+            run = runs.get(run_role)
+            if isinstance(run, dict):
+                out.append((f"{role}.{run_role}", run))
+    aggregation = metrics.get("confirmation_aggregation")
+    confirmations = aggregation.get("confirmations") if isinstance(aggregation, dict) else None
+    if isinstance(confirmations, list):
+        for idx, confirmation in enumerate(confirmations):
+            if isinstance(confirmation, dict):
+                out.append((f"{role}.confirmation[{idx}]", confirmation))
+    return out
+
+
+def _unique_preserve_order(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        if value and value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
+def _artifact_uri_hint(raw: dict[str, Any]) -> str | None:
+    """Return a public-safe artifact pointer; avoid leaking host-local paths."""
+    explicit = raw.get("uri") or raw.get("artifact_uri")
+    if explicit:
+        return str(explicit)
+    path = resolve_artifact_path(raw)
+    try:
+        return rel(path)
+    except Exception:
+        pass
+    sha = str(raw.get("sha256") or "")
+    return f"sha256:{sha}" if sha else None
+
+
+def os0_identity_key_payloads(bundle: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build immutable identity-key rows from a seed bundle's signed evidence."""
+    manifest = bundle["manifest"]
+    metrics = bundle["metrics"]
+    rows: dict[str, dict[str, Any]] = {}
+    for role, evidence in metric_evidence_objects(metrics):
+        identity = evidence.get("signed_identity")
+        if not isinstance(identity, dict):
+            continue
+        public_key = str(identity.get("identity_public_key") or "")
+        if not public_key:
+            continue
+        raw_fp = raw_artifact_fingerprint(evidence)
+        rows.setdefault(
+            public_key,
+            {
+                "identity_public_key": public_key,
+                "machine_id": machine_id_from_metrics(evidence),
+                "key_scheme": str(identity.get("scheme") or "unknown"),
+                "key_status": "local_sim",
+                "trust_scope": "simulated_not_payout_eligible",
+                "last_seen_at": now_iso(),
+                "metadata": {
+                    "schema_version": "cursiveos.os0.identity-key-metadata.v0.1",
+                    "source": "seed_organism.py",
+                    "bundle_hash": manifest.get("bundle_hash"),
+                    "variant_id": manifest.get("variant_id"),
+                    "evidence_role": role,
+                    "session_nonce": identity.get("session_nonce"),
+                    "raw_artifact_fingerprint": raw_fp,
+                },
+            },
+        )
+    return list(rows.values())
+
+
+def os0_raw_artifact_index_payloads(bundle: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build content-addressed raw-artifact index rows for CursiveRoot replay checks."""
+    manifest = bundle["manifest"]
+    sensor = bundle["sensor_result"]
+    metrics = bundle["metrics"]
+    rows: dict[str, dict[str, Any]] = {}
+    for role, evidence in metric_evidence_objects(metrics):
+        raw_fp = raw_artifact_fingerprint(evidence)
+        if not raw_fp:
+            continue
+        records = raw_artifact_records(evidence)
+        primary = records[0] if records else {}
+        identity = evidence.get("signed_identity", {}) if isinstance(evidence.get("signed_identity"), dict) else {}
+        rows.setdefault(
+            raw_fp,
+            {
+                "raw_artifact_fingerprint": raw_fp,
+                "measurement_fingerprint": measurement_fingerprint(evidence),
+                "metric_derivation_fingerprint": metric_derivation_fingerprint(evidence),
+                "artifact_kind": primary.get("kind") or "unknown",
+                "artifact_sha256": primary.get("sha256"),
+                "artifact_uri": _artifact_uri_hint(primary) if primary else None,
+                "bundle_hash": manifest.get("bundle_hash"),
+                "variant_id": manifest.get("variant_id"),
+                "decision": manifest.get("decision"),
+                "machine_id": machine_id_from_metrics(evidence),
+                "identity_public_key": identity.get("identity_public_key"),
+                "metadata": {
+                    "schema_version": "cursiveos.os0.raw-artifact-index.v0.1",
+                    "source": "seed_organism.py",
+                    "evidence_role": role,
+                    "bundle_measurement_fingerprint": sensor.get("measurement_fingerprint"),
+                },
+            },
+        )
+    return list(rows.values())
+
+
+def os0_trust_evaluation_payload(
+    bundle: dict[str, Any],
+    *,
+    job_id: str | None = None,
+    request_id: str | None = None,
+) -> dict[str, Any]:
+    """Summarize local V hardening in a CursiveRoot table shape.
+
+    This does not unlock money. It makes the existing recompute/signature/replay
+    and independence checks database-addressable so OS.0 can later aggregate them
+    without founder-attested `--confirmations N`.
+    """
+    manifest = bundle["manifest"]
+    metrics = bundle["metrics"]
+    sensor = bundle["sensor_result"]
+    decision = str(manifest.get("decision") or "unknown")
+    recompute_failures = verifier_recompute_failures(metrics)
+    identity_failures = signed_identity_failures(metrics)
+    confirmations_ok, confirmation_decision, confirmation_failures = confirmation_independence_gate(metrics)
+    confirmation_count = int(metrics.get("confirmation_count", 1) or 1)
+    independent_aggregation_ok = (
+        confirmation_count > 1
+        and metrics.get("confirmation_source") == "cursiveroot_independent_aggregation"
+        and confirmations_ok
+    )
+    replay_ok = not decision.startswith("rejected_replay")
+
+    if recompute_failures:
+        gate_status = "blocked_recompute_mismatch"
+    elif identity_failures:
+        gate_status = "blocked_unsigned_identity"
+    elif not replay_ok:
+        gate_status = "blocked_replay"
+    elif confirmation_failures:
+        gate_status = confirmation_decision or "blocked_independence_failure"
+    elif not independent_aggregation_ok:
+        gate_status = "awaiting_independent_aggregation"
+    elif decision == "accepted":
+        gate_status = "selection_eligible_simulated_reward"
+    elif decision == "measured_baseline":
+        gate_status = "baseline_only_not_payout"
+    elif decision == "inconclusive":
+        gate_status = "inconclusive_not_payout"
+    else:
+        gate_status = "not_selection_eligible"
+
+    identity_keys = _unique_preserve_order([
+        str(row.get("identity_public_key") or "") for row in os0_identity_key_payloads(bundle)
+    ])
+    raw_fps = _unique_preserve_order([
+        str(row.get("raw_artifact_fingerprint") or "") for row in os0_raw_artifact_index_payloads(bundle)
+    ])
+    reasons = recompute_failures + identity_failures + confirmation_failures
+    if not reasons and manifest.get("reason"):
+        reasons = [str(manifest.get("reason"))]
+    selection_truth_eligible = (
+        decision == "accepted"
+        and not recompute_failures
+        and not identity_failures
+        and replay_ok
+        and independent_aggregation_ok
+    )
+    return {
+        "bundle_hash": manifest.get("bundle_hash"),
+        "job_id": job_id,
+        "request_id": request_id,
+        "variant_id": manifest.get("variant_id"),
+        "decision": decision,
+        "machine_id": sensor.get("machine_id") or machine_id_from_metrics(metrics),
+        "identity_public_keys": identity_keys,
+        "raw_artifact_fingerprints": raw_fps,
+        "measurement_fingerprint": sensor.get("measurement_fingerprint"),
+        "gate_status": gate_status,
+        "recompute_ok": not recompute_failures,
+        "signed_identity_ok": not identity_failures,
+        "replay_ok": replay_ok,
+        "independent_aggregation_ok": independent_aggregation_ok,
+        "selection_truth_eligible": selection_truth_eligible,
+        "payout_eligible": False,
+        "reasons": reasons,
+        "trust_summary": {
+            "schema_version": "cursiveos.os0.trust-evaluation.v0.1",
+            "source": "seed_organism.py",
+            "trust_scope": "simulated_not_payout_eligible",
+            "confirmation_count": confirmation_count,
+            "confirmation_source": metrics.get("confirmation_source", "single_session_or_missing"),
+            "local_v_gates": {
+                "verifier_recompute": not recompute_failures,
+                "signed_identity": not identity_failures,
+                "global_replay": replay_ok,
+                "independent_aggregation": independent_aggregation_ok,
+            },
+            "money_gate": "hard-disabled; payout_eligible is constrained false in CursiveRoot",
+        },
+    }
+
+
+def upload_os0_trust_payloads(bundle: dict[str, Any]) -> dict[str, int]:
+    counts = {"identity_keys": 0, "raw_artifacts": 0, "trust_evaluations": 0}
+    for payload in os0_identity_key_payloads(bundle):
+        if optional_postgrest_upsert("os0_identity_keys", "identity_public_key", payload):
+            counts["identity_keys"] += 1
+    for payload in os0_raw_artifact_index_payloads(bundle):
+        if optional_postgrest_upsert("os0_raw_artifact_index", "raw_artifact_fingerprint", payload):
+            counts["raw_artifacts"] += 1
+    if optional_postgrest_upsert("os0_trust_evaluations", "bundle_hash", os0_trust_evaluation_payload(bundle)):
+        counts["trust_evaluations"] += 1
+    return counts
+
+
 def full_test_detail_payload(
     result: dict[str, Any],
     *,
@@ -1873,10 +2104,14 @@ def cmd_upload(args: argparse.Namespace) -> None:
     ensure_state(state)
     uploaded_bundles = 0
     uploaded_payouts = 0
+    uploaded_os0_trust = {"identity_keys": 0, "raw_artifacts": 0, "trust_evaluations": 0}
 
     for manifest_path in sorted((state / "runs").glob("cycle-*/*/bundle-manifest.json")):
         bundle = load_bundle_dir(manifest_path.parent)
         postgrest_upsert("seed_bundles", "bundle_hash", seed_bundle_payload(bundle))
+        trust_counts = upload_os0_trust_payloads(bundle)
+        for key, count in trust_counts.items():
+            uploaded_os0_trust[key] += count
         uploaded_bundles += 1
 
     for report_path in sorted((state / "cycles").glob("cycle-*-payout.json")):
@@ -1885,6 +2120,9 @@ def cmd_upload(args: argparse.Namespace) -> None:
         uploaded_payouts += 1
 
     print(f"uploaded_seed_bundles: {uploaded_bundles}")
+    print(f"uploaded_os0_identity_keys: {uploaded_os0_trust['identity_keys']}")
+    print(f"uploaded_os0_raw_artifacts: {uploaded_os0_trust['raw_artifacts']}")
+    print(f"uploaded_os0_trust_evaluations: {uploaded_os0_trust['trust_evaluations']}")
     print(f"uploaded_payout_reports: {uploaded_payouts}")
     print("cursiveroot_upload: ok")
 

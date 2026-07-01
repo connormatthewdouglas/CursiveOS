@@ -79,5 +79,9 @@ jobs:
           select 'machine_capabilities=' || count(*) from information_schema.tables where table_schema='public' and table_name='machine_capabilities';
           select 'measurement_requests=' || count(*) from information_schema.tables where table_schema='public' and table_name='measurement_requests';
           select 'measurement_jobs=' || count(*) from information_schema.tables where table_schema='public' and table_name='measurement_jobs';
+          select 'os0_identity_keys=' || count(*) from information_schema.tables where table_schema='public' and table_name='os0_identity_keys';
+          select 'os0_raw_artifact_index=' || count(*) from information_schema.tables where table_schema='public' and table_name='os0_raw_artifact_index';
+          select 'os0_trust_evaluations=' || count(*) from information_schema.tables where table_schema='public' and table_name='os0_trust_evaluations';
+          select 'os0_trust_money_gate=' || count(*) from information_schema.check_constraints where constraint_schema='public' and constraint_name like '%payout_eligible%';
           select 'seed_request_count=' || count(*) from public.measurement_requests where request_key='os0-alpha-v0.12-vs-v0.12b-swappiness-normal';
           SQL

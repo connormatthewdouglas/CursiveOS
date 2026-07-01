@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -501,6 +502,109 @@ class CoreEvaluationTest(unittest.TestCase):
             FIXTURE_VARIANT, weird_sensor, weird_regression, seed_organism.DEFAULT_CONFIG, weird
         )
         self.assertEqual(weird_decision, "accepted", weird_reason)
+
+
+class OS0TrustSpinePayloadTest(unittest.TestCase):
+    def _accepted_independent_bundle(self) -> dict:
+        m1 = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0, machine_id="trust-rig-a")
+        m2 = acceptance_grade_metrics(coldstart_pct=8.4, sustained_pct=1.1, machine_id="trust-rig-b")
+        aggregated = json.loads(json.dumps(m1))
+        aggregated.update(seed_organism.build_independent_confirmation_aggregation([m1, m2]))
+
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT,
+            metrics=aggregated,
+            config=seed_organism.DEFAULT_CONFIG,
+        )
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, aggregated)
+        decision, reason = seed_organism.verdict(
+            FIXTURE_VARIANT,
+            sensor,
+            regression,
+            seed_organism.DEFAULT_CONFIG,
+            aggregated,
+        )
+        self.assertEqual(decision, "accepted", reason)
+        return {
+            "manifest": {
+                "bundle_hash": "trust-spine-bundle-fixture",
+                "variant_id": FIXTURE_VARIANT["variant_id"],
+                "cycle_id": 4,
+                "decision": decision,
+                "reason": reason,
+            },
+            "variant": dict(FIXTURE_VARIANT),
+            "metrics": aggregated,
+            "sensor_result": sensor,
+            "regression_result": regression,
+        }
+
+    def test_full_test_detail_payload_accepts_result_argument(self) -> None:
+        result = {
+            "machine_id": "detail-payload-machine",
+            "created_at": "2026-07-01T12:34:56Z",
+            "preset_version": "v0.12",
+            "wrapper_version": "v1.4.5",
+            "baseline": {"network_mbps": 100.0},
+            "variant": {"network_mbps": 110.0},
+            "delta": {"network_pct": 10.0},
+            "regression": {"full_test_passed": True},
+            "structured_telemetry": {"source": "fixture"},
+            "measurement_quality": {"decision_grade": True, "flags": []},
+        }
+        payload = seed_organism.full_test_detail_payload(result, source_hash="fixture-source-hash")
+        self.assertEqual(payload["source_hash"], "fixture-source-hash")
+        self.assertEqual(payload["machine_id"], "detail-payload-machine")
+        self.assertEqual(payload["result_summary"]["variant"]["network_mbps"], 110.0)
+
+    def test_os0_trust_payloads_index_independent_confirmation_evidence_without_money(self) -> None:
+        bundle = self._accepted_independent_bundle()
+
+        identity_rows = seed_organism.os0_identity_key_payloads(bundle)
+        raw_rows = seed_organism.os0_raw_artifact_index_payloads(bundle)
+        trust = seed_organism.os0_trust_evaluation_payload(
+            bundle,
+            job_id="00000000-0000-0000-0000-000000000001",
+            request_id="00000000-0000-0000-0000-000000000002",
+        )
+
+        self.assertEqual(len(identity_rows), 2)
+        self.assertEqual(len(raw_rows), 2)
+        self.assertEqual(trust["gate_status"], "selection_eligible_simulated_reward")
+        self.assertTrue(trust["selection_truth_eligible"])
+        self.assertFalse(trust["payout_eligible"])
+        self.assertEqual(
+            trust["trust_summary"]["money_gate"],
+            "hard-disabled; payout_eligible is constrained false in CursiveRoot",
+        )
+        self.assertEqual(trust["job_id"], "00000000-0000-0000-0000-000000000001")
+        self.assertEqual(trust["request_id"], "00000000-0000-0000-0000-000000000002")
+        self.assertEqual(set(trust["identity_public_keys"]), {row["identity_public_key"] for row in identity_rows})
+        self.assertEqual(set(trust["raw_artifact_fingerprints"]), {row["raw_artifact_fingerprint"] for row in raw_rows})
+
+    def test_upload_os0_trust_payloads_writes_three_trust_spine_tables(self) -> None:
+        bundle = self._accepted_independent_bundle()
+        calls: list[tuple[str, str, dict]] = []
+
+        def fake_upsert(table: str, conflict_key: str, payload: dict) -> bool:
+            calls.append((table, conflict_key, payload))
+            return True
+
+        with patch.object(seed_organism, "optional_postgrest_upsert", side_effect=fake_upsert):
+            counts = seed_organism.upload_os0_trust_payloads(bundle)
+
+        self.assertEqual(counts, {"identity_keys": 2, "raw_artifacts": 2, "trust_evaluations": 1})
+        self.assertEqual(
+            [table for table, _, _ in calls],
+            [
+                "os0_identity_keys",
+                "os0_identity_keys",
+                "os0_raw_artifact_index",
+                "os0_raw_artifact_index",
+                "os0_trust_evaluations",
+            ],
+        )
+        self.assertTrue(all(call[2].get("payout_eligible") is not True for call in calls))
 
 
 class FullTestTelemetryExtractionTest(unittest.TestCase):
