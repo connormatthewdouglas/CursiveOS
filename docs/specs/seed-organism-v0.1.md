@@ -403,7 +403,7 @@ The project is ready for the first external tester when:
 - Population confirmation logic can handle fleet size 2.
 - Tester compensation is simulated or clearly documented even if Fast tier billing is not live.
 
-The first external tester should not be asked to validate the whole manifesto. They should be asked to validate a concrete path:
+The first external tester should not be asked to validate the whole framework. They should be asked to validate a concrete path:
 
 ```text
 clone repo → run full test → submit result → see result in CursiveRoot/Hub → receive tester status
