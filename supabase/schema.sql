@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict yxegt3gBvTsb1TKVjLivlLjxJlMAmn86cd9f3bkUEAQ18fkDaTqv3GaFi8jJS78
+\restrict h1gCPZQgS1QKv9fFxLtcgbmBcaEd2TXt9QkZUAdkcnZgK53xq2f36LrUZaY4ll5
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -1479,6 +1479,33 @@ CREATE TABLE public.machine_aliases (
 
 
 --
+-- Name: machine_capabilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.machine_capabilities (
+    machine_id text NOT NULL,
+    daemon_version text NOT NULL,
+    platform text NOT NULL,
+    os_name text,
+    kernel text,
+    arch text,
+    cpu text,
+    gpu text,
+    selection_scopes text[] DEFAULT '{}'::text[] NOT NULL,
+    capabilities jsonb DEFAULT '{}'::jsonb NOT NULL,
+    first_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_seen_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE machine_capabilities; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.machine_capabilities IS 'OS.0 alpha daemon host capability snapshots. Public alpha upsert; tighten before external fleet.';
+
+
+--
 -- Name: machines; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1497,6 +1524,189 @@ CREATE TABLE public.machines (
     gpu_vendor text,
     fingerprint_version integer
 );
+
+
+--
+-- Name: measurement_jobs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.measurement_jobs (
+    job_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    request_id uuid NOT NULL,
+    machine_id text,
+    daemon_id text NOT NULL,
+    daemon_version text NOT NULL,
+    status text DEFAULT 'claimed'::text NOT NULL,
+    capabilities_snapshot jsonb DEFAULT '{}'::jsonb NOT NULL,
+    result_bundle_hash text,
+    result_summary jsonb,
+    failure_reason text,
+    claimed_at timestamp with time zone DEFAULT now() NOT NULL,
+    started_at timestamp with time zone,
+    finished_at timestamp with time zone,
+    last_heartbeat_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT measurement_jobs_status_check CHECK ((status = ANY (ARRAY['planned'::text, 'claimed'::text, 'running'::text, 'complete'::text, 'failed'::text, 'upload_failed'::text, 'ineligible'::text, 'cancelled'::text])))
+);
+
+
+--
+-- Name: TABLE measurement_jobs; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.measurement_jobs IS 'Claim/execution records for measurement_requests. A job points to seed_bundles.result_bundle via result_bundle_hash when complete.';
+
+
+--
+-- Name: measurement_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.measurement_requests (
+    request_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    request_key text,
+    status text DEFAULT 'open'::text NOT NULL,
+    priority integer DEFAULT 0 NOT NULL,
+    parent_variant_id text NOT NULL,
+    parent_variant_path text NOT NULL,
+    candidate_variant_id text NOT NULL,
+    candidate_variant_path text NOT NULL,
+    cycle_id integer DEFAULT 4 NOT NULL,
+    screen_order text DEFAULT 'normal'::text NOT NULL,
+    required_capabilities text[] DEFAULT ARRAY['linux_bare_metal'::text, 'sudo_noninteractive'::text, 'bash'::text, 'python3'::text, 'git'::text, 'curl'::text] NOT NULL,
+    selection_scope text DEFAULT 'linux_bare_metal'::text NOT NULL,
+    trust_scope text DEFAULT 'simulated_not_payout_eligible'::text NOT NULL,
+    reward_sats_placeholder bigint DEFAULT 0 NOT NULL,
+    requested_by text,
+    notes text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT measurement_requests_screen_order_check CHECK ((screen_order = ANY (ARRAY['normal'::text, 'reversed'::text]))),
+    CONSTRAINT measurement_requests_selection_scope_check CHECK ((selection_scope = ANY (ARRAY['linux_bare_metal'::text, 'linux_founder_fleet'::text, 'linux_observe_only'::text]))),
+    CONSTRAINT measurement_requests_status_check CHECK ((status = ANY (ARRAY['open'::text, 'claimed'::text, 'running'::text, 'complete'::text, 'failed'::text, 'cancelled'::text]))),
+    CONSTRAINT measurement_requests_trust_scope_check CHECK ((trust_scope = ANY (ARRAY['simulated_not_payout_eligible'::text, 'observe_only_not_payout_eligible'::text])))
+);
+
+
+--
+-- Name: TABLE measurement_requests; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.measurement_requests IS 'Explicit Linux measurement work orders for contributor daemons. Requests remain simulated/observe-only until trust hardening.';
+
+
+--
+-- Name: COLUMN measurement_requests.selection_scope; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.measurement_requests.selection_scope IS 'Linux-only scope; Windows/WSL must not enter selection truth.';
+
+
+--
+-- Name: COLUMN measurement_requests.trust_scope; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.measurement_requests.trust_scope IS 'OS.0 alpha guard: no request is payout eligible. Real BTC requires later trust hardening.';
+
+
+--
+-- Name: os0_identity_keys; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.os0_identity_keys (
+    identity_public_key text NOT NULL,
+    machine_id text NOT NULL,
+    key_scheme text NOT NULL,
+    key_status text DEFAULT 'local_sim'::text NOT NULL,
+    trust_scope text DEFAULT 'simulated_not_payout_eligible'::text NOT NULL,
+    first_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT os0_identity_keys_key_status_check CHECK ((key_status = ANY (ARRAY['local_sim'::text, 'active'::text, 'revoked'::text, 'superseded'::text]))),
+    CONSTRAINT os0_identity_keys_trust_scope_check CHECK ((trust_scope = ANY (ARRAY['simulated_not_payout_eligible'::text, 'observe_only_not_payout_eligible'::text])))
+);
+
+
+--
+-- Name: TABLE os0_identity_keys; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.os0_identity_keys IS 'OS.0 alpha signed identity key registry. Local-sim evidence only; not payout eligible.';
+
+
+--
+-- Name: os0_raw_artifact_index; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.os0_raw_artifact_index (
+    raw_artifact_fingerprint text NOT NULL,
+    measurement_fingerprint text,
+    metric_derivation_fingerprint text,
+    artifact_kind text NOT NULL,
+    artifact_sha256 text,
+    artifact_uri text,
+    bundle_hash text,
+    variant_id text,
+    decision text,
+    machine_id text,
+    identity_public_key text,
+    first_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+--
+-- Name: TABLE os0_raw_artifact_index; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.os0_raw_artifact_index IS 'OS.0 content-addressed raw artifact replay index for immutable recompute checks.';
+
+
+--
+-- Name: os0_trust_evaluations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.os0_trust_evaluations (
+    bundle_hash text NOT NULL,
+    job_id uuid,
+    request_id uuid,
+    variant_id text,
+    decision text NOT NULL,
+    machine_id text,
+    identity_public_keys text[] DEFAULT '{}'::text[] NOT NULL,
+    raw_artifact_fingerprints text[] DEFAULT '{}'::text[] NOT NULL,
+    measurement_fingerprint text,
+    gate_status text NOT NULL,
+    recompute_ok boolean DEFAULT false NOT NULL,
+    signed_identity_ok boolean DEFAULT false NOT NULL,
+    replay_ok boolean DEFAULT false NOT NULL,
+    independent_aggregation_ok boolean DEFAULT false NOT NULL,
+    selection_truth_eligible boolean DEFAULT false NOT NULL,
+    payout_eligible boolean DEFAULT false NOT NULL,
+    reasons text[] DEFAULT '{}'::text[] NOT NULL,
+    trust_summary jsonb DEFAULT '{}'::jsonb NOT NULL,
+    evaluated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT os0_trust_evaluations_payout_eligible_check CHECK ((payout_eligible IS FALSE))
+);
+
+
+--
+-- Name: TABLE os0_trust_evaluations; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.os0_trust_evaluations IS 'OS.0 local V trust evaluations. payout_eligible is hard-constrained false until production Sybil resistance exists.';
+
+
+--
+-- Name: COLUMN os0_trust_evaluations.selection_truth_eligible; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.os0_trust_evaluations.selection_truth_eligible IS 'Local trust summary only; still simulated/not payout eligible.';
+
+
+--
+-- Name: COLUMN os0_trust_evaluations.payout_eligible; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.os0_trust_evaluations.payout_eligible IS 'Hard money gate. CHECK keeps all OS.0 Sprint 3 rows not payout eligible.';
 
 
 --
@@ -2059,6 +2269,14 @@ ALTER TABLE ONLY public.machine_aliases
 
 
 --
+-- Name: machine_capabilities machine_capabilities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.machine_capabilities
+    ADD CONSTRAINT machine_capabilities_pkey PRIMARY KEY (machine_id);
+
+
+--
 -- Name: machines machines_machine_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2072,6 +2290,54 @@ ALTER TABLE ONLY public.machines
 
 ALTER TABLE ONLY public.machines
     ADD CONSTRAINT machines_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: measurement_jobs measurement_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.measurement_jobs
+    ADD CONSTRAINT measurement_jobs_pkey PRIMARY KEY (job_id);
+
+
+--
+-- Name: measurement_requests measurement_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.measurement_requests
+    ADD CONSTRAINT measurement_requests_pkey PRIMARY KEY (request_id);
+
+
+--
+-- Name: measurement_requests measurement_requests_request_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.measurement_requests
+    ADD CONSTRAINT measurement_requests_request_key_key UNIQUE (request_key);
+
+
+--
+-- Name: os0_identity_keys os0_identity_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.os0_identity_keys
+    ADD CONSTRAINT os0_identity_keys_pkey PRIMARY KEY (identity_public_key);
+
+
+--
+-- Name: os0_raw_artifact_index os0_raw_artifact_index_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.os0_raw_artifact_index
+    ADD CONSTRAINT os0_raw_artifact_index_pkey PRIMARY KEY (raw_artifact_fingerprint);
+
+
+--
+-- Name: os0_trust_evaluations os0_trust_evaluations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.os0_trust_evaluations
+    ADD CONSTRAINT os0_trust_evaluations_pkey PRIMARY KEY (bundle_hash);
 
 
 --
@@ -2362,6 +2628,153 @@ CREATE INDEX machine_aliases_machine_idx ON public.machine_aliases USING btree (
 
 
 --
+-- Name: machine_capabilities_scopes_gin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX machine_capabilities_scopes_gin_idx ON public.machine_capabilities USING gin (selection_scopes);
+
+
+--
+-- Name: machine_capabilities_seen_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX machine_capabilities_seen_idx ON public.machine_capabilities USING btree (last_seen_at DESC);
+
+
+--
+-- Name: measurement_jobs_machine_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX measurement_jobs_machine_idx ON public.measurement_jobs USING btree (machine_id, claimed_at DESC);
+
+
+--
+-- Name: measurement_jobs_request_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX measurement_jobs_request_idx ON public.measurement_jobs USING btree (request_id, claimed_at DESC);
+
+
+--
+-- Name: measurement_jobs_status_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX measurement_jobs_status_idx ON public.measurement_jobs USING btree (status, last_heartbeat_at DESC);
+
+
+--
+-- Name: measurement_requests_candidate_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX measurement_requests_candidate_idx ON public.measurement_requests USING btree (candidate_variant_id, created_at DESC);
+
+
+--
+-- Name: measurement_requests_key_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX measurement_requests_key_idx ON public.measurement_requests USING btree (request_key);
+
+
+--
+-- Name: measurement_requests_status_priority_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX measurement_requests_status_priority_idx ON public.measurement_requests USING btree (status, priority DESC, created_at);
+
+
+--
+-- Name: os0_identity_keys_machine_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_identity_keys_machine_idx ON public.os0_identity_keys USING btree (machine_id, last_seen_at DESC);
+
+
+--
+-- Name: os0_identity_keys_metadata_gin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_identity_keys_metadata_gin_idx ON public.os0_identity_keys USING gin (metadata);
+
+
+--
+-- Name: os0_raw_artifact_index_bundle_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_raw_artifact_index_bundle_idx ON public.os0_raw_artifact_index USING btree (bundle_hash);
+
+
+--
+-- Name: os0_raw_artifact_index_identity_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_raw_artifact_index_identity_idx ON public.os0_raw_artifact_index USING btree (identity_public_key);
+
+
+--
+-- Name: os0_raw_artifact_index_machine_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_raw_artifact_index_machine_idx ON public.os0_raw_artifact_index USING btree (machine_id, first_seen_at DESC);
+
+
+--
+-- Name: os0_raw_artifact_index_measurement_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_raw_artifact_index_measurement_idx ON public.os0_raw_artifact_index USING btree (measurement_fingerprint);
+
+
+--
+-- Name: os0_raw_artifact_index_metadata_gin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_raw_artifact_index_metadata_gin_idx ON public.os0_raw_artifact_index USING gin (metadata);
+
+
+--
+-- Name: os0_trust_evaluations_gate_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_trust_evaluations_gate_idx ON public.os0_trust_evaluations USING btree (gate_status, evaluated_at DESC);
+
+
+--
+-- Name: os0_trust_evaluations_identity_gin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_trust_evaluations_identity_gin_idx ON public.os0_trust_evaluations USING gin (identity_public_keys);
+
+
+--
+-- Name: os0_trust_evaluations_machine_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_trust_evaluations_machine_idx ON public.os0_trust_evaluations USING btree (machine_id, evaluated_at DESC);
+
+
+--
+-- Name: os0_trust_evaluations_raw_gin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_trust_evaluations_raw_gin_idx ON public.os0_trust_evaluations USING gin (raw_artifact_fingerprints);
+
+
+--
+-- Name: os0_trust_evaluations_summary_gin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_trust_evaluations_summary_gin_idx ON public.os0_trust_evaluations USING gin (trust_summary);
+
+
+--
+-- Name: os0_trust_evaluations_variant_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX os0_trust_evaluations_variant_idx ON public.os0_trust_evaluations USING btree (variant_id, evaluated_at DESC);
+
+
+--
 -- Name: run_detail_bundles_machine_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2584,6 +2997,14 @@ ALTER TABLE ONLY public.l5_wallet_identities
 
 
 --
+-- Name: measurement_jobs measurement_jobs_request_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.measurement_jobs
+    ADD CONSTRAINT measurement_jobs_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.measurement_requests(request_id) ON DELETE CASCADE;
+
+
+--
 -- Name: runs runs_machine_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2750,10 +3171,151 @@ CREATE POLICY machine_aliases_anon_select ON public.machine_aliases FOR SELECT T
 
 
 --
+-- Name: machine_capabilities; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.machine_capabilities ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: machine_capabilities machine_capabilities_anon_insert; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY machine_capabilities_anon_insert ON public.machine_capabilities FOR INSERT TO anon WITH CHECK (true);
+
+
+--
+-- Name: machine_capabilities machine_capabilities_anon_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY machine_capabilities_anon_update ON public.machine_capabilities FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+
+--
+-- Name: machine_capabilities machine_capabilities_public_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY machine_capabilities_public_select ON public.machine_capabilities FOR SELECT USING (true);
+
+
+--
 -- Name: machines; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.machines ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: measurement_jobs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.measurement_jobs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: measurement_jobs measurement_jobs_anon_insert; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY measurement_jobs_anon_insert ON public.measurement_jobs FOR INSERT TO anon WITH CHECK (true);
+
+
+--
+-- Name: measurement_jobs measurement_jobs_anon_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY measurement_jobs_anon_update ON public.measurement_jobs FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+
+--
+-- Name: measurement_jobs measurement_jobs_public_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY measurement_jobs_public_select ON public.measurement_jobs FOR SELECT USING (true);
+
+
+--
+-- Name: measurement_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.measurement_requests ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: measurement_requests measurement_requests_anon_insert; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY measurement_requests_anon_insert ON public.measurement_requests FOR INSERT TO anon WITH CHECK (((trust_scope = ANY (ARRAY['simulated_not_payout_eligible'::text, 'observe_only_not_payout_eligible'::text])) AND (selection_scope = ANY (ARRAY['linux_bare_metal'::text, 'linux_founder_fleet'::text, 'linux_observe_only'::text]))));
+
+
+--
+-- Name: measurement_requests measurement_requests_anon_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY measurement_requests_anon_update ON public.measurement_requests FOR UPDATE TO anon USING (true) WITH CHECK (((trust_scope = ANY (ARRAY['simulated_not_payout_eligible'::text, 'observe_only_not_payout_eligible'::text])) AND (selection_scope = ANY (ARRAY['linux_bare_metal'::text, 'linux_founder_fleet'::text, 'linux_observe_only'::text]))));
+
+
+--
+-- Name: measurement_requests measurement_requests_public_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY measurement_requests_public_select ON public.measurement_requests FOR SELECT USING (true);
+
+
+--
+-- Name: os0_identity_keys; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.os0_identity_keys ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: os0_identity_keys os0_identity_keys_anon_insert; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY os0_identity_keys_anon_insert ON public.os0_identity_keys FOR INSERT TO anon WITH CHECK ((trust_scope = ANY (ARRAY['simulated_not_payout_eligible'::text, 'observe_only_not_payout_eligible'::text])));
+
+
+--
+-- Name: os0_identity_keys os0_identity_keys_public_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY os0_identity_keys_public_select ON public.os0_identity_keys FOR SELECT USING (true);
+
+
+--
+-- Name: os0_raw_artifact_index; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.os0_raw_artifact_index ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: os0_raw_artifact_index os0_raw_artifact_index_anon_insert; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY os0_raw_artifact_index_anon_insert ON public.os0_raw_artifact_index FOR INSERT TO anon WITH CHECK (true);
+
+
+--
+-- Name: os0_raw_artifact_index os0_raw_artifact_index_public_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY os0_raw_artifact_index_public_select ON public.os0_raw_artifact_index FOR SELECT USING (true);
+
+
+--
+-- Name: os0_trust_evaluations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.os0_trust_evaluations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: os0_trust_evaluations os0_trust_evaluations_anon_insert; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY os0_trust_evaluations_anon_insert ON public.os0_trust_evaluations FOR INSERT TO anon WITH CHECK (((payout_eligible IS FALSE) AND ((trust_summary ->> 'trust_scope'::text) = ANY (ARRAY['simulated_not_payout_eligible'::text, 'observe_only_not_payout_eligible'::text]))));
+
+
+--
+-- Name: os0_trust_evaluations os0_trust_evaluations_public_select; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY os0_trust_evaluations_public_select ON public.os0_trust_evaluations FOR SELECT USING (true);
+
 
 --
 -- Name: machines public insert machines; Type: POLICY; Schema: public; Owner: -
@@ -2853,5 +3415,5 @@ CREATE POLICY seed_payout_reports_anon_select ON public.seed_payout_reports FOR 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict yxegt3gBvTsb1TKVjLivlLjxJlMAmn86cd9f3bkUEAQ18fkDaTqv3GaFi8jJS78
+\unrestrict h1gCPZQgS1QKv9fFxLtcgbmBcaEd2TXt9QkZUAdkcnZgK53xq2f36LrUZaY4ll5
 
