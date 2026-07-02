@@ -66,7 +66,7 @@ The benchmark surface is intentionally narrow during this phase. It is designed 
 
 CursiveRoot is the project's shared performance database. When the benchmark harness runs with user consent, it submits structured results — hardware fingerprint, kernel and distribution version, preset version applied, measurement deltas — to the shared database. Over time this database accumulates the empirical record of which tunings produce results on which hardware configurations under which conditions. The database is the project's sensory nervous system: the mechanism by which the organism perceives what is working and where.
 
-CursiveRoot is live and accumulating data from the hardware configurations used to develop the project. Public query access is available via `scripts/cursiveroot-status.sh`.
+CursiveRoot is live and accumulating data from the hardware configurations used to develop the project. A public read-only view is available at the live dashboard, [connormatthewdouglas.github.io/CursiveOS](https://connormatthewdouglas.github.io/CursiveOS/), and from the command line via [`scripts/cursiveroot-status.sh`](scripts/cursiveroot-status.sh).
 
 ### 3.4 Integration
 
