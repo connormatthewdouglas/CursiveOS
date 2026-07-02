@@ -103,7 +103,50 @@ still be run on its own:
 
 Details and development workflows: [docs/specs/seed-organism-runbook-v0.1.md](docs/specs/seed-organism-runbook-v0.1.md).
 
-## Results (v0.8 preset, initial measurements)
+## Results
+
+### What's validated now
+
+The project no longer leads with a single headline percentage, because the honest
+picture is per-channel and hardware-scoped. What the measurement loop has actually
+established, on real hardware, with repeat + counterbalanced + cross-machine
+confirmation:
+
+- **Selection loop closed twice.** Lineage advanced **v0.8 → v0.9 → v0.12** through
+  two accepted cycles (v0.9c cold-start retention, cycle 1; v0.11-zram-swappiness
+  memory win, cycle 3). Equally important, a string of candidates were **rejected**
+  by measurement — v0.10 (neutral), v0.12b (worse), v0.13 (regressed) — which is the
+  half of selection most projects never show. CursiveRoot holds 2 accepted bundles
+  and 2 (simulated) payout reports.
+- **Network — scoped honestly.** On ordinary ≤1GbE lossy links the real win is the
+  **CUBIC → BBR** congestion-control switch (large under loss); with BBR held
+  constant, the CursiveOS buffer/qdisc stack measured **~0%**. The old "+500–900%"
+  figures were loopback-BDP artifacts and do not transfer to real links. Claim is
+  scoped to **single flow under loss** pending multi-flow fairness testing (see the
+  honesty box above).
+- **Cold-start latency — real but hardware-scoped.** ~**−51%** on the Ryzen 7 5700 +
+  Arc A750 desktop and large gains on older CPU-only hardware; **~0%** on some
+  laptops. Reported by hardware class, never as a universal number.
+- **Memory pressure — the newest earned win.** v0.11 (zram + `vm.swappiness=60`) cut
+  cgroup memory-pressure refault time **~4×** vs the v0.9 parent (e.g. Stardust
+  45s→11s) with **no inference regression** (cold-start −0.5%, sustained 0.0%),
+  confirmed on two machines before it earned any fitness weight. zram is neutral
+  under `swappiness=0` — the swappiness change is what unlocks it.
+- **Idle power — a real tradeoff, gated accordingly.** The v0.8-era stack raised idle
+  power on some hosts; the idle-power channel is currently **gate-only** in fitness
+  (blocks severe regressions, awards no reward) until its noise floor is trustworthy
+  fleet-wide.
+
+The per-hardware tables below are the **initial March-2026 measurements** and are
+kept for transparency; their network magnitudes predate the real-path correction
+and should be read through the scoping note that follows them.
+
+### Initial per-hardware measurements (March 2026 — loopback, historical)
+
+> **Read these as historical.** They use the repository's **loopback** WAN
+> simulation, which inflates network deltas via a loopback-BDP artifact. The
+> real-path correction and current scoping are summarized above and in the note
+> after the tables.
 
 ### AMD Ryzen 7 5700 + Intel Arc A750
 
@@ -154,7 +197,10 @@ This is a genesis baseline characterization, reconstructed into CursiveRoot from
 
 CursiveOS applies a set of temporary, safe OS tweaks tuned for local compute workloads. The full-test script automatically reverts presets at the end of each run. Reboot or `--undo` are optional fallback paths.
 
-**28 tweaks in `presets/cursiveos-presets-v0.7.sh`:**
+**Representative core tweaks** (early-lineage stack, shown for intuition). The
+authoritative current stack is the canonical parent **v0.12** in
+[`presets/`](presets/); the selection loop has since refined specific values —
+see the note under the table.
 
 | Tweak | Value | Why |
 | --- | --- | --- |
@@ -184,12 +230,20 @@ CursiveOS applies a set of temporary, safe OS tweaks tuned for local compute wor
 | GPU min frequency | 2000 MHz | Prevents drop to 300 MHz between requests |
 | SYCL persistent cache | enabled | Cache compiled GPU kernels (Arc only) |
 
-Apply manually:
+> **What selection changed since this early stack.** The loop measured its way
+> off several of these: **v0.9 dropped the Arc GPU frequency pin** (the two GPU
+> rows above — measured dead weight, no cold-start benefit), and **v0.11 added a
+> zram swap device and set `vm.swappiness=60`** (the memory-pressure win; the
+> `swappiness=10` row above is early-lineage). The result is canonical parent
+> **v0.12**. Treat the rows above as intuition for the *kind* of tuning involved,
+> and `presets/cursiveos-presets-v0.12.sh` as the source of truth.
+
+Apply manually (canonical parent):
 
 ```
-./presets/cursiveos-presets-v0.7.sh --dry-run      # preview all changes first
-./presets/cursiveos-presets-v0.7.sh --apply-temp   # apply
-./presets/cursiveos-presets-v0.7.sh --undo         # revert
+./presets/cursiveos-presets-v0.12.sh --dry-run      # preview all changes first
+./presets/cursiveos-presets-v0.12.sh --apply-temp   # apply
+./presets/cursiveos-presets-v0.12.sh --undo         # revert
 ```
 
 ---
