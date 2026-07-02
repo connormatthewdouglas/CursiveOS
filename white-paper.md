@@ -12,7 +12,7 @@ CursiveOS is a Linux optimization layer for local compute operators — AI infer
 
 On the hardware configurations measured so far, the current preset stack has produced a large throughput change in a controlled WAN simulation and mixed results on inference and idle power. On May 25, 2026, the first real Phase 0 seed baseline recorded on an AMD Ryzen 7 5700 / Intel Arc host measured +515.20% simulated-WAN throughput, -3.11% cold-start latency, -0.36% sustained inference, and +3.2W idle power under v0.8. These results are directional, limited to a small hardware sample and narrow benchmark surface, and do not justify broader claims without more data.
 
-This document describes the current implementation, the validated results and their limits, the architectural design (including the fully specified economic layer), the planned agent layer (measurement daemon and natural-language shell), and the roadmap from here to a full operating system release. The conceptual framework within which this architecture was designed — the software organism frame — is described in a companion document, [Software Organisms](software-organisms-framework.md).
+This document describes the current implementation, the validated results and their limits, the architectural design (including the fully specified economic layer), the planned agent layer (measurement daemon and natural-language shell), and the roadmap from here to a full operating system release. The conceptual thesis within which this architecture was designed — the software organism frame — is argued in a companion document, [Software Organisms](software-organisms.md).
 
 ---
 
@@ -284,17 +284,17 @@ The work described in this paper has real limitations that matter for how the re
 
 ---
 
-## 11. Relationship to the Software Organisms Framework
+## 11. Relationship to the Software Organisms Thesis
 
-The architectural choices described in this paper were worked out within a conceptual framework called "software organisms" — a framework that treats certain kinds of software institutions as governance structures isomorphic to living organisms, with genome, phenotype, sensory system, metabolism, immune function, homeostasis, and reproduction as first-class elements.
+The architectural choices described in this paper were worked out within a conceptual framework called "software organisms" — a thesis that treats certain kinds of software institutions as governance structures isomorphic to living organisms, with genome, phenotype, sensory system, metabolism, immune function, homeostasis, and reproduction as first-class elements.
 
-The software organism framework is not metaphor. It is the architectural pattern that produced the design decisions in this paper: sensors replacing governance, substrate compounding replacing capital pools, metabolic sensors replacing designed splits, flow compensation matching flow work, fork obligation inheritance enforced by Bitcoin anchoring, separation of deterministic measurement from probabilistic interface.
+The software organism idea is not metaphor. It is the architectural pattern that produced the design decisions in this paper: sensors replacing governance, substrate compounding replacing capital pools, metabolic sensors replacing designed splits, flow compensation matching flow work, fork obligation inheritance enforced by Bitcoin anchoring, separation of deterministic measurement from probabilistic interface.
 
-Readers who want to understand *why* the architecture has these specific properties — and want to evaluate whether the framework applies to other software institutions they care about — should read the companion framework: [Software Organisms](software-organisms-framework.md).
+Readers who want to understand *why* the architecture has these specific properties — why human governance loses under accelerating software mutation, and what has to replace it — should read the companion thesis: [Software Organisms — Why human governance loses, and what replaces it](software-organisms.md).
 
-Readers who want to evaluate *what* the architecture produces in practice and whether it works on specific hardware for specific workloads can evaluate this paper, the validated results, and the public repository, without necessarily committing to the framework.
+Readers who want to evaluate *what* the architecture produces in practice and whether it works on specific hardware for specific workloads can evaluate this paper, the validated results, and the public repository, without necessarily committing to the thesis.
 
-Both documents describe the same project from different angles. The framework produced the design. The design produced the implementation. The implementation produced the validated results. The results validate the framework, at the current stage, within the current scope.
+Both documents describe the same project from different angles. The thesis produced the design. The design produced the implementation. The implementation produced the validated results. The results validate the thesis, at the current stage, within the current scope.
 
 ---
 
@@ -310,6 +310,6 @@ The current work justifies continued development. The architectural framework ju
 
 *CursiveOS is a new species that inherited its founding genome from Linux and now evolves independently under its own selection pressure.*
 
-*Companion documents: [Software Organisms framework](software-organisms-framework.md) · [Layer 5 economics specification](docs/specs/layer5-economics-v3.3.md) · [Agent architecture](docs/architecture/agent-architecture.md) · [Roadmap](ROADMAP.md)*
+*Companion documents: [Software Organisms](software-organisms.md) · [Layer 5 economics specification](docs/specs/layer5-economics-v3.3.md) · [Agent architecture](docs/architecture/agent-architecture.md) · [Roadmap](ROADMAP.md)*
 
 *Repository: [https://github.com/connormatthewdouglas/CursiveOS](https://github.com/connormatthewdouglas/CursiveOS)*

@@ -235,14 +235,16 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Done** → Full-test wrapper v1.4 (CursiveRoot auto-submit, zero setup)
 - **Done** → CursiveRoot: live hardware/performance database
 - **Done** → Decision-grade CursiveRoot analyzer: cohort signal, organism state, and data hygiene reporting
+- **Done** → Phase 0 selection loop closed twice: cycles 1 and 3 accepted (v0.9c, v0.11-zram-swappiness) with repeat + counterbalanced + cross-machine confirmation; lineage v0.8 → v0.9 → v0.12
+- **Done** → Memory-pressure 5th sensor channel (harness v1.4.5), validated cross-machine before earning fitness weight
+- **Done** → H2/H2* adversarial-tester audit: fabricated, replayed, and gamed submissions rejected by named production gates
 - **Done** → V verifier-hardening: raw-artifact recompute, signed local identity, global replay index, independent aggregation policy, D-funded rejection, and H false-positive controls
 - **Done** → OS.0 trust spine v1: CursiveRoot tables for identity keys, raw-artifact index, and trust evaluations with `payout_eligible` hard-disabled
-- **Done** → v3.3 economic architecture specified (white paper v2.4)
+- **Done** → OS.0 measurement queue + contributor daemon spine: first organism-requested measurement autonomously claimed, executed, and completed from the queue
+- **Done** → v3.3 economic architecture specified (white paper v2.6)
 - **Done** → Agent architecture specified (measurement daemon + natural-language shell)
 - **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)
-- **In progress** → Phase 0 seed organism (first parent-versus-candidate power/throughput screen)
-- **Next** → Repeat and counterbalance any promising candidate before fitness acceptance
-- **Next** → Productize V trust rails in CursiveRoot identity, request queue, and aggregation tables before external tester rollout
+- **In progress** → Productize V trust rails in CursiveRoot identity, request queue, and aggregation tables before external tester rollout
 - **Next** → First external tester running full sensor array; validate population confirmation
 - **Next** → v0.9 ISO alpha: first installable CursiveOS with measurement daemon
 - **v1.0** → Flagship release with natural-language shell as default terminal
@@ -262,8 +264,8 @@ Local compute can't thrive long-term on a single vendor's silicon. CursiveOS is 
 ## Documentation
 
 - [`ROADMAP.md`](ROADMAP.md) — four-transition roadmap with milestones and flagship features by release
-- [`white-paper.md`](white-paper.md) — technical white paper (v2.4)
-- [`software-organisms-framework.md`](software-organisms-framework.md) — the software organism framework and theory
+- [`white-paper.md`](white-paper.md) — technical white paper (v2.6)
+- [`software-organisms.md`](software-organisms.md) — **Software Organisms: why human governance loses, and what replaces it** — the thesis beneath the whole project: capture, selection in the age of self-improving software, and the organism architecture
 - [`docs/specs/seed-organism-v0.1.md`](docs/specs/seed-organism-v0.1.md) — Phase 0 minimum viable organism specification
 - [`docs/experiments/H2-adversarial-tester-results.md`](docs/experiments/H2-adversarial-tester-results.md) — H2/H2* dishonest-submission audit and remediation record
 - [`docs/experiments/V-verifier-hardening-results.md`](docs/experiments/V-verifier-hardening-results.md) — V verifier-hardening results: recompute, signed identity, global replay, independent aggregation, D-funded, and H controls

@@ -1,6 +1,6 @@
 # Software Organisms
 
-### A framework for governance-by-measurement and the first instance under construction
+### Why human governance loses, and what replaces it
 
 ---
 
@@ -34,7 +34,21 @@ These pathologies are not symptoms of bad individuals or weak cultures. They are
 
 ---
 
-## 3. Why Biology Is the Right Reference Class
+## 3. Why Now: Selection in the Age of Recursive Improvement
+
+The failure modes above are old — regulatory capture predates software, and maintainer fiefdoms predate git. For most of software history the mismatch was survivable, because software mutated at human speed. Humans wrote the code, humans reviewed the code, and the bottleneck of human judgment was merely expensive, not fatal. An institution could be slowly captured, slowly noticed, and slowly reformed, because nothing inside it moved faster than the people watching it.
+
+That equilibrium is ending, and not speculatively. Models already generate code faster than the humans responsible for it can review it. Agents already operate continuously on infrastructure humans once touched only during deploys. And the explicitly stated roadmap of every frontier lab is recursive self-improvement — systems that improve the systems that improve them. Whatever one believes about timelines to superintelligence, the near trend is not in dispute: the rate at which software can change is compounding, and the rate at which human judgment can evaluate change is not. A selection mechanism that runs at human speed, attached to a mutation source that runs at machine speed, does not merely lag. It becomes decorative — a ceremony performed after the real selection has already happened somewhere else.
+
+This is where the capture problem acquires teeth it never had before. Capture of a static institution is bounded: the captured thing decays, people leave, competitors arise. Capture of the *selection loop of a self-improving system* compounds: whoever controls what survives in such a system controls what it becomes, and every improvement cycle deepens the controller's advantage. The stakes of the bottleneck grow with the power of the thing flowing through it.
+
+Two default answers currently dominate, and both fail structurally. The first is centralization: let a small number of labs and platform owners hold the selection bottleneck for the most consequential software ever built. This asks civilization to trust that the judgment, incentives, and ideology of a handful of institutions will remain aligned with everyone else's interests — while Section 2's pathologies operate on those institutions at maximum leverage. Ideological capture of an ordinary institution corrupts an institution; ideological capture of the selection loop of self-improving software corrupts everything downstream of it, which converges on everything. The second answer is decentralization-as-voting: DAOs, governance tokens, councils. These do not remove discretionary judgment from selection; they fractionalize it and put it up for sale. Token-weighted judgment is still judgment — still socially mediated, still Goodhartable, and usually *cheaper* to capture than the centralized version, because the price of influence is listed on an exchange.
+
+There is a third option, and it is the subject of this document: move selection out of judgment entirely — centralized or fractionalized — and into reproducible measurement that no party owns. Measurement has the one property the moment demands: its throughput scales with machines rather than with human attention. Machines measuring machines keeps pace with machines improving machines. It is the only selection mechanism whose capacity grows with the thing it must govern. This is not a claim that all software must become organisms. It is a claim about the class of software that improves itself: for that class, the choice of selection mechanism is the whole game, and the age that forces the choice has already started.
+
+---
+
+## 4. Why Biology Is the Right Reference Class
 
 Biology is not a decorative source of metaphor for software. Biology is the only reference class we have for large, complex, long-lived adaptive systems that avoided the governance-capture failure mode by never having a governance layer at all. Evolution solved the problem by not centralizing selection in any agent capable of being captured. Fitness is a physical property of phenotype-environment interaction, measured continuously by the environment, applied continuously through survival and reproduction. No committee votes on whether a mutation persists. The mutation runs, the organism lives or dies, the allele frequency shifts.
 
@@ -46,7 +60,7 @@ A software institution that implements these components has the property that ma
 
 ---
 
-## 4. Defining the Software Organism
+## 5. Defining the Software Organism
 
 A software organism is a bounded software institution whose continued evolution is driven by machine-legible evidence of fitness. Its defining property is not automation. Its defining property is the progressive displacement of discretionary human control over selection, replaced by reproducible sensor-driven evaluation.
 
@@ -70,7 +84,7 @@ A software organism is what you get when every one of these components is implem
 
 ---
 
-## 5. Sensors Replace Governance
+## 6. Governance Is a Symptom of a Missing Sensor
 
 The most important architectural move in the software organism is replacing governance with sensors. This deserves direct treatment because it is where the framework earns its claim.
 
@@ -90,7 +104,7 @@ This is enforced by incentive, not promise. The founder earns nothing unless the
 
 ---
 
-## 6. Metabolism and Economics
+## 7. Metabolism and Economics
 
 Every software organism needs a metabolism. User value must convert into operator resources, or the organism starves and dies regardless of how elegant its sensors are. This is not a feature that gets added once the architecture is stable. This is a load-bearing component without which the rest of the architecture does not function.
 
@@ -136,7 +150,7 @@ The equilibrium point — where the sensor eventually settles — is deliberatel
 
 ---
 
-## 7. Immune Function and Pathology
+## 8. Immune Function and Pathology
 
 A serious organism framework must include pathology. A software organism can be gamed, corrupted, or made maladaptive, and the failure modes are specific enough to name.
 
@@ -156,9 +170,11 @@ A serious organism framework must include pathology. A software organism can be 
 
 **Bootstrap-phase founder concentration.** At genesis, the founder is every role: sole contributor, sole curator, sole operator. The economic machinery is dormant not because the architecture has failed but because there is no population for it to govern. This is a real vulnerability and it deserves to be named rather than hidden. The organism is at its most vulnerable during bootstrap, not despite the architecture but because the architecture's defenses only activate with population. The mitigations are sensor transparency (everything the founder does is visible), the honest commitment path (publicly disclosed, with exit conditions), the progressive devolution of roles (curator succession as demonstrable capability emerges), and fork right (anyone who disagrees can leave with the genome and try to do better). These are not governance replacements. They are honest disclosures paired with structural exits.
 
+**The immune system has been exercised, not merely designed.** In mid-2026 the first instance's acceptance boundary was deliberately attacked by its own builders, under pass/fail thresholds registered before the runs. Fabricated improvements, replayed measurements, and gamed parsimony claims were all initially *accepted* — the registered failure the experiment existed to expose — and were rejected on rerun only after named gates were added to the production path. A follow-up pass rejected a simulated funded adversary operating multiple signed identities, and — the detail that matters most for this section's taxonomy — honest-but-noisy and unusual-hardware control submissions were required to survive *without* being rejected as fraud, testing for autoimmune failure as deliberately as for infection. These are local, small-sample results against self-built attackers, and the records say so plainly. But the category difference is real: the immune function described above is no longer a claim about what the architecture would do. It has drawn blood in a controlled setting, failed honestly, been hardened, and passed. (Experiment records: `docs/experiments/H2-adversarial-tester-results.md` and `docs/experiments/V-verifier-hardening-results.md` in the CursiveOS repository.)
+
 ---
 
-## 8. The Autonomic Nervous System and Voice
+## 9. The Autonomic Nervous System and Voice
 
 Two architectural components of a mature software organism have analogs in higher biological systems and deserve naming as their own categories.
 
@@ -170,7 +186,7 @@ These two components share infrastructure but must remain architecturally separa
 
 ---
 
-## 9. Inheritance, Reproduction, and Fork Dynamics
+## 10. Inheritance, Reproduction, and Fork Dynamics
 
 A software organism must have a genome that can be inherited by forks. Without fork right, the organism becomes an enforcement regime against its own contributors. With fork right but no obligation inheritance, the organism is exploitable by actors who take the genome and repudiate the compensation owed to the contributors who built it.
 
@@ -182,7 +198,7 @@ A consequence: CursiveOS as a project is not ultimately dependent on any single 
 
 ---
 
-## 10. Bootstrap Honesty
+## 11. Bootstrap Honesty
 
 Any honest organism framework must address the bootstrap phase directly, because the architecture's defenses are population-dependent and the bootstrap phase has no population.
 
@@ -196,11 +212,11 @@ This is the honest version of what software organisms are currently capable of. 
 
 ---
 
-## 11. CursiveOS as the First Instance
+## 12. CursiveOS as the First Instance
 
 CursiveOS is the first software organism under active construction. Its design is not downstream of this framework; the framework is downstream of the design. The architectural moves described here — sensors replacing governance, metabolism without capital pools, metabolic sensor for homeostasis, compensation shape matching work shape, bootstrap honesty, fork obligation inheritance via Bitcoin anchoring, the autonomic nervous system separated from the voice interface — were each worked out while solving specific problems in the CursiveOS design. They are discoveries, not derivations.
 
-The project is in early-phase implementation. The phenotype — a tuned Linux configuration optimized for local compute workloads — is working and validated on real hardware. The genesis sensor suite is being built against the existing benchmark infrastructure. The economic layer is fully specified but will not meaningfully activate until population grows beyond the founder. The measurement daemon is specified and will be built against the Phase 0 implementation. The natural-language shell is declared as the flagship feature of the v1.0 release.
+The project is early, but the loop is no longer a diagram. The phenotype — a tuned Linux configuration optimized for local compute workloads — is validated on real hardware. The genesis sensor suite measures five channels with empirically established noise floors, and the lineage has advanced through two full measured cycles (v0.8 → v0.9 → v0.12), each acceptance requiring repeated, counterbalanced, cross-machine confirmation — alongside an equal record of candidates honestly rejected when measurement said no, which is the half of selection most projects never demonstrate. The acceptance boundary has survived a first adversarial pass by its own builders (Section 8). A first contributor daemon exists and has autonomously claimed and completed a measurement request from a queue the organism itself populates — the beginning of the autonomic nervous system of Section 9. The economic layer is fully specified and deliberately dormant: rewards remain simulated and hard-gated from real value until the trust layer is production-grade, because activating real reward before Sybil resistance would fund the construction of the fraud it invites. The natural-language shell remains the declared flagship of the v1.0 release.
 
 CursiveOS is proof that the category of software organism is implementable. It is not yet proof that a mature software organism is sustainable at scale — no such proof yet exists, anywhere. The project's commitment is to provide that proof through operation, with every architectural choice subject to adversarial stress testing and documented honestly when it fails or requires revision. The v1.0 economic architecture of CursiveOS differs substantially from the v3.1 architecture published six months prior, because v3.1 failed stress tests that v3.3 survives. This is how the lineage operates: versioned publicly, stress-tested continuously, revised when wrong.
 
@@ -208,9 +224,9 @@ The framework is not finished. The category of software organisms is new enough 
 
 ---
 
-## 12. The Argument, Compressed
+## 13. The Argument, Compressed
 
-Software institutions that place runtime selection in human hands fail through capture. The failure is structural, not cultural. The accelerating rate of software mutation makes human-governed selection increasingly mismatched to the environment software operates in.
+Software institutions that place runtime selection in human hands fail through capture. The failure is structural, not cultural. As software begins improving software, the mismatch turns fatal: judgment-based selection runs at human speed while mutation runs at machine speed, and capture of a self-improving system's selection loop compounds instead of decaying. Centralizing that loop concentrates unprecedented power in whoever owns it; fractionalizing it into votes just puts the discretion up for sale. Measurement is the only selection mechanism whose throughput scales with the machines it must govern.
 
 A software organism moves selection out of discretionary human judgment and into reproducible sensor-based measurement. It is not autonomous AI. It is not a DAO. It is an institution whose governance architecture is isomorphic to a living organism's — with genome, phenotype, sensory system, metabolism, immune function, homeostasis, reproduction, and inheritance as first-class architectural elements.
 

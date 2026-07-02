@@ -69,3 +69,36 @@ loosens the existing honest-scoping discipline (§8, §10):
 - `white-paper.md` (v2.4 → v2.6)
 - `docs/specs/seed-organism-v0.1.md`
 - `docs/CHANGELOG-v2.6.md` (this file)
+
+---
+
+## Addendum (2026-07-02): title finalized + docs cohesion pass
+
+The June-30 interim title ("A framework for governance-by-measurement…")
+undersold the document — "framework" read as process documentation for what is
+actually the project's central argument. Final form, chosen deliberately
+between "manifesto" (too hot, signals ungrounded advocacy) and "framework"
+(too cold, signals nobody needs to read it):
+
+- **File:** `software-organisms-framework.md` → **`software-organisms.md`** (final; all references updated)
+- **Title:** "Software Organisms — **Why human governance loses, and what replaces it**"
+- Former §5 retitled to its own strongest line: "**Governance Is a Symptom of a Missing Sensor**"
+
+Substance added in the same pass, all evidence-bounded:
+
+- New §3 "Why Now: Selection in the Age of Recursive Improvement" — the
+  RSI/ASI stakes argument (judgment-speed selection vs machine-speed mutation;
+  capture of a self-improving selection loop compounds; centralization and
+  vote-based decentralization both fail structurally; measurement is the only
+  selection mechanism whose throughput scales with what it governs). Sections
+  renumbered 4–13.
+- §8 Immune Function: "exercised, not merely designed" — records the H2/V
+  adversarial passes, including the Mode-H false-positive controls as an
+  explicit autoimmune test, scoped as local/small-sample/self-built attacker.
+- §12 First Instance: staleness removed in the *upward* direction — the doc
+  previously claimed the sensor suite "is being built" and the daemon "will be
+  built"; both now exist and have operated (5 channels, cycles 1 & 3 accepted,
+  first queue-driven daemon run). Reward remains simulated and hard-gated.
+- White paper §11 and footer updated to reference the thesis by its new title;
+  README doc index and roadmap bullets refreshed (cycles closed, memory
+  channel, OS.0 queue/daemon, H2/V audits; white paper v2.6).
