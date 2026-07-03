@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict h1gCPZQgS1QKv9fFxLtcgbmBcaEd2TXt9QkZUAdkcnZgK53xq2f36LrUZaY4ll5
+\restrict hSshjWBiGJqYpWQ3RfctJfPqqbLG1yKE1LdsL6XP3oCYR8iEDbGkUiwhuSSEjHt
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -3237,13 +3237,6 @@ CREATE POLICY measurement_jobs_public_select ON public.measurement_jobs FOR SELE
 ALTER TABLE public.measurement_requests ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: measurement_requests measurement_requests_anon_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY measurement_requests_anon_insert ON public.measurement_requests FOR INSERT TO anon WITH CHECK (((trust_scope = ANY (ARRAY['simulated_not_payout_eligible'::text, 'observe_only_not_payout_eligible'::text])) AND (selection_scope = ANY (ARRAY['linux_bare_metal'::text, 'linux_founder_fleet'::text, 'linux_observe_only'::text]))));
-
-
---
 -- Name: measurement_requests measurement_requests_anon_update; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -3415,5 +3408,5 @@ CREATE POLICY seed_payout_reports_anon_select ON public.seed_payout_reports FOR 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict h1gCPZQgS1QKv9fFxLtcgbmBcaEd2TXt9QkZUAdkcnZgK53xq2f36LrUZaY4ll5
+\unrestrict hSshjWBiGJqYpWQ3RfctJfPqqbLG1yKE1LdsL6XP3oCYR8iEDbGkUiwhuSSEjHt
 
