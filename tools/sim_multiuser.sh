@@ -6,6 +6,10 @@
 set -euo pipefail
 BASE="http://localhost:8787"
 H="Content-Type: application/json"
+PYTHON=${PYTHON:-python}
+RUN_ID=${RUN_ID:-$(date +%s)}
+ADMIN_USERNAME=${ADMIN_USERNAME:-}
+ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
 
 ok()   { echo "  ✓ $1"; }
 step() { echo ""; echo "══ $1 ══"; }
@@ -13,13 +17,13 @@ fail() { echo "  ✗ FAIL: $1"; exit 1; }
 
 jq_val() {
   local json="$1" key="$2"
-  echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('$key',''))" 2>/dev/null
+  echo "$json" | "$PYTHON" -c "import sys,json; d=json.load(sys.stdin); print(d.get('$key',''))" 2>/dev/null
 }
 
 check_ok() {
   local resp="$1" label="$2"
   local v
-  v=$(echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('ok','false'))" 2>/dev/null)
+  v=$(echo "$resp" | "$PYTHON" -c "import sys,json; d=json.load(sys.stdin); print(d.get('ok','false'))" 2>/dev/null)
   if [ "$v" = "False" ] || [ "$v" = "false" ] || [ -z "$v" ]; then
     echo "  ✗ $label FAILED: $resp"
     exit 1
@@ -29,21 +33,36 @@ check_ok() {
 # ─── Phase 0: create accounts ────────────────────────────────────────────────
 step "Phase 0: Creating accounts"
 
-ADMIN_ID="38246aa5-eba9-48bc-959e-a6e4226b5b13"
+if [ -z "$ADMIN_USERNAME" ] || [ -z "$ADMIN_PASSWORD" ]; then
+  fail "set ADMIN_USERNAME and ADMIN_PASSWORD for an existing admin; passwordless /hub/session/create is intentionally disabled by default"
+fi
+
+admin_login=$(curl -sf -X POST "$BASE/hub/auth/login" -H "$H" -d "{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"}")
+check_ok "$admin_login" "admin login"
+ADMIN_TOK=$(jq_val "$admin_login" session_token)
+ok "admin session opened"
 
 make_account() {
   local role="$1" label="$2"
+  local username="${label}-${RUN_ID}"
+  local password="CursiveOS-${label}-${RUN_ID}!"
   local resp
-  resp=$(curl -sf -X POST "$BASE/hub/accounts/create" -H "$H" -d "{\"role\":\"$role\",\"label\":\"$label\"}")
+  resp=$(curl -sf -X POST "$BASE/hub/auth/register" -H "$H" -d "{\"username\":\"$username\",\"password\":\"$password\",\"role\":\"$role\"}")
   check_ok "$resp" "create $label"
-  jq_val "$resp" account_id
+  echo "$(jq_val "$resp" account_id):$(jq_val "$resp" session_token)"
 }
 
-ALICE=$(make_account contributor alice)
-BOB=$(make_account contributor bob)
-CAROL=$(make_account contributor carol)
-VAL1=$(make_account validator val1)
-VAL2=$(make_account validator val2)
+ALICE_PAIR=$(make_account contributor alice)
+BOB_PAIR=$(make_account contributor bob)
+CAROL_PAIR=$(make_account contributor carol)
+VAL1_PAIR=$(make_account validator val1)
+VAL2_PAIR=$(make_account validator val2)
+
+ALICE=${ALICE_PAIR%%:*}; ALICE_TOK=${ALICE_PAIR#*:}
+BOB=${BOB_PAIR%%:*}; BOB_TOK=${BOB_PAIR#*:}
+CAROL=${CAROL_PAIR%%:*}; CAROL_TOK=${CAROL_PAIR#*:}
+VAL1=${VAL1_PAIR%%:*}; VAL1_TOK=${VAL1_PAIR#*:}
+VAL2=${VAL2_PAIR%%:*}; VAL2_TOK=${VAL2_PAIR#*:}
 
 ok "alice = $ALICE"
 ok "bob   = $BOB"
@@ -51,24 +70,8 @@ ok "carol = $CAROL"
 ok "val1  = $VAL1"
 ok "val2  = $VAL2"
 
-# ─── Phase 0b: open sessions ─────────────────────────────────────────────────
-step "Phase 0b: Opening sessions"
-
-get_session() {
-  local acct="$1"
-  local resp
-  resp=$(curl -sf -X POST "$BASE/hub/session/create" -H "$H" -d "{\"account_id\":\"$acct\"}")
-  check_ok "$resp" "session $acct"
-  jq_val "$resp" session_token
-}
-
-ADMIN_TOK=$(get_session "$ADMIN_ID")
-ALICE_TOK=$(get_session "$ALICE")
-BOB_TOK=$(get_session "$BOB")
-CAROL_TOK=$(get_session "$CAROL")
-VAL1_TOK=$(get_session "$VAL1")
-VAL2_TOK=$(get_session "$VAL2")
-ok "all sessions opened"
+# Account registration returns the session tokens; no passwordless session bypass is used.
+ok "all contributor/validator sessions opened"
 
 # ─── Phase 0c: dispense test credits ─────────────────────────────────────────
 step "Phase 0c: Dispensing test credits (admin)"

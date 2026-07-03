@@ -15,7 +15,7 @@ Branch: main
 External pilot status: GO for supervised rail-mode pilot.
 
 Implemented and pushed:
-1. Strict session-token auth for `/hub/*` (except bootstrap/create)
+1. Strict session-token auth for `/hub/*` (public bootstrap does not enumerate accounts; passwordless create/session endpoints are disabled by default after the 2026-07-03 hardening pass)
 2. Role/ownership permission guards
 3. Wallet bind flow + EIP-191 challenge/verify flow to `verified`
 4. Rate limiting + action audit trail

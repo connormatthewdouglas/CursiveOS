@@ -1,4 +1,5 @@
 const API = window.HUB_API_BASE || 'http://localhost:8787';
+const MIN_PASSWORD_LENGTH = 12;
 
 // ── State ────────────────────────────────────────────────────────────────────
 let SESSION_TOKEN = null;
@@ -37,6 +38,17 @@ function clearMsg(id) {
   if (el) { el.className = 'form-msg'; el.textContent = ''; }
 }
 
+function escHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function truncHtml(v, max) {
+  const s = String(v ?? '');
+  return `${escHtml(s.slice(0, max))}${s.length > max ? '…' : ''}`;
+}
+
 function shortId(id) { return id ? id.slice(0, 8) + '…' : '–'; }
 
 function friendlyRole(role) {
@@ -48,7 +60,7 @@ function accountLabel(a) {
 }
 
 function badgeHtml(text, cls) {
-  return `<span class="badge ${cls}">${text}</span>`;
+  return `<span class="badge ${cls}">${escHtml(text)}</span>`;
 }
 
 function submissionBadge(state) {
@@ -194,11 +206,11 @@ async function loadBalance() {
       strip.innerHTML = `
         <span class="bl">Balance</span>
         <span class="bv">${Number(b.balance_btc).toFixed(8)} BTC</span>
-        <span class="bl">~$${b.balance_usd}</span>
+        <span class="bl">~$${Number(b.balance_usd || 0).toFixed(2)}</span>
         <div class="bs"></div>
         <span class="bl">Total earned</span>
         <span class="bv">${Number(b.total_earned_btc).toFixed(8)} BTC</span>
-        <span class="bl">~$${b.total_earned_usd}</span>`;
+        <span class="bl">~$${Number(b.total_earned_usd || 0).toFixed(2)}</span>`;
     } else {
       strip.style.display = 'none';
     }
@@ -323,12 +335,12 @@ async function loadSubmissions() {
   }
   tbody.innerHTML = mine.map(s => `<tr>
     <td>
-      <strong style="font-size:13px">${s.title}</strong>
-      ${s.description ? `<div style="font-size:12px;color:var(--text3);margin-top:2px">${s.description.slice(0,100)}${s.description.length>100?'…':''}</div>` : ''}
+      <strong style="font-size:13px">${escHtml(s.title)}</strong>
+      ${s.description ? `<div style="font-size:12px;color:var(--text3);margin-top:2px">${truncHtml(s.description, 100)}</div>` : ''}
     </td>
-    <td class="td-dim">${s.class}</td>
+    <td class="td-dim">${escHtml(s.class)}</td>
     <td>${submissionBadge(s.state)}</td>
-    <td style="text-align:right">${s.verdict ? `<span style="color:var(--text2);font-size:12px">${s.verdict}</span>` : '–'}</td>
+    <td style="text-align:right">${s.verdict ? `<span style="color:var(--text2);font-size:12px">${escHtml(s.verdict)}</span>` : '–'}</td>
   </tr>`).join('');
 }
 
@@ -406,11 +418,11 @@ async function loadVote() {
       <div id="voteRows">${accepted.map(s => `
         <div class="vote-row">
           <div class="vote-info">
-            <strong>${s.title}</strong>
-            <span>${s.class}${s.submission_hash && !s.submission_hash.startsWith('auto:') ? ` · <code>${s.submission_hash.slice(0,12)}</code>` : ''}</span>
-            ${s.description ? `<div class="vote-desc">${s.description.slice(0,160)}${s.description.length>160?'…':''}</div>` : ''}
+            <strong>${escHtml(s.title)}</strong>
+            <span>${escHtml(s.class)}${s.submission_hash && !String(s.submission_hash).startsWith('auto:') ? ` · <code>${truncHtml(s.submission_hash, 12)}</code>` : ''}</span>
+            ${s.description ? `<div class="vote-desc">${truncHtml(s.description, 160)}</div>` : ''}
           </div>
-          <input type="number" class="vote-input" data-subid="${s.submission_id}" min="0" max="100" step="1" value="0" />
+          <input type="number" class="vote-input" data-subid="${escHtml(s.submission_id)}" min="0" max="100" step="1" value="0" />
           <span style="color:var(--text3);font-size:12px">pts</span>
         </div>`).join('')}
       </div>
@@ -519,7 +531,7 @@ async function loadEarnings() {
     get('/hub/rewards/ledger?limit=20').catch(() => ({ data: [] })),
   ]);
 
-  const btcPrice = Number(process?.env?.BTC_PRICE_USD || 85000);
+  const btcPrice = Number(window.BTC_PRICE_USD || 85000);
   const balBtc   = Number(balance.balance_btc || 0);
   const earnedBtc= Number(balance.total_earned_btc || 0);
   const allLTV   = Number(lifetime.all_lifetime_votes || 0);
@@ -543,7 +555,7 @@ async function loadEarnings() {
     </div>
     <div class="stat-card sc-amber">
       <div class="stat-label">Yield Share</div>
-      <div class="stat-value">${mine?.lifetime_share_pct || '0.00'}%</div>
+      <div class="stat-value">${Number(mine?.lifetime_share_pct || 0).toFixed(2)}%</div>
       <div class="stat-sub">permanent royalty share</div>
     </div>`;
 
@@ -552,10 +564,10 @@ async function loadEarnings() {
   const ltvRows = lifetime.data || [];
   ltvTbody.innerHTML = ltvRows.length
     ? ltvRows.map(r => `<tr ${r.account_id === ACCOUNT_ID ? 'style="background:rgba(91,141,239,.06)"' : ''}>
-        <td><strong>${acctMap[r.account_id] || shortId(r.account_id)}</strong>
+        <td><strong>${escHtml(acctMap[r.account_id] || shortId(r.account_id))}</strong>
           ${r.account_id === ACCOUNT_ID ? ' <span style="font-size:11px;color:var(--blue)">(you)</span>' : ''}</td>
         <td>${Number(r.lifetime_votes).toFixed(1)}</td>
-        <td>${r.lifetime_share_pct}%</td>
+        <td>${Number(r.lifetime_share_pct || 0).toFixed(2)}%</td>
         <td class="td-dim">${Number(r.total_payout_btc||0).toFixed(8)}</td>
         <td class="td-dim">${Number(r.total_royalty_btc||0).toFixed(8)}</td>
       </tr>`).join('')
@@ -571,7 +583,7 @@ async function loadEarnings() {
   const histRows = ledger.data || [];
   histTbody.innerHTML = histRows.length
     ? histRows.map(e => `<tr>
-        <td>${eventLabels[e.event_type] || e.event_type}</td>
+        <td>${escHtml(eventLabels[e.event_type] || e.event_type)}</td>
         <td class="td-dim">${Number(e.amount).toFixed(8)} BTC</td>
         <td class="td-dim">${e.cycle_id || '–'}</td>
       </tr>`).join('')
@@ -638,7 +650,7 @@ function loadAdmin() {
   // Populate account selects
   const opts = ALL_ACCOUNTS
     .filter(a => a.account_id !== ACCOUNT_ID)
-    .map(a => `<option value="${a.account_id}">${accountLabel(a)}</option>`)
+    .map(a => `<option value="${escHtml(a.account_id)}">${escHtml(accountLabel(a))}</option>`)
     .join('');
   ['adminDispenseAccount','adminControlAccount','adminDeleteAccount'].forEach(id => {
     const el = document.getElementById(id);
@@ -724,7 +736,7 @@ document.getElementById('settingsChangePwBtn').addEventListener('click', async (
   const current_password = document.getElementById('settingsCurrentPw').value;
   const new_password     = document.getElementById('settingsNewPw').value;
   if (!current_password || !new_password) { msg('settingsChangePwMsg', 'Fill in both fields.', 'err'); return; }
-  if (new_password.length < 6) { msg('settingsChangePwMsg', 'New password must be at least 6 characters.', 'err'); return; }
+  if (new_password.length < MIN_PASSWORD_LENGTH) { msg('settingsChangePwMsg', `New password must be at least ${MIN_PASSWORD_LENGTH} characters.`, 'err'); return; }
   const r = await post('/hub/auth/change-password', { current_password, new_password });
   if (r.ok) {
     msg('settingsChangePwMsg', 'Password changed.', 'ok');
@@ -772,21 +784,6 @@ document.getElementById('showLoginPathFromSetup').addEventListener('click', () =
   document.getElementById('adminSetupPath').style.display = 'none';
   document.getElementById('loginPath').style.display = 'block';
   document.getElementById('createPath').style.display = 'none';
-  document.getElementById('resetAdminPath').style.display = 'none';
-});
-
-document.getElementById('showResetAdminPath').addEventListener('click', () => {
-  document.getElementById('adminSetupPath').style.display = 'none';
-  document.getElementById('loginPath').style.display = 'none';
-  document.getElementById('createPath').style.display = 'none';
-  document.getElementById('resetAdminPath').style.display = 'block';
-});
-
-document.getElementById('showLoginPathFromReset').addEventListener('click', () => {
-  document.getElementById('resetAdminPath').style.display = 'none';
-  document.getElementById('loginPath').style.display = 'block';
-  document.getElementById('createPath').style.display = 'none';
-  document.getElementById('adminSetupPath').style.display = 'none';
 });
 
 // ── Sign In ───────────────────────────────────────────────────────────────────
@@ -818,14 +815,14 @@ document.getElementById('createBtn').addEventListener('click', async () => {
   const confirm  = document.getElementById('signupPasswordConfirm').value;
   const role     = document.getElementById('signupRole').value;
   if (!username) { document.getElementById('createError').textContent = 'Choose a username.'; return; }
-  if (password.length < 6) { document.getElementById('createError').textContent = 'Password must be at least 6 characters.'; return; }
+  if (password.length < MIN_PASSWORD_LENGTH) { document.getElementById('createError').textContent = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`; return; }
   if (password !== confirm) { document.getElementById('createError').textContent = 'Passwords don\'t match.'; return; }
   const btn = document.getElementById('createBtn');
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
     const r = await post('/hub/auth/register', { username, password, role });
     if (!r.ok) {
-      const errMap = { username_taken: 'That username is already taken.', password_too_short_min_6: 'Password must be at least 6 characters.', username_must_be_2_to_40_chars: 'Username must be 2–40 characters.' };
+      const errMap = { username_taken: 'That username is already taken.', [r.error]: r.min_password_length ? `Password must be at least ${r.min_password_length} characters.` : undefined, username_must_be_2_to_40_chars: 'Username must be 2–40 characters.' };
       throw new Error(errMap[r.error] || r.error || 'Could not create account.');
     }
     SESSION_TOKEN = r.session_token;
@@ -848,7 +845,7 @@ document.getElementById('adminSetupBtn').addEventListener('click', async () => {
   const password   = document.getElementById('setupAdminPassword').value;
   if (!account_id) { document.getElementById('adminSetupError').textContent = 'Paste your admin account UUID.'; return; }
   if (!username)   { document.getElementById('adminSetupError').textContent = 'Choose a username.'; return; }
-  if (password.length < 6) { document.getElementById('adminSetupError').textContent = 'Password must be at least 6 characters.'; return; }
+  if (password.length < MIN_PASSWORD_LENGTH) { document.getElementById('adminSetupError').textContent = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`; return; }
   const btn = document.getElementById('adminSetupBtn');
   btn.disabled = true; btn.textContent = 'Setting up…';
   try {
@@ -864,33 +861,6 @@ document.getElementById('adminSetupBtn').addEventListener('click', async () => {
     document.getElementById('adminSetupError').textContent = e.message;
   } finally {
     btn.disabled = false; btn.textContent = 'Set Up Admin Login';
-  }
-});
-
-// ── Admin Password Reset ──────────────────────────────────────────────────────
-document.getElementById('resetAdminBtn').addEventListener('click', async () => {
-  const account_id = document.getElementById('resetAdminId').value.trim();
-  const new_password = document.getElementById('resetAdminPassword').value;
-  const confirm    = document.getElementById('resetAdminPasswordConfirm').value;
-  const err = (t) => { document.getElementById('resetAdminError').textContent = t; };
-  if (!account_id)          { err('Paste your admin account UUID.'); return; }
-  if (new_password.length < 6) { err('Password must be at least 6 characters.'); return; }
-  if (new_password !== confirm)  { err('Passwords do not match.'); return; }
-  const btn = document.getElementById('resetAdminBtn');
-  btn.disabled = true; btn.textContent = 'Resetting…';
-  try {
-    const r = await post('/hub/auth/reset-admin', { account_id, new_password });
-    if (!r.ok) throw new Error(r.error || 'Reset failed.');
-    SESSION_TOKEN = r.session_token;
-    ACCOUNT_ID    = r.account_id;
-    ACCOUNT_ROLE  = r.role;
-    USERNAME      = r.username;
-    saveSession();
-    await bootApp();
-  } catch (e) {
-    err(e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Reset Password';
   }
 });
 

@@ -8,17 +8,11 @@ import { verifyMessage } from 'ethers';
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-app.use('/hub', enforceRateLimit);
-app.use('/hub', enforceNetworkLockout);
-app.use('/hub', requireHubSession);
-app.use('/hub', enforceAccountControl);
-
 const PORT = process.env.PORT || 8787;
 const REF = process.env.SUPABASE_PROJECT_REF;
 const TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
 const SESSION_TTL_HOURS = Number(process.env.HUB_SESSION_TTL_HOURS || 24);
+const MIN_PASSWORD_LENGTH = Number(process.env.HUB_MIN_PASSWORD_LENGTH || 12);
 const HUB_RATE_LIMIT_PER_MINUTE = Number(process.env.HUB_RATE_LIMIT_PER_MINUTE || 180);
 const HUB_SLOW_MODE_DELAY_MS = Number(process.env.HUB_SLOW_MODE_DELAY_MS || 1500);
 const HUB_NETWORK_STRIKE_THRESHOLD = Number(process.env.HUB_NETWORK_STRIKE_THRESHOLD || 6);
@@ -26,6 +20,24 @@ const HUB_NETWORK_STRIKE_WINDOW_SECONDS = Number(process.env.HUB_NETWORK_STRIKE_
 const HUB_NETWORK_LOCKOUT_MINUTES = Number(process.env.HUB_NETWORK_LOCKOUT_MINUTES || 10);
 const HUB_IP_REPUTATION_DENYLIST = (process.env.HUB_IP_REPUTATION_DENYLIST || '').split(',').map(s => s.trim()).filter(Boolean);
 const HUB_IP_REPUTATION_WATCHLIST = (process.env.HUB_IP_REPUTATION_WATCHLIST || '').split(',').map(s => s.trim()).filter(Boolean);
+const HUB_CORS_ORIGINS = (process.env.HUB_CORS_ORIGINS || 'http://localhost:8787,http://127.0.0.1:8787,http://localhost:8080,http://127.0.0.1:8080')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+const HUB_ENABLE_LEGACY_PASSWORDLESS_ACCOUNTS = process.env.HUB_ENABLE_LEGACY_PASSWORDLESS_ACCOUNTS === 'true';
+
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin || HUB_CORS_ORIGINS.includes('*') || HUB_CORS_ORIGINS.includes(origin)) return cb(null, true);
+    return cb(new Error('cors_origin_denied'));
+  },
+  credentials: false,
+}));
+app.use(express.json({ limit: process.env.HUB_JSON_BODY_LIMIT || '64kb' }));
+app.use('/hub', enforceRateLimit);
+app.use('/hub', enforceNetworkLockout);
+app.use('/hub', requireHubSession);
+app.use('/hub', enforceAccountControl);
 
 const rateWindowMs = 60 * 1000;
 const _ensured = new Set();
@@ -34,6 +46,14 @@ const networkStrikeBuckets = new Map();
 
 function esc(v) {
   return String(v ?? '').replace(/'/g, "''");
+}
+
+function passwordTooShort(pw) {
+  return typeof pw !== 'string' || pw.length < MIN_PASSWORD_LENGTH;
+}
+
+function passwordTooShortError() {
+  return `password_too_short_min_${MIN_PASSWORD_LENGTH}`;
 }
 
 function scopeAccount(req) {
@@ -290,13 +310,19 @@ async function hashPassword(pw) {
 }
 async function verifyPassword(pw, stored) {
   const [salt, hash] = stored.split(':');
+  if (!salt || !hash) return false;
   return new Promise((res, rej) => {
-    crypto.scrypt(pw, salt, 64, (err, h) => err ? rej(err) : res(h.toString('hex') === hash));
+    crypto.scrypt(pw, salt, 64, (err, h) => {
+      if (err) return rej(err);
+      const expected = Buffer.from(hash, 'hex');
+      if (expected.length !== h.length) return res(false);
+      return res(crypto.timingSafeEqual(h, expected));
+    });
   });
 }
 
 async function createSessionForAccount(accountId) {
-  const token = crypto.randomBytes(24).toString('hex');
+  const token = crypto.randomBytes(32).toString('hex');
   await sql(`insert into l5_auth_sessions (session_token, account_id, status, expires_at, last_seen_at)
     values ('${esc(token)}', '${esc(accountId)}', 'active', now() + interval '${Number(SESSION_TTL_HOURS)} hours', now());`);
   return token;
@@ -304,12 +330,10 @@ async function createSessionForAccount(accountId) {
 
 function isSessionOptionalPath(path) {
   return path === '/session/bootstrap'
-    || path === '/session/create'
-    || path === '/accounts/create'
     || path === '/auth/login'
     || path === '/auth/register'
     || path === '/auth/setup-admin'
-    || path === '/auth/reset-admin';
+    || (HUB_ENABLE_LEGACY_PASSWORDLESS_ACCOUNTS && (path === '/session/create' || path === '/accounts/create'));
 }
 
 async function requireHubSession(req, res, next) {
@@ -859,7 +883,7 @@ app.post('/hub/auth/register', async (req, res) => {
     const { username, password, role = 'contributor' } = req.body || {};
     if (!username || !password) return res.status(400).json({ ok: false, error: 'missing_fields' });
     if (username.trim().length < 2 || username.trim().length > 40) return res.status(400).json({ ok: false, error: 'username_must_be_2_to_40_chars' });
-    if (password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    if (passwordTooShort(password)) return res.status(400).json({ ok: false, error: passwordTooShortError(), min_password_length: MIN_PASSWORD_LENGTH });
     const validRoles = ['contributor', 'validator', 'consumer'];
     if (!validRoles.includes(role)) return res.status(400).json({ ok: false, error: 'invalid_role' });
     const existing = await sql(`select account_id from l5_accounts where lower(username)=lower('${esc(username.trim())}') limit 1;`);
@@ -880,7 +904,7 @@ app.post('/hub/auth/setup-admin', async (req, res) => {
   try {
     const { account_id, username, password } = req.body || {};
     if (!account_id || !username || !password) return res.status(400).json({ ok: false, error: 'missing_fields' });
-    if (password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    if (passwordTooShort(password)) return res.status(400).json({ ok: false, error: passwordTooShortError(), min_password_length: MIN_PASSWORD_LENGTH });
     const rows = await sql(`select account_id, role, password_hash from l5_accounts where account_id='${esc(account_id)}' limit 1;`);
     const acct = rows[0];
     if (!acct) return res.status(404).json({ ok: false, error: 'account_not_found' });
@@ -896,12 +920,16 @@ app.post('/hub/auth/setup-admin', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: String(e.message || e) }); }
 });
 
-// POST /hub/auth/reset-admin — reset password for admin account using UUID (no current password required)
+// POST /hub/auth/reset-admin — authenticated admin-only reset for admin accounts.
 app.post('/hub/auth/reset-admin', async (req, res) => {
   try {
+    const actorId = req.authAccountId;
+    const actorRole = await getAccountRole(actorId);
+    if (!canAdmin(actorRole)) return res.status(403).json({ ok: false, error: 'forbidden_admin_only' });
+
     const { account_id, new_password } = req.body || {};
     if (!account_id || !new_password) return res.status(400).json({ ok: false, error: 'missing_fields' });
-    if (new_password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    if (passwordTooShort(new_password)) return res.status(400).json({ ok: false, error: passwordTooShortError(), min_password_length: MIN_PASSWORD_LENGTH });
     const rows = await sql(`select account_id, role, username from l5_accounts where account_id='${esc(account_id)}' limit 1;`);
     const acct = rows[0];
     if (!acct) return res.status(404).json({ ok: false, error: 'account_not_found' });
@@ -909,7 +937,7 @@ app.post('/hub/auth/reset-admin', async (req, res) => {
     const hash = await hashPassword(new_password);
     await sql(`update l5_accounts set password_hash='${esc(hash)}' where account_id='${esc(account_id)}';`);
     const token = await createSessionForAccount(account_id);
-    await logAction({ action: 'auth_reset_admin', actorAccountId: account_id, req, details: {} });
+    await logAction({ action: 'auth_reset_admin', actorAccountId: actorId, req, details: { target_account_id: account_id } });
     res.json({ ok: true, session_token: token, account_id, username: acct.username, role: 'mixed' });
   } catch (e) { res.status(500).json({ ok: false, error: String(e.message || e) }); }
 });
@@ -920,7 +948,7 @@ app.post('/hub/auth/change-password', async (req, res) => {
     const actorId = req.authAccountId;
     const { current_password, new_password } = req.body || {};
     if (!current_password || !new_password) return res.status(400).json({ ok: false, error: 'missing_fields' });
-    if (new_password.length < 6) return res.status(400).json({ ok: false, error: 'password_too_short_min_6' });
+    if (passwordTooShort(new_password)) return res.status(400).json({ ok: false, error: passwordTooShortError(), min_password_length: MIN_PASSWORD_LENGTH });
     const rows = await sql(`select password_hash from l5_accounts where account_id='${esc(actorId)}' limit 1;`);
     if (!rows[0]?.password_hash) return res.status(400).json({ ok: false, error: 'no_password_set' });
     if (!await verifyPassword(current_password, rows[0].password_hash)) return res.status(401).json({ ok: false, error: 'wrong_current_password' });
@@ -932,6 +960,10 @@ app.post('/hub/auth/change-password', async (req, res) => {
 
 app.post('/hub/session/create', async (req, res) => {
   try {
+    if (!HUB_ENABLE_LEGACY_PASSWORDLESS_ACCOUNTS) {
+      return res.status(410).json({ ok: false, error: 'legacy_passwordless_session_create_disabled', replacement: '/hub/auth/login' });
+    }
+
     const accountId = (req.body?.account_id || '').toString().trim();
     if (!accountId) return res.status(400).json({ ok: false, error: 'missing_account_id' });
 
@@ -940,11 +972,9 @@ app.post('/hub/session/create', async (req, res) => {
 
     await ensureSessionTable();
 
-    const sessionToken = crypto.randomBytes(24).toString('hex');
-    await sql(`insert into l5_auth_sessions (session_token, account_id, status, expires_at, last_seen_at)
-      values ('${esc(sessionToken)}', '${esc(accountId)}', 'active', now() + interval '${Number(SESSION_TTL_HOURS)} hours', now());`);
+    const sessionToken = await createSessionForAccount(accountId);
 
-    await logAction({ action: 'session_create', actorAccountId: accountId, req, details: { ttl_hours: Number(SESSION_TTL_HOURS) } });
+    await logAction({ action: 'legacy_passwordless_session_create', actorAccountId: accountId, req, details: { ttl_hours: Number(SESSION_TTL_HOURS) } });
     res.json({ ok: true, account_id: accountId, session_token: sessionToken, expires_in_hours: Number(SESSION_TTL_HOURS) });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
@@ -1144,17 +1174,31 @@ app.get('/hub/admin/runbooks/network-abuse', async (req, res) => {
   }
 });
 
-app.get('/hub/session/bootstrap', async (_req, res) => {
+app.get('/hub/session/bootstrap', async (req, res) => {
   try {
-    const accounts = await sql(`select account_id, role, status, username, created_at from l5_accounts order by created_at asc limit 200;`);
-    const suggestedAdmin = accounts.find(a => a.role === 'mixed') || null;
-    const suggestedOperator = accounts.find(a => ['contributor','validator','consumer'].includes(a.role)) || accounts[0] || null;
+    const viewerAccountId = await resolveAccountFromSession(req);
+    if (!viewerAccountId) {
+      return res.json({
+        ok: true,
+        authenticated: false,
+        accounts: [],
+        suggested_account_id: null,
+        suggested_admin_account_id: null,
+        suggested_operator_account_id: null
+      });
+    }
+
+    const viewerRole = await getAccountRole(viewerAccountId);
+    const accountWhere = canAdmin(viewerRole) ? '' : `where account_id='${esc(viewerAccountId)}'`;
+    const accounts = await sql(`select account_id, role, status, username, created_at from l5_accounts ${accountWhere} order by created_at asc limit 200;`);
     res.json({
       ok: true,
-      // Default to a non-admin account so new visitors don't land on admin
-      suggested_account_id: (suggestedOperator || suggestedAdmin)?.account_id || null,
-      suggested_admin_account_id: suggestedAdmin?.account_id || null,
-      suggested_operator_account_id: suggestedOperator?.account_id || null,
+      authenticated: true,
+      viewer_account_id: viewerAccountId,
+      viewer_role: viewerRole || null,
+      suggested_account_id: viewerAccountId,
+      suggested_admin_account_id: null,
+      suggested_operator_account_id: viewerRole === 'mixed' ? null : viewerAccountId,
       accounts
     });
   } catch (e) {
@@ -1658,7 +1702,11 @@ app.get('/hub/rewards/my-balance', async (req, res) => {
 
 app.post('/hub/accounts/create', async (req, res) => {
   try {
-    // Anyone can create an account — no auth required (pilot: open sign-up)
+    if (!HUB_ENABLE_LEGACY_PASSWORDLESS_ACCOUNTS) {
+      return res.status(410).json({ ok: false, error: 'legacy_passwordless_account_create_disabled', replacement: '/hub/auth/register' });
+    }
+
+    // Legacy simulation path: passwordless account creation is disabled by default.
     const { role = 'contributor', label } = req.body || {};
     const validRoles = ['contributor', 'validator', 'consumer', 'mixed'];
     if (!validRoles.includes(role)) {

@@ -29,7 +29,7 @@ Status: In progress
 
 6) Permission safety
 - Status: PASS (strict token + abuse controls)
-- Current: admin-only cycle run, owner/admin plan guard, actor-match checks, session token -> account mapping, strict token-required access for `/hub/*` (except session bootstrap/create), per-route rate limit, account controls (`normal`/`slow`/`blocked`), anomaly stream, temporary network lockout policy, geo/ASN/reputation context capture, and admin runbook/resolve endpoints.
+- Current: admin-only cycle run, owner/admin plan guard, actor-match checks, session token -> account mapping, strict token-required access for `/hub/*` (public bootstrap returns no account list without a session; legacy passwordless account/session create is disabled by default), per-route rate limit, account controls (`normal`/`slow`/`blocked`), anomaly stream, temporary network lockout policy, geo/ASN/reputation context capture, and admin runbook/resolve endpoints.
 - Missing (post-pilot hardening): external reputation feed integration and automated reputation sync jobs.
 
 7) No-SQL operator journey validated

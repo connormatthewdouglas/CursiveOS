@@ -2,7 +2,7 @@
 
 Minimal backend for Hub tabs using Supabase SQL API.
 
-**Status note (2026-05-25):** This API is legacy v3.1-era MVP scaffolding and is not an implementation of the authoritative v3.3 economics specification or the Phase 0 seed bundle path. It still exposes pool/governance-shaped endpoints. Do not treat it as the active payout or fitness interface until it is replaced or migrated.
+**Status note (2026-07-03):** This API is legacy v3.1-era MVP scaffolding and is not an implementation of the authoritative v3.3 economics specification or the OS.0/CursiveRoot measurement queue path. It still exposes pool/governance-shaped endpoints. Do not treat it as the active payout or fitness interface until it is replaced or migrated.
 
 ## Setup
 1) cd hub-api
@@ -22,4 +22,6 @@ Minimal backend for Hub tabs using Supabase SQL API.
 
 ## Notes
 - This is MVP scaffolding for internal pilot.
-- Next step: add auth and account scoping (only show the operator's own data by default).
+- Auth/account scoping is password-session based. Public bootstrap no longer enumerates account UUIDs; authenticated non-admin users see only themselves; admins see the pilot account list.
+- Passwordless legacy endpoints (`/hub/accounts/create`, `/hub/session/create`) are disabled by default. Use `/hub/auth/register` and `/hub/auth/login`. Only set `HUB_ENABLE_LEGACY_PASSWORDLESS_ACCOUNTS=true` for isolated throwaway simulations.
+- CORS is deny-by-default outside localhost unless `HUB_CORS_ORIGINS` explicitly includes the origin. Keep `SUPABASE_ACCESS_TOKEN` server-only and never expose it to `hub/` or `dashboard/`.
