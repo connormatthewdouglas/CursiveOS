@@ -1,0 +1,16 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.13-pagecluster0",
+  "parent_variant_id": "parent-baseline-v0.12",
+  "contributor_id": "organism-proposer",
+  "commit_ref": "candidate-v0.13-pagecluster0",
+  "preset_version": "v0.13-pagecluster0",
+  "preset_path": "presets/cursiveos-presets-v0.13-pagecluster0.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "knobs_removed_vs_parent": 0,
+  "proposed_by": "organism_proposer.v0.1",
+  "declared_scope": "The v0.12 parent stack plus a single reversible sysctl: vm.page-cluster=0 (channel: memory). Autonomously proposed; one knob added, nothing removed.",
+  "hypothesis": "With a zram swap device (present in v0.12), vm.page-cluster=0 faults a single page per swap-in instead of a 8-page cluster, cutting wasted decompression under memory pressure. Expect the memory-pressure refault channel to improve vs v0.12 with no inference regression; other channels neutral.",
+  "rollback_method": "Restores the prior vm.page-cluster value captured at apply time, then delegates the rest of the revert to the v0.12 preset undo; harness reverts at run end."
+}
