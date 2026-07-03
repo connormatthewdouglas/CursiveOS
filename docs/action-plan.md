@@ -1,5 +1,5 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-06-29
+**Last updated:** 2026-07-03 (post-adversarial review)
 **Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
 **Current candidate:** none — v0.12b-swappiness **rejected** 2026-06-28; v0.13-sched **rejected** 2026-06-27
 **Current wrapper:** v1.4.5 (memory-pressure 5th channel + idle-power gate-only + observe-only concurrency probe)
