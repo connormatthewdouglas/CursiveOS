@@ -36,6 +36,13 @@ DEFAULT_SUPABASE_URL = "https://iovvktpuoinmjdgfxgvm.supabase.co"
 DEFAULT_SUPABASE_KEY = "sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
 DEFAULT_CONFIG = {
     "schema_version": "seed-organism.config.v0.1",
+    # Bump config_version whenever selection math (weights/caps/gates) is
+    # retuned. load_config() replaces any older on-disk state config with the
+    # current defaults, because rig-local config.json snapshots otherwise
+    # freeze retired weights forever (cycle-5 post-mortem: both founder rigs'
+    # default state dirs still carried the pre-2026-06-16 network=0.40
+    # weights, which turned pure network noise into fitness -0.12).
+    "config_version": 3,
     "current_cycle_share": 0.20,
     "lifetime_share": 0.80,
     "minimum_confidence": 0.65,
@@ -471,7 +478,18 @@ def ensure_state(state: Path) -> None:
 
 def load_config(state: Path) -> dict[str, Any]:
     ensure_state(state)
-    config = DEFAULT_CONFIG | read_json(state / "config.json")
+    stored = read_json(state / "config.json")
+    stored_version = int(stored.get("config_version") or 0)
+    if stored_version < int(DEFAULT_CONFIG["config_version"]):
+        # Stale selection math: the on-disk config predates a weights/gates
+        # retuning. Replace it with the current defaults (audit trail: the old
+        # file is preserved alongside as config.json.superseded-vN).
+        superseded = state / f"config.json.superseded-v{stored_version}"
+        if not superseded.exists():
+            write_json(superseded, stored)
+        write_json(state / "config.json", DEFAULT_CONFIG)
+        stored = dict(DEFAULT_CONFIG)
+    config = DEFAULT_CONFIG | stored
     config["weights"] = DEFAULT_CONFIG["weights"] | config.get("weights", {})
     config["caps_pct"] = DEFAULT_CONFIG["caps_pct"] | config.get("caps_pct", {})
     config["severe_regression_pct"] = DEFAULT_CONFIG["severe_regression_pct"] | config.get("severe_regression_pct", {})
@@ -611,6 +629,18 @@ def measurement_fingerprint(metrics: dict[str, Any]) -> str:
     return sha256_json(material)
 
 
+# Honest hardware conditions: measurement-quality flags that describe a real,
+# expected property of the host rather than missing/fabricated evidence. Per the
+# pre-registered V bar, honest runs must be accepted or held inconclusive — never
+# fraud-rejected. These flags therefore void only the affected channel in fitness
+# scoring (see score_performance) instead of disqualifying the whole bundle.
+# Example: ollama has no Intel Arc backend, so sustained inference is always
+# CPU-bound on the founder rigs even though a GPU is present.
+HONEST_HARDWARE_CONDITION_FLAGS: dict[str, str] = {
+    "sustained_inference_cpu_bound": "sustained",
+}
+
+
 def evidence_quality_failures(metrics: dict[str, Any], role: str = "metrics") -> list[str]:
     failures: list[str] = []
     source = str(metrics.get("source_provenance") or "")
@@ -625,8 +655,12 @@ def evidence_quality_failures(metrics: dict[str, Any], role: str = "metrics") ->
     if not isinstance(quality, dict):
         failures.append(f"{role} evidence gate: missing measurement_quality")
     elif not quality.get("decision_grade", False):
-        flags = quality.get("flags", [])
-        failures.append(f"{role} evidence gate: measurement_quality not decision-grade: {flags}")
+        flags = [str(f) for f in quality.get("flags", []) or []]
+        disqualifying = [f for f in flags if f not in HONEST_HARDWARE_CONDITION_FLAGS]
+        if disqualifying:
+            failures.append(f"{role} evidence gate: measurement_quality not decision-grade: {disqualifying}")
+        # Flags that are all honest hardware conditions do not reject the
+        # bundle; score_performance voids the affected channels instead.
     structured = metrics.get("structured_telemetry")
     if not isinstance(structured, dict):
         failures.append(f"{role} evidence gate: missing structured_telemetry")
@@ -827,6 +861,29 @@ def derive_confidence(metrics: dict[str, Any], missing_core: list[str]) -> float
     return clamp(0.50 + (0.10 * (min_repeat - 1)), 0.50, 0.90)
 
 
+def honest_condition_channels(metrics: dict[str, Any]) -> dict[str, list[str]]:
+    """Channels voided by honest hardware-condition flags, on the metrics or any source run."""
+    voided: dict[str, list[str]] = {}
+
+    def scan(quality: Any) -> None:
+        if not isinstance(quality, dict):
+            return
+        for flag in quality.get("flags", []) or []:
+            channel = HONEST_HARDWARE_CONDITION_FLAGS.get(str(flag))
+            if channel:
+                voided.setdefault(channel, [])
+                if str(flag) not in voided[channel]:
+                    voided[channel].append(str(flag))
+
+    scan(metrics.get("measurement_quality"))
+    source_runs = metrics.get("source_runs")
+    if isinstance(source_runs, dict):
+        for run in source_runs.values():
+            if isinstance(run, dict):
+                scan(run.get("measurement_quality"))
+    return voided
+
+
 def score_performance(
     *,
     variant: dict[str, Any],
@@ -849,12 +906,20 @@ def score_performance(
         "memory_pct": pct_lower_is_better(num(baseline, "memory_refault_s"), num(candidate, "memory_refault_s")),
     }
 
+    # Honest hardware conditions (e.g. sustained inference CPU-bound because
+    # the host GPU has no inference backend) void the affected channel's
+    # magnitude: it neither scores nor severe-gates. The corpus already
+    # established CPU sustained deltas are thermally unreliable; the pre-V-bar
+    # behavior of fraud-rejecting the whole honest bundle was the cycle-5 bug.
+    voided_channels = honest_condition_channels(metrics)
+
     weights = config["weights"]
     caps = config["caps_pct"]
+    sustained_weight = 0.0 if "sustained" in voided_channels else weights["sustained"]
     base_fitness = (
         weights["network"] * normalize_pct(deltas["network_pct"], caps["network"])
         + weights["coldstart"] * normalize_pct(deltas["coldstart_pct"], caps["coldstart"])
-        + weights["sustained"] * normalize_pct(deltas["sustained_pct"], caps["sustained"])
+        + sustained_weight * normalize_pct(deltas["sustained_pct"], caps["sustained"])
         - weights["idle_power"] * normalize_pct(deltas["idle_power_pct"], caps["idle_power"])
         + weights.get("memory", 0.0) * normalize_pct(deltas["memory_pct"], caps.get("memory", 50.0))
     )
@@ -865,7 +930,11 @@ def score_performance(
         severe.append(f"network regression {deltas['network_pct']:.2f}%")
     if deltas["coldstart_pct"] is not None and deltas["coldstart_pct"] < thresholds["coldstart"]:
         severe.append(f"cold-start regression {deltas['coldstart_pct']:.2f}%")
-    if deltas["sustained_pct"] is not None and deltas["sustained_pct"] < thresholds["sustained"]:
+    if (
+        "sustained" not in voided_channels
+        and deltas["sustained_pct"] is not None
+        and deltas["sustained_pct"] < thresholds["sustained"]
+    ):
         severe.append(f"sustained regression {deltas['sustained_pct']:.2f}%")
     if deltas["idle_power_pct"] is not None and deltas["idle_power_pct"] > thresholds["idle_power_cost"]:
         severe.append(f"idle power cost {deltas['idle_power_pct']:.2f}%")
@@ -925,6 +994,7 @@ def score_performance(
         "metric_derivation_fingerprint": metric_derivation_fingerprint(metrics),
         "missing_core_metrics": missing_core,
         "severe_regressions": severe,
+        "voided_channels": voided_channels,
         "timestamp": now_iso(),
     }
     result["sensor_result_hash"] = sha256_json(result)

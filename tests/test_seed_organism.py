@@ -504,6 +504,128 @@ class CoreEvaluationTest(unittest.TestCase):
         self.assertEqual(weird_decision, "accepted", weird_reason)
 
 
+class HonestHardwareConditionScopingTest(unittest.TestCase):
+    """Cycle-5 post-mortem: honest hardware-condition flags must void the
+    affected channel, not fraud-reject the bundle (pre-registered V bar)."""
+
+    def test_cpu_bound_founder_rig_is_scored_not_fraud_rejected(self) -> None:
+        # Founder-rig reality: a GPU is present but ollama has no backend for
+        # it, so sustained inference is CPU-bound with NO legacy hardware_class
+        # declaration. This exact shape produced rejected_unverified_evidence
+        # in cycle 5.
+        metrics = acceptance_grade_metrics(
+            coldstart_pct=8.0,
+            sustained_pct=1.0,
+            machine_id="honest-cpu-bound-founder-rig",
+            cpu_only=True,
+        )
+        self.assertIn("sustained_inference_cpu_bound", metrics["measurement_quality"]["flags"])
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=metrics, config=seed_organism.DEFAULT_CONFIG
+        )
+        self.assertEqual(sensor["voided_channels"], {"sustained": ["sustained_inference_cpu_bound"]})
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, metrics)
+        decision, reason = seed_organism.verdict(
+            FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, metrics
+        )
+        self.assertNotEqual(decision, "rejected_unverified_evidence", reason)
+        self.assertIn(decision, {"accepted", "inconclusive"}, reason)
+
+    def test_voided_sustained_neither_scores_nor_severe_gates(self) -> None:
+        cpu_bound = acceptance_grade_metrics(
+            coldstart_pct=8.0,
+            sustained_pct=-20.0,  # would trip the -15% severe gate if scored
+            machine_id="honest-cpu-bound-sustained-reg",
+            cpu_only=True,
+        )
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=cpu_bound, config=seed_organism.DEFAULT_CONFIG
+        )
+        self.assertEqual(sensor["voided_channels"], {"sustained": ["sustained_inference_cpu_bound"]})
+        self.assertEqual(sensor["severe_regressions"], [])
+        # The same run with GPU-bound sustained scores and severe-gates it.
+        gpu = acceptance_grade_metrics(
+            coldstart_pct=8.0,
+            sustained_pct=-20.0,
+            machine_id="honest-gpu-sustained-reg",
+        )
+        gpu_sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=gpu, config=seed_organism.DEFAULT_CONFIG
+        )
+        self.assertEqual(gpu_sensor["voided_channels"], {})
+        self.assertTrue(any("sustained regression" in s for s in gpu_sensor["severe_regressions"]))
+        sustained_term = seed_organism.DEFAULT_CONFIG["weights"]["sustained"] * (
+            -20.0 / seed_organism.DEFAULT_CONFIG["caps_pct"]["sustained"]
+        )
+        self.assertAlmostEqual(sensor["base_fitness"] - gpu_sensor["base_fitness"], -sustained_term, places=6)
+
+    def test_honest_flag_does_not_mask_other_channel_regressions(self) -> None:
+        metrics = acceptance_grade_metrics(
+            coldstart_pct=-10.0,  # real cold-start regression
+            machine_id="honest-cpu-bound-cold-reg",
+            cpu_only=True,
+        )
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=metrics, config=seed_organism.DEFAULT_CONFIG
+        )
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, metrics)
+        decision, reason = seed_organism.verdict(
+            FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, metrics
+        )
+        self.assertEqual(decision, "rejected_negative_fitness", reason)
+
+    def test_disqualifying_quality_flags_still_reject_evidence(self) -> None:
+        metrics = acceptance_grade_metrics(
+            coldstart_pct=8.0,
+            sample_counts={"network": 3, "coldstart": 3, "sustained": 3, "idle_power": 2},
+            machine_id="low-idle-samples-rig",
+        )
+        self.assertIn("idle_power_has_fewer_than_3_samples", metrics["measurement_quality"]["flags"])
+        sensor = seed_organism.score_performance(
+            variant=FIXTURE_VARIANT, metrics=metrics, config=seed_organism.DEFAULT_CONFIG
+        )
+        regression = seed_organism.evaluate_regression(FIXTURE_VARIANT, metrics)
+        decision, reason = seed_organism.verdict(
+            FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, metrics
+        )
+        self.assertEqual(decision, "rejected_unverified_evidence", reason)
+
+
+class ConfigVersionUpgradeTest(unittest.TestCase):
+    """Rig-local config.json snapshots must not freeze retired selection math
+    (cycle-5 post-mortem: both founder rigs still carried network=0.40)."""
+
+    def test_stale_config_auto_upgrades_to_current_selection_math(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            state = Path(td) / "seed"
+            seed_organism.ensure_state(state)
+            (state / "config.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "seed-organism.config.v0.1",
+                        "minimum_confidence": 0.65,
+                        "weights": {"network": 0.4, "coldstart": 0.3, "sustained": 0.2, "idle_power": 0.1},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = seed_organism.load_config(state)
+            self.assertEqual(config["weights"], seed_organism.DEFAULT_CONFIG["weights"])
+            self.assertTrue((state / "config.json.superseded-v0").exists())
+            on_disk = json.loads((state / "config.json").read_text(encoding="utf-8"))
+            self.assertEqual(int(on_disk["config_version"]), int(seed_organism.DEFAULT_CONFIG["config_version"]))
+
+    def test_current_version_config_overrides_are_respected(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            state = Path(td) / "seed"
+            seed_organism.load_config(state)  # writes current defaults
+            on_disk = json.loads((state / "config.json").read_text(encoding="utf-8"))
+            on_disk["minimum_confidence"] = 0.7
+            (state / "config.json").write_text(json.dumps(on_disk), encoding="utf-8")
+            config = seed_organism.load_config(state)
+            self.assertEqual(config["minimum_confidence"], 0.7)
+
+
 class OS0TrustSpinePayloadTest(unittest.TestCase):
     def _accepted_independent_bundle(self) -> dict:
         m1 = acceptance_grade_metrics(coldstart_pct=8.0, sustained_pct=1.0, machine_id="trust-rig-a")
