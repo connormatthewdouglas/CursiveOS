@@ -1,4 +1,4 @@
-# CursiveOS — Agent Handover (2026-06-30, post-V verifier hardening)
+# CursiveOS — Agent Handover (2026-07-06, post first autonomous cycle)
 
 Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 `docs/action-plan.md`. This file = live operational state.
@@ -18,7 +18,10 @@ Pick-up note for the next agent. Pairs with `CursiveResearch/VALIDATION.md` and
 - **OS.0 identity contract (2026-07-01):** wrapper + contributor daemon canonical machine ids are `sha256(HW_ID_TUPLE + "\\n")[:16]` (`fingerprint_version=2`). See `docs/os0-machine-identity-contract.md`; dashboard tests collapse aliases and count only `claimed/running` daemon jobs as active.
 - **OS.0 dashboard contribution panel (2026-07-01):** dashboard keeps completed requests visible, joins jobs back to request/candidate/reward metadata, and renders per-machine contribution history with alias collapse. This is still read-only/public-alpha and simulated reward only.
 - **OS.0 trust spine (2026-07-01):** CursiveRoot now has database-backed `os0_identity_keys`, `os0_raw_artifact_index`, and `os0_trust_evaluations`; seed bundle upload writes identity/raw-artifact/trust rows alongside bundles. `payout_eligible` is hard-constrained false.
-- **Next:** exercise trust-spine upload/readback with live accepted bundles, add dashboard/operator visibility for trust rows, and continue hardware/wallet independence hardening before any real BTC/reward path.
+- **FIRST AUTONOMOUS CYCLE (cycle 5, 2026-07-06):** proposer-materialized `v0.13-pagecluster0` was privileged-enqueued, daemon-claimed on Stardust, screened, uploaded, and closed **with zero manual screen steps** — request+job `complete`, bundle `7eee6272…`. Per-channel the candidate is **neutral** (cold-start 0.0%, idle 0.0%, memory refault −0.9% ≈ noise, sustained −0.4%): the pre-registered page-cluster hypothesis is not supported on Stardust. Honest null; first proposer→queue→daemon→sensors loop closure.
+- **Trust spine exercised live (first rows, 2026-07-06):** upload wrote 1 identity key, 2 raw artifacts, 7 trust evaluations. New bundle gates: recompute ✓ / signed identity ✓ / replay ✓ / independent aggregation pending (correct for a single founder screen). Legacy bundles correctly read `blocked_recompute_mismatch`. Dashboard now renders the trust ledger (panel shipped + verified 2026-07-06).
+- **⚠ EVIDENCE-GATE COLLISION (top open decision):** the hardened evidence gate (2026-06-30) consumes `measurement_quality.decision_grade`, and the `sustained_inference_cpu_bound` flag (always true on both founder rigs — ollama runs CPU on Arc/Iris) sets `decision_grade=false` → the cycle-5 verdict is `rejected_unverified_evidence` **for an honest run**, and every future founder-rig screen will be too. This contradicts the pre-registered V bar ("honest controls accepted or held inconclusive rather than fraud-rejected"). Fix direction: scope the CPU-bound flag to disqualify only the sustained channel (weight 0.10) instead of the whole bundle, or map honest quality flags to `inconclusive`. Touches the acceptance core path — deliberately left for a reviewed change, not hot-patched.
+- **Next:** (1) fix the evidence-gate/CPU-bound collision (above); (2) re-screen v0.13-pagecluster0 through the fixed gate or retire the knob (channels read neutral anyway) and let the proposer advance to `vfscache50`; (3) ground proposer selection in the live QD archive + gated auto-enqueue via signed proposer identity (G4); (4) hardware/wallet independence hardening before any real BTC/reward path.
 
 ## Lineage
 
