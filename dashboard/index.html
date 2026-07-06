@@ -187,9 +187,9 @@
       <div class="arrow">→</div>
       <div class="gene" style="border-color:rgba(72,226,155,.55)"><b>v0.12 <span class="pill good">current</span></b><span>canonical parent baseline</span></div>
       <div class="arrow">↯</div>
-      <div class="gene" style="border-color:rgba(255,209,102,.45)"><b>v0.12b</b><span>alpha request candidate</span></div>
+      <div class="gene" style="border-color:rgba(255,209,102,.45)"><b>v0.13-pagecluster0</b><span>autonomously proposed candidate</span></div>
     </div>
-    <p class="mut" style="margin-top:14px">v0.12 is the accepted parent stack. v0.12b is an OS.0 alpha queue seed that exercises the request → daemon → evidence path for a narrower memory-axis hypothesis; this does not make alpha queue output payout truth.</p>
+    <p class="mut" style="margin-top:14px">v0.12 is the accepted parent stack. v0.13-pagecluster0 is the first candidate the organism proposed for itself (audited-knob proposer, zram companion tuning); daemons screen it through the normal queue and the sensors decide. Alpha queue output is never payout truth.</p>
   </div>
 
   <div class="twocol" id="evidence" style="margin-top:14px">
@@ -197,6 +197,12 @@
     <div class="panel"><h2>Simulated reward</h2><div id="payout"><span class="loading">Loading…</span></div></div>
   </div>
   <div class="note" style="margin-top:14px">⚠ <b>Not real money.</b> Payouts are a simulation that proves the accounting machinery works before any real Bitcoin is involved. No OS.0 queue request is payout-eligible.</div>
+
+  <div class="section-head" id="trust">
+    <div><h2>Trust spine</h2></div>
+    <p>Every uploaded evidence bundle now carries a verifier trust evaluation: recompute, signed identity, replay index, and independent aggregation checks. Payout eligibility is hard-constrained false at the database layer until the trust model is production-hardened.</p>
+  </div>
+  <div class="panel"><div id="trustrows"><span class="loading">Loading…</span></div></div>
 
   <div class="section-head">
     <div><h2>The fleet</h2></div>
@@ -325,6 +331,28 @@ function renderHeartbeats(caps){
   }).join("");
 }
 
+function trustCheck(label, ok){
+  const cls = ok === true ? "good" : ok === false ? "bad" : "warn";
+  const mark = ok === true ? "✓" : ok === false ? "✗" : "·";
+  return `<span class="pill ${cls}">${mark} ${esc(label)}</span>`;
+}
+function renderTrust(rows, canon){
+  const list = (rows || []).slice(0,6);
+  if (!list.length) return cardEmpty("No trust evaluations yet. The first daemon upload through the trust spine will populate this ledger.");
+  return list.map(t => `<div class="card">
+    <div class="row"><div><div class="title">${esc(variantLabel(t.variant_id))}</div><div class="mono mut">bundle ${esc(short(t.bundle_hash,16))} · machine ${esc(short(canon(t.machine_id),12))}</div></div><span class="pill ${statusClass(t.gate_status === "pass" ? "complete" : t.gate_status)}">${esc(t.gate_status || t.decision || "evaluated")}</span></div>
+    <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
+      ${trustCheck("recompute", t.recompute_ok)}
+      ${trustCheck("signed identity", t.signed_identity_ok)}
+      ${trustCheck("replay index", t.replay_ok)}
+      ${trustCheck("independent aggregation", t.independent_aggregation_ok)}
+      ${trustCheck("selection-truth eligible", t.selection_truth_eligible)}
+      <span class="pill warn">payout: hard-gated false</span>
+    </div>
+    <p class="mut mono" style="margin-top:8px">decision ${esc(t.decision || "—")} · evaluated ${esc(when(t.evaluated_at))}</p>
+  </div>`).join("");
+}
+
 function isoMs(value){
   const t = Date.parse(value || "");
   return Number.isFinite(t) ? t : 0;
@@ -359,7 +387,7 @@ function collapseCapabilities(caps, canon){
 }
 
 async function main(){
-  const [runs, machines, accepted, payouts, aliases, requests, jobs, caps, allRuns] = await Promise.all([
+  const [runs, machines, accepted, payouts, aliases, requests, jobs, caps, allRuns, trust] = await Promise.all([
     q("runs?select=machine_id,preset_version,network_delta_pct,coldstart_delta_pct,power_delta_w,created_at&order=created_at.desc&limit=24"),
     q("machines?select=machine_id,cpu,gpu,os&order=created_at.desc"),
     q("seed_bundles?decision=eq.accepted&select=variant_id,confidence,fitness_score,reason,machine_id,created_at&order=created_at.desc&limit=5"),
@@ -368,7 +396,8 @@ async function main(){
     q("measurement_requests?select=request_id,request_key,status,parent_variant_id,candidate_variant_id,cycle_id,selection_scope,trust_scope,reward_sats_placeholder,requested_by,notes,created_at,updated_at&order=priority.desc,created_at.asc&limit=20"),
     q("measurement_jobs?select=job_id,request_id,machine_id,status,result_bundle_hash,result_summary,failure_reason,claimed_at,started_at,finished_at,last_heartbeat_at&order=claimed_at.desc&limit=20"),
     q("machine_capabilities?select=machine_id,daemon_version,platform,os_name,kernel,cpu,gpu,selection_scopes,last_seen_at&order=last_seen_at.desc&limit=20"),
-    q("runs?select=id")
+    q("runs?select=id"),
+    q("os0_trust_evaluations?select=bundle_hash,variant_id,decision,machine_id,gate_status,recompute_ok,signed_identity_ok,replay_ok,independent_aggregation_ok,selection_truth_eligible,payout_eligible,evaluated_at&order=evaluated_at.desc&limit=6")
   ]);
 
   const canon = canonicalizer(aliases || []);
@@ -388,6 +417,7 @@ async function main(){
   document.getElementById("jobs").innerHTML = renderJobs(jobs || [], canon, requests || []);
   document.getElementById("contributions").innerHTML = renderContributions(jobs || [], requests || [], canon);
   document.getElementById("heartbeats").innerHTML = renderHeartbeats(canonicalCaps);
+  document.getElementById("trustrows").innerHTML = renderTrust(trust || [], canon);
 
   const a = (accepted || [])[0];
   document.getElementById("accepted").innerHTML = a ? `
@@ -424,7 +454,7 @@ async function main(){
 }
 
 main().catch(e => {
-  for (const id of ["requests","jobs","contributions","heartbeats","accepted","payout","machines"]) {
+  for (const id of ["requests","jobs","contributions","heartbeats","accepted","payout","machines","trustrows"]) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = `<p class="bad">Could not load live data: ${esc(e && e.message ? e.message : e)}</p>`;
   }
