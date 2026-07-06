@@ -221,22 +221,22 @@ All measurements are produced by scripts in the public repository. The preset st
 A recurring source of confusion in early-stage systems is the mixing of current functionality with future direction. This section separates them.
 
 **Implemented and operational:**
-- Preset stack v0.8 (28 tweaks, reversible)
-- Benchmark harness (`cursiveos-full-test-v1.4.sh`) with paired before/after measurement
-- CursiveRoot performance database with auto-submit
-- Phase 0 seed artifact storage and one real genesis baseline bundle
+- Preset lineage through canonical parent **v0.12** (reversible; promoted by accepted cycles 1 and 3)
+- Benchmark harness v1.4.5 (`cursiveos-full-test-v1.4.sh`) with five measured channels and paired before/after measurement
+- CursiveRoot performance database with auto-submit (144 runs, 3 physical machines, 18 bundles as of 2026-07-06)
+- Phase 0 selection loop demonstrated across five cycles: 2 accepted, 2 rejected, 1 autonomous null
+- OS.0 autonomy spine: request queue, unattended contributor daemon, autonomous proposer, and trust-spine rows (signed identity / raw artifacts / trust evaluations) on every upload; first fully autonomous cycle closed 2026-07-06
 - Public repository, documented APIs for benchmark submission
 - Five-layer architectural separation
 
 **Fully specified, implementation in progress or pending:**
-- Layer 5 economic architecture (v3.3 spec complete; mechanical implementation pending contributor/user population)
-- Hub rebuild to v3.3 specification (in active development)
-- Phase 0 candidate selection loop (baseline recorded; candidate screening in active development)
-- Measurement daemon (specified; Phase 1 scope)
-- Natural-language shell (architecturally sketched; v1.0 flagship implementation scope)
+- Layer 5 economic architecture (v3.3 spec complete; mechanical implementation pending contributor/user population; payouts simulated, `payout_eligible` hard-false)
+- Production trust layer: real signed identity + CursiveRoot-owned independent aggregation (replacing local-sim signatures and caller-attested confirmations)
+- Measurement daemon maturation for installed systems (the OS.0 contributor daemon exists; Phase 1 hardens it)
+- Natural-language shell (architecturally sketched; release-1.0 flagship implementation scope)
 
 **Architecturally committed but not yet specified in detail:**
-- ISO build pipeline and first installable release (v0.9)
+- ISO build pipeline and first installable release (release 0.9 — release numbers are independent of preset-lineage numbers; see ROADMAP.md)
 - Workload detection subsystem (Transition 3 scope)
 - Multi-workload sensor array expansion (Transition 3 scope)
 
@@ -255,7 +255,7 @@ Every claim in this paper is intended to fall clearly within one of these catego
 The project roadmap is organized around four transitions that progressively expand what CursiveOS is. The detailed roadmap is at [ROADMAP.md](ROADMAP.md).
 
 Summary of the transitions:
-- **Transition 1 (v0.9 → v1.0):** Tweak stack becomes a tuned, installable distribution. Natural-language shell ships as the flagship v1.0 feature.
+- **Transition 1 (release 0.9 → 1.0):** Tweak stack becomes a tuned, installable distribution. Natural-language shell ships as the flagship 1.0 feature. (Release numbers are independent of preset-lineage numbers.)
 - **Transition 2 (v1.x → v2.0):** Distribution becomes measurement-native. Every install contributes sensor data and receives validated updates. The organism improves through operation.
 - **Transition 3 (v2.x):** Distribution becomes workload-native. Multiple workload classes are covered by dedicated sensor families. Per-workload preset families emerge.
 - **Transition 4 (v3.x and beyond):** Distribution becomes substrate — the platform other projects build against. This is an ecological transition earned through execution quality and time.
@@ -268,7 +268,7 @@ The architecture in this paper is sized for Transition 4. The current implementa
 
 The work described in this paper has real limitations that matter for how the reader should evaluate it.
 
-**Validation population.** Initial results came from three hardware configurations. The Phase 0 ledger currently contains one real genesis baseline bundle from the Vega host, reconstructed from its terminal summary after CursiveRoot was unavailable at submit time. It is evidence of a measured baseline, not an accepted mutation or population confirmation. Generalization beyond these hosts is untested.
+**Validation population.** All results come from three physical founder machines (a Ryzen+Arc desktop, an i5 laptop, and the retired Vega/FX host). The Phase 0 ledger holds 18 bundles across five cycles — 2 accepted with repeat/counterbalanced/cross-machine confirmation, the rest rejected, inconclusive, or baselines. Confirmation across founder-owned machines is not population confirmation: no machine outside the founder's control has contributed yet, and generalization beyond these hosts is untested.
 
 **Benchmark coverage.** The current suite measures simulated-WAN network throughput, cold-start latency, sustained inference, idle power, and a basic stability flag. The network test is a loopback netem experiment rather than real-path traffic. Until this revision, idle power used a single reading; the harness now stores the median and raw samples from up to five readings per condition. Other workload dimensions — sustained multi-tenant throughput, memory pressure behavior under load, and long-duration reliability — are not yet directly measured.
 

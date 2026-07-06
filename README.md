@@ -56,8 +56,11 @@ also the contributor of an accepted variant.
 There is **no active candidate configured by default**. Cycle 3 already accepted
 **v0.11-zram-swappiness** (v0.9 + zram + `vm.swappiness=60`) and promoted it to
 **canonical parent v0.12**. Follow-on swappiness 100 (`v0.12b`) and scheduler
-(`v0.13`) screens were rejected, so the near-term focus has moved from more
-manual screens to **Seed Organism → OS.0**: contributor daemon + request queue.
+(`v0.13-sched`) screens were rejected. **Seed Organism → OS.0 is now running:**
+in cycle 5 (2026-07-06) the autonomous proposer materialized its own candidate
+(`v0.13-pagecluster0`), contributor daemons on two machines claimed it from the
+CursiveRoot request queue and screened it unattended, and the sensors returned
+an honest null — the first loop iteration with no manual screen step.
 The V verifier-hardening pass extends H2*: fabricated evidence is rejected by
 raw-artifact recompute, cross-state replays by a CursiveRoot/global fingerprint
 index, parsimony overclaims by invariant gates, and funded confirmation-Sybil
@@ -115,7 +118,8 @@ confirmation:
 - **Selection loop closed twice.** Lineage advanced **v0.8 → v0.9 → v0.12** through
   two accepted cycles (v0.9c cold-start retention, cycle 1; v0.11-zram-swappiness
   memory win, cycle 3). Equally important, a string of candidates were **rejected**
-  by measurement — v0.10 (neutral), v0.12b (worse), v0.13 (regressed) — which is the
+  by measurement — v0.10 (neutral), v0.12b (worse), v0.13-sched (regressed),
+  v0.13-pagecluster0 (neutral; the first autonomously proposed candidate) — which is the
   half of selection most projects never show. CursiveRoot holds 2 accepted bundles
   and 2 (simulated) payout reports.
 - **Network — scoped honestly.** On ordinary ≤1GbE lossy links the real win is the
@@ -276,7 +280,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Two-year claim window.** Accruals must be claimed within two years or redistribute to active claimants. Lifetime fitness itself is permanent.
 - **Forks inherit obligations.** The lifetime ledger is Bitcoin-anchored; forks that use the genome owe the same payments to the same contributors.
 
-**Current status (July 1, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 has **2 accepted variants** (v0.9c cycle 1, v0.11 cycle 3) with simulated payout reports. Parent preset v0.12. Harness v1.4.5 with memory channel integrated. CursiveRoot now includes the OS.0 request/job queue and trust-spine tables; public-alpha write paths remain simulated/not payout eligible and must be auth-hardened before broader testing.
+**Current status (July 6, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 has **2 accepted variants** (v0.9c cycle 1, v0.11 cycle 3) with simulated payout reports across **5 cycles run**. Parent preset v0.12. Harness v1.4.5 with memory channel integrated. The OS.0 request/job queue, contributor daemon, autonomous proposer, and trust spine are live and have run a full cycle end-to-end (cycle 5); every upload now writes signed-identity/raw-artifact/trust rows, with `payout_eligible` hard-false at the database layer. Write paths remain simulated/not payout eligible and must move to real signed identity + CursiveRoot-owned aggregation before broader testing.
 
 ---
 
@@ -295,12 +299,14 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Done** → V verifier-hardening: raw-artifact recompute, signed local identity, global replay index, independent aggregation policy, D-funded rejection, and H false-positive controls
 - **Done** → OS.0 trust spine v1: CursiveRoot tables for identity keys, raw-artifact index, and trust evaluations with `payout_eligible` hard-disabled
 - **Done** → OS.0 measurement queue + contributor daemon spine: first organism-requested measurement autonomously claimed, executed, and completed from the queue
+- **Done** → First fully autonomous cycle (cycle 5, 2026-07-06): proposer-materialized candidate → queue → daemons on two machines → honest null; trust spine exercised live (recompute/identity/replay checks on every upload); dashboard trust ledger shipped
+- **Done** → GPU inference unlocked on founder hardware: laptop CUDA path (5.0× sustained tok/s); Stardust Arc A750 SYCL backend built and verified (clean benchmark + harness integration pending)
 - **Done** → v3.3 economic architecture specified (white paper v2.6)
 - **Done** → Agent architecture specified (measurement daemon + natural-language shell)
-- **In progress** → Hub rebuild to v3.3 (new design system, seven-tab frontend, Supabase backend)
-- **In progress** → Productize V trust rails in CursiveRoot identity, request queue, and aggregation tables before external tester rollout
+- **Retired** → Hub v3.3 seven-tab rebuild (over-build; the operator surface is the single-page static dashboard until real operators demand more — legacy hub locked down)
+- **In progress** → Productize V trust rails: real signed identity + CursiveRoot-owned independent aggregation replacing local-sim signatures and caller-attested confirmations, before external tester rollout
 - **Next** → First external tester running full sensor array; validate population confirmation
-- **Next** → v0.9 ISO alpha: first installable CursiveOS with measurement daemon
+- **Next** → ISO alpha (release 0.9): first installable CursiveOS with the contributor daemon
 - **v1.0** → Flagship release with natural-language shell as default terminal
 - **v2.0** → Self-updating fleet: measurement-native installs improve automatically as the organism learns
 - **v3.0** → Workload-adaptive tuning across inference, mining, build, and other workload classes

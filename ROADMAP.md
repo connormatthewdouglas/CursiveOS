@@ -4,41 +4,46 @@
 
 This roadmap describes what CursiveOS is becoming. It's organized around four transitions — each one changes what the project fundamentally is, not just what features it has. Every architectural decision in the current specifications is sized for the end state, which is why some choices look overbuilt for where the project is now. They're sized for where it's going.
 
-## Where We Are: Pre-Transition-One (July 1, 2026)
+## Where We Are: Pre-Transition-One (July 6, 2026)
 
 The current state of the project:
 
 - Canonical parent preset **v0.12** (v0.9 stack + zram + swappiness=60), promoted from accepted v0.11 (cycle 3, 2026-06-26)
-- Harness **v1.4.5** with five measured channels (network gate-only, cold-start, sustained, idle power, memory-pressure); concurrency probe observe-only
-- Benchmark suite: network, cold-start, sustained, memory-pressure, concurrency-inference (prototype)
-- CursiveRoot: live database with **2 accepted mutation bundles**, **2 simulated payout reports**, OS.0 request/job queue tables, and OS.0 trust-spine tables for identity keys/raw artifacts/trust evaluations
-- Layer 5 economics v3.3 specified; Hub API remains MVP scaffolding
-- Phase 0 seed organism: selection loop demonstrated (cycles 1 and 3 closed); current OS.0 work is daemon/request coordination plus database-backed trust aggregation before money
-- Hub rebuild in progress
+- **The loop runs without the founder in the middle** (first time, cycle 5, 2026-07-06): the autonomous proposer selected and materialized a candidate from an audited knob library, a privileged enqueue put it in the CursiveRoot queue, contributor daemons on two machines claimed and screened it unattended, and the sensors delivered an honest null. Proposal, coordination, execution, and judgment each ran without a manual screen step — only the enqueue is still founder-gated, by design.
+- **Trust spine live and exercised**: every uploaded bundle now writes signed-identity, raw-artifact, and trust-evaluation rows; new bundles pass recompute/identity/replay checks with independent aggregation correctly pending; `payout_eligible` is hard-false at the database layer. The public dashboard renders the trust ledger.
+- Harness **v1.4.5** with five measured channels (network gate-only, cold-start, sustained, idle power, memory-pressure); concurrency probe observe-only. Honest hardware conditions void only their channel (never fraud-reject a run), and selection math is version-stamped so rig-local config can no longer drift from retuned weights.
+- CursiveRoot: **144 runs, 3 physical machines (7 fingerprint aliases), 18 bundles — 2 accepted (cycles 1, 3), 2 simulated payout reports, 5 cycles run.** Rejected/inconclusive verdicts are kept and shown; honest nulls are outcomes, not failures.
+- **GPU inference unlocked on founder hardware** (2026-07-06): laptop CUDA path enabled (5.0× sustained tok/s over CPU); Stardust Arc A750 SYCL backend built and functionally verified (23/23 layers offload), clean benchmark + harness integration pending an idle window.
+- Layer 5 economics v3.3 specified; simulated payouts only. The legacy hub API is locked down as scaffolding; the operator-facing surface is the **single-page static dashboard** (queue, jobs, contributions, trust ledger, fleet, honesty box) — deliberately small until a real external operator validates the need for more.
 
-The immediate engineering frontier is turning the request/job queue plus trust spine into an unattended contributor loop: daemon claims, artifact upload, CursiveRoot aggregation, dashboard visibility, and simulated rewards that stay gated from real money until Sybil resistance is production-grade.
+The immediate engineering frontier: replace the local-sim signature scheme with real signed identity, move confirmation aggregation from caller-attested to CursiveRoot-owned, and gate the proposer's auto-enqueue behind that identity — the last pieces between "founder-gated autonomy" and "an external machine can contribute end-to-end." Real money stays gated behind production Sybil resistance.
 
-What exists today is a set of shell scripts and a measurement apparatus. It is not yet an operating system. Making it one is Transition 1.
+What exists today is a measurement apparatus that has begun to run itself. It is not yet an operating system. Making it one is Transition 1.
 
 ---
 
 ## Transition 1: Tweak Stack → Tuned Distribution
 
-**Target release: v0.9 (ISO alpha) through v1.0 (ISO stable)**
+**Target release: ISO alpha ("release 0.9") through ISO stable ("release 1.0")**
+
+> **Naming note:** release numbers and preset-lineage numbers are separate namespaces. The preset lineage (v0.8 → v0.9 → v0.12 → …) counts accepted genome generations and is already past 0.9; the ISO releases below count what a user can install. The **v1.5 gate** in `docs/action-plan.md` (5+ external machines, clean safety record, confirmed external gains, auto-submit from machines we don't control) is the fleet-validation exit bar of this transition — it must pass before public solicitation, and it sits between the alpha ISO and the stable release.
 
 CursiveOS becomes a thing people install, not a thing people apply on top of Ubuntu. The tweak stack becomes part of the base image. The benchmarks and the full-test harness ship with the install. Users boot into a configured system and verify their hardware received the intended config with one command.
 
 Milestones:
 
-- Phase 0 seed organism complete on founder's rig (measurement-to-ledger loop demonstrated end-to-end across three cycles)
-- Hub v3.3 shipped and operational (seven-tab frontend, Supabase backend, auth-scoped, fresh design system)
+- ✅ Phase 0 seed organism complete on founder rigs — measurement-to-ledger loop demonstrated end-to-end across **five cycles** (two accepted, two rejected, one autonomous null), with repeat, counterbalanced, and cross-machine confirmation
+- ✅ OS.0 autonomy spine: request queue, unattended contributor daemon, trust-spine tables, and autonomous proposer all live — first organism-proposed candidate screened by daemons with zero manual screen steps (cycle 5)
+- Operator window: the **static read-only dashboard** (live: queue, jobs, contributions, trust ledger, fleet, honesty box) grows only as real operators validate the need. *The former "hub v3.3 seven-tab frontend" rebuild is retired as over-build — that complexity is what nearly killed the project once; legacy hub surfaces are locked down, not developed.*
+- Signed identity + CursiveRoot-owned independent aggregation replace the local-sim scheme and caller-attested confirmations (the hard gate in front of both external testers and any real reward)
 - First external tester successfully running the full sensor array (validates population confirmation works with more than one operator)
+- **v1.5 gate passes** (see naming note above) — the wrapper proves itself on machines we don't control
 - ISO build pipeline established (live-build or Cubic-based; automatable, reproducible)
-- v0.9 alpha ISO: installable, boots to a working system with presets applied, ships with benchmark harness and local measurement daemon
-- Measurement daemon (non-LLM) running locally on installed systems, submitting sensor data to the hub with explicit user consent
-- v1.0 stable ISO: above, plus the **natural-language shell** (see Transition 4 flagship feature) as the default operator interface
+- Alpha ISO: installable, boots to a working system with presets applied, ships with benchmark harness and the contributor daemon
+- Contributor daemon (non-LLM) running locally on installed systems, submitting sensor data to CursiveRoot with explicit user consent — *this is the OS.0 daemon that already exists, matured, not a new build*
+- Stable ISO: above, plus the **natural-language shell** (see Transition 4 flagship feature) as the default operator interface
 
-v1.0 is the moment CursiveOS is first a thing the world can download and try. The natural-language shell is intentionally sequenced here — not deferred to a later transition — because v1.0 is the first impression the project makes, and the natural-language shell is the feature that makes the first impression memorable.
+Release 1.0 is the moment CursiveOS is first a thing the world can download and try. The natural-language shell is intentionally sequenced here — not deferred to a later transition — because 1.0 is the first impression the project makes, and the natural-language shell is the feature that makes the first impression memorable.
 
 ---
 
@@ -99,10 +104,10 @@ This stage is not something the project can schedule. It either happens or it do
 
 ## Flagship Features by Release
 
-**v0.9 (ISO alpha)**
-First installable CursiveOS. Tuned distribution, benchmarks included, measurement daemon running. No natural-language shell yet — this release validates the ISO build path and the measurement daemon on real user hardware.
+**Release 0.9 (ISO alpha)**
+First installable CursiveOS. Tuned distribution, benchmarks included, contributor/measurement daemon running. No natural-language shell yet — this release validates the ISO build path and the daemon on real user hardware. (Release numbers are independent of the preset lineage's v0.9 — see the naming note in Transition 1.)
 
-**v1.0 (ISO stable) — flagship: the natural-language shell**
+**Release 1.0 (ISO stable) — flagship: the natural-language shell**
 The interface that turns CursiveOS from "another Linux distribution" into something categorically different. The terminal, as it has existed for fifty years, becomes a conversation with a local agent. Users describe outcomes; the agent finds the mechanism. Commands still exist and remain inspectable, but they are no longer the primary interface.
 
 Tiered model approach per hardware class:

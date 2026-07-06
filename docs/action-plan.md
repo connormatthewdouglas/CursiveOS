@@ -69,13 +69,16 @@
 
 Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bundles** and **2 simulated payout reports** (cycles 1 and 3). The seed organism closes variant → measure → gate → ledger → simulated payout → inheritance on founder rigs. Dashboard: https://connormatthewdouglas.github.io/CursiveOS/
 
-**CursiveRoot status at July 1, 2026:**
+**CursiveRoot status at July 6, 2026:**
+- 144 runs, 3 physical machines (7 fingerprint aliases), 18 bundles, 5 cycles run.
 - Accepted bundles: v0.9c-cpu-retained (cycle 1), v0.11-zram-swappiness (cycle 3).
 - Harness v1.4.5 uploads runs with memory columns + detail bundles.
 - Payout reports remain simulated/not real money.
-- OS.0 request/job queue tables and trust-spine tables are live; trust rows remain
-  simulated/not payout eligible pending auth, wallet/hardware independence, and
-  production aggregation hardening.
+- OS.0 request/job queue, contributor daemon, autonomous proposer, and trust spine
+  are live and have run a full cycle end-to-end (cycle 5); every upload writes
+  identity/raw-artifact/trust rows. Trust rows remain simulated/not payout eligible
+  pending real signed identity, wallet/hardware independence, and production
+  aggregation hardening.
 
 **Infrastructure status at June 10, 2026:**
 - **Data durability incident:** the free-tier auto-pause + resume left CursiveRoot looking empty for 1–2 hours before the async restore completed. A daily encrypted backup + keep-alive GitHub Action now prevents the pause and keeps independent backups. See `docs/specs/cursiveroot-data-durability-v1.md`. ⚠️ Requires two repo secrets (`SUPABASE_DB_URL`, `BACKUP_PASSPHRASE`) — not yet configured.
@@ -104,6 +107,7 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
 
 ### 2. Add a dashboard request/contribution panel
 - **Panel v1 shipped 2026-07-01:** dashboard renders recent requests (including completed ones), daemon jobs joined to request/candidate metadata, per-machine contribution history, alias-collapsed machine ids, and placeholder/simulated reward labels.
+- **Trust ledger panel shipped 2026-07-06:** dashboard renders `os0_trust_evaluations` per bundle (recompute / signed identity / replay / independent aggregation / selection-truth checks, payout hard-gated-false label).
 - Remaining before broad external operator use: authenticated/bidirectional request creation, explicit operator install/run CTA, and trust-hardened write policies.
 - Render open requests, per-machine contribution history, lineage, and placeholder
   rewards from CursiveRoot.
@@ -131,8 +135,14 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
   operators **after** the daemon + queue spine works.
 - White-glove the first cohort as collaborators, not disposable testers.
 
-### 5. Autonomous proposer after the queue exists
-- Wire `tools/qd_organism.py` to emit candidate presets into the request queue.
+### 5. Autonomous proposer after the queue exists — MVP DONE, next stage open
+- **Done 2026-07-06:** `tools/organism_proposer.py` (audited-knob library) ran the
+  first fully autonomous cycle: materialize → privileged enqueue → daemon screens
+  on two machines → honest null (v0.13-pagecluster0 retired). Next audited knob:
+  `vfscache50`.
+- **Open:** wire `tools/qd_organism.py` to ground selection in real CursiveRoot
+  fitness (QD archive) instead of the static priority list; gated auto-enqueue via
+  signed proposer identity (needs board task 3).
 - Keep proposal generation separate from truth-writing: measurement bundles and
   trust gates remain the source of selection truth.
 

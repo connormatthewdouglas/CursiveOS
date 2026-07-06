@@ -32,7 +32,8 @@ recovery of any locally saved results → genesis baseline for this machine's
 fingerprint (skipped if CursiveRoot already has one) → optional explicitly
 requested parent-vs-candidate screen → upload → analyzer verdict. No active
 candidate is configured by default right now; v0.11-zram-swappiness has already
-been promoted to v0.12, and v0.12b/v0.13 were rejected. Every step is safe to
+been promoted to v0.12, v0.12b/v0.13-sched were rejected, and the autonomously
+proposed v0.13-pagecluster0 screened neutral (cycle 5). Every step is safe to
 repeat; re-pasting the same command resumes/retries idempotently.
 
 ```bash
