@@ -17,9 +17,11 @@ import json
 import os
 import platform
 import re
+import secrets
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -247,7 +249,96 @@ def signed_identity_signature(identity_public_key: str, session_nonce: str, raw_
     )
 
 
+SSHSIG_SIGNATURE_SCHEME = "cursiveos-sshsig-ed25519-v0.2"
+SSHSIG_NAMESPACE = "cursiveos-bundle"
+IDENTITY_DIR = Path(os.environ.get("CURSIVEOS_IDENTITY_DIR") or (Path.home() / ".cursiveos" / "identity"))
+IDENTITY_KEY_PATH = IDENTITY_DIR / "machine_ed25519"
+
+
+def sshsig_payload(identity_public_key: str, session_nonce: str, raw_fingerprint: str) -> bytes:
+    return json.dumps(
+        {
+            "scheme": SSHSIG_SIGNATURE_SCHEME,
+            "identity_public_key": identity_public_key,
+            "session_nonce": session_nonce,
+            "raw_artifact_fingerprint": raw_fingerprint,
+        },
+        sort_keys=True,
+    ).encode("utf-8")
+
+
+def ensure_machine_identity_key(machine_id: str) -> str | None:
+    """Create/load this machine's Ed25519 identity keypair. Returns the public key
+    line ("ssh-ed25519 <base64>") or None when ssh-keygen is unavailable."""
+    if not shutil.which("ssh-keygen"):
+        return None
+    try:
+        if not IDENTITY_KEY_PATH.exists():
+            IDENTITY_DIR.mkdir(parents=True, exist_ok=True)
+            res = subprocess.run(
+                ["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", f"cursiveos-{machine_id}", "-f", str(IDENTITY_KEY_PATH)],
+                capture_output=True, text=True, timeout=30, check=False,
+            )
+            if res.returncode != 0:
+                return None
+        parts = IDENTITY_KEY_PATH.with_suffix(".pub").read_text(encoding="utf-8").split()
+        return " ".join(parts[:2]) if len(parts) >= 2 else None
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def sshsig_sign(payload: bytes) -> str | None:
+    """Detached SSHSIG signature over payload with the machine identity key."""
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            target = Path(td) / "payload"
+            target.write_bytes(payload)
+            res = subprocess.run(
+                ["ssh-keygen", "-Y", "sign", "-q", "-f", str(IDENTITY_KEY_PATH), "-n", SSHSIG_NAMESPACE, str(target)],
+                capture_output=True, text=True, timeout=30, check=False,
+            )
+            sig = target.with_suffix(".sig")
+            if res.returncode != 0 or not sig.exists():
+                return None
+            return sig.read_text(encoding="utf-8")
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def sshsig_verify(payload: bytes, signature: str, public_key: str, principal: str) -> bool:
+    """Verify a detached SSHSIG signature against an explicit public key."""
+    if not shutil.which("ssh-keygen"):
+        return False
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            allowed = Path(td) / "allowed_signers"
+            allowed.write_text(f"{principal} {public_key}\n", encoding="utf-8")
+            sig = Path(td) / "payload.sig"
+            sig.write_text(signature, encoding="utf-8")
+            res = subprocess.run(
+                ["ssh-keygen", "-Y", "verify", "-f", str(allowed), "-I", principal, "-n", SSHSIG_NAMESPACE, "-s", str(sig)],
+                input=payload, capture_output=True, timeout=30, check=False,
+            )
+            return res.returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def make_signed_identity(machine_id: str, raw_fingerprint: str, session_nonce: str | None = None) -> dict[str, Any]:
+    # Real per-machine Ed25519 identity (SSHSIG) when ssh-keygen is available.
+    public_key = ensure_machine_identity_key(machine_id)
+    if public_key:
+        nonce = session_nonce or secrets.token_hex(12)
+        signature = sshsig_sign(sshsig_payload(public_key, nonce, raw_fingerprint))
+        if signature:
+            return {
+                "scheme": SSHSIG_SIGNATURE_SCHEME,
+                "identity_public_key": public_key,
+                "principal": machine_id,
+                "session_nonce": nonce,
+                "signature": signature,
+            }
+    # Fallback shim (no ssh-keygen): keyless, forgeable, never independence-grade.
     nonce = session_nonce or sha256_json({"machine_id": machine_id, "raw": raw_fingerprint})[:24]
     identity_public_key = "local-sim-" + sha256_json({"machine_id": machine_id})[:32]
     return {
@@ -293,15 +384,23 @@ def signed_identity_failures(metrics: dict[str, Any]) -> list[str]:
         return ["signed identity gate: missing raw artifact fingerprint"]
     if not isinstance(identity, dict):
         return ["signed identity gate: missing signed_identity"]
-    if identity.get("scheme") != LOCAL_SIGNATURE_SCHEME:
-        failures.append("signed identity gate: unsupported signature scheme")
+    scheme = identity.get("scheme")
     public_key = str(identity.get("identity_public_key") or "")
     nonce = str(identity.get("session_nonce") or "")
     signature = str(identity.get("signature") or "")
     if not public_key or not nonce or not signature:
-        failures.append("signed identity gate: incomplete signed identity fields")
-    elif signature != signed_identity_signature(public_key, nonce, raw_fp):
-        failures.append("signed identity gate: signature does not bind identity/session to raw artifacts")
+        return ["signed identity gate: incomplete signed identity fields"]
+    if scheme == SSHSIG_SIGNATURE_SCHEME:
+        principal = str(identity.get("principal") or machine_id_from_metrics(metrics) or "")
+        if not principal:
+            failures.append("signed identity gate: sshsig identity missing principal")
+        elif not sshsig_verify(sshsig_payload(public_key, nonce, raw_fp), signature, public_key, principal):
+            failures.append("signed identity gate: sshsig signature does not bind identity/session to raw artifacts")
+    elif scheme == LOCAL_SIGNATURE_SCHEME:
+        if signature != signed_identity_signature(public_key, nonce, raw_fp):
+            failures.append("signed identity gate: signature does not bind identity/session to raw artifacts")
+    else:
+        failures.append("signed identity gate: unsupported signature scheme")
     return failures
 
 
@@ -2169,6 +2268,114 @@ def full_test_detail_payload(
     }
 
 
+def bundle_confirmation_evidence(row: dict[str, Any], *, allow_local_sim: bool, registered_keys: set[str]) -> dict[str, Any]:
+    """Extract + verify one CursiveRoot bundle row as confirmation evidence."""
+    metrics = (row.get("result_bundle") or {}).get("metrics") if isinstance(row.get("result_bundle"), dict) else None
+    out: dict[str, Any] = {
+        "bundle_hash": row.get("bundle_hash"),
+        "decision": row.get("decision"),
+        "fitness_score": row.get("fitness_score"),
+        "machine_id": row.get("machine_id"),
+        "qualifies": False,
+        "reasons": [],
+    }
+    if not isinstance(metrics, dict):
+        out["reasons"].append("bundle has no metrics payload")
+        return out
+    source_runs = metrics.get("source_runs")
+    unit = source_runs.get("candidate") if isinstance(source_runs, dict) and isinstance(source_runs.get("candidate"), dict) else metrics
+    identity = unit.get("signed_identity") if isinstance(unit.get("signed_identity"), dict) else {}
+    raw_fp = str(unit.get("raw_artifact_fingerprint") or "")
+    scheme = identity.get("scheme")
+    public_key = str(identity.get("identity_public_key") or "")
+    out.update(
+        {
+            "scheme": scheme,
+            "identity_public_key": public_key,
+            "raw_artifact_fingerprint": raw_fp,
+            "measurement_fingerprint": measurement_fingerprint(metrics),
+            "metric_derivation_fingerprint": metric_derivation_fingerprint(metrics),
+        }
+    )
+    if str(row.get("decision")) not in {"accepted", "inconclusive"}:
+        out["reasons"].append(f"decision {row.get('decision')} is not a confirming screen")
+    if not raw_fp or not public_key:
+        out["reasons"].append("missing raw fingerprint or identity key")
+        return out
+    if scheme == SSHSIG_SIGNATURE_SCHEME:
+        principal = str(identity.get("principal") or unit.get("machine_id") or row.get("machine_id") or "")
+        payload = sshsig_payload(public_key, str(identity.get("session_nonce") or ""), raw_fp)
+        if not sshsig_verify(payload, str(identity.get("signature") or ""), public_key, principal):
+            out["reasons"].append("sshsig signature failed verification")
+        if public_key not in registered_keys:
+            out["reasons"].append("identity key not registered in os0_identity_keys")
+    elif scheme == LOCAL_SIGNATURE_SCHEME:
+        if not allow_local_sim:
+            out["reasons"].append("local-sim identity is forgeable; excluded without --allow-local-sim")
+        elif str(identity.get("signature") or "") != signed_identity_signature(
+            public_key, str(identity.get("session_nonce") or ""), raw_fp
+        ):
+            out["reasons"].append("local-sim signature binding failed")
+    else:
+        out["reasons"].append(f"unsupported signature scheme {scheme!r}")
+    out["qualifies"] = not out["reasons"]
+    return out
+
+
+def cmd_confirm_variant(args: argparse.Namespace) -> None:
+    variant_id = str(args.variant_id)
+    rows = postgrest_get(
+        "seed_bundles?variant_id=eq." + urllib.parse.quote(variant_id)
+        + "&select=bundle_hash,decision,fitness_score,machine_id,result_bundle,created_at&order=created_at.asc"
+    )
+    key_rows = postgrest_get("os0_identity_keys?select=identity_public_key")
+    registered = {str(r.get("identity_public_key") or "") for r in key_rows if isinstance(r, dict)}
+    evidence = [
+        bundle_confirmation_evidence(row, allow_local_sim=bool(args.allow_local_sim), registered_keys=registered)
+        for row in rows
+        if isinstance(row, dict)
+    ]
+    qualifying = [e for e in evidence if e["qualifies"]]
+    # Independence: one confirmation per distinct (identity, raw artifact,
+    # measurement fingerprint, derivation fingerprint) — replay/Sybil shapes collapse.
+    seen: set[tuple[str, str, str, str]] = set()
+    independent: list[dict[str, Any]] = []
+    for e in qualifying:
+        key = (
+            e["identity_public_key"],
+            e["raw_artifact_fingerprint"],
+            e["measurement_fingerprint"],
+            e["metric_derivation_fingerprint"],
+        )
+        if key in seen:
+            e["qualifies"] = False
+            e["reasons"].append("duplicate identity/raw/measurement/derivation tuple (replay-collapsed)")
+            continue
+        seen.add(key)
+        independent.append(e)
+    distinct_identities = len({e["identity_public_key"] for e in independent})
+    count = min(len(independent), distinct_identities)
+    report = {
+        "schema_version": "seed-organism.cursiveroot-confirmation.v0.1",
+        "variant_id": variant_id,
+        "aggregation_source": "cursiveroot_owned_remote_v1",
+        "bundles_seen": len(evidence),
+        "independent_confirmations": count,
+        "distinct_identities": distinct_identities,
+        "confidence": round(min(0.95, 1.0 - 0.5 ** max(1, count)), 4) if count else 0.0,
+        "limitation": "raw-artifact recompute still runs at the origin machine; this command verifies signatures, registration, and independence remotely",
+        "evidence": evidence,
+        "generated_at": now_iso(),
+    }
+    report["aggregation_hash"] = sha256_json({k: v for k, v in report.items() if k != "evidence"})
+    if args.json_out:
+        Path(args.json_out).write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps({k: v for k, v in report.items() if k != "evidence"}, indent=2, sort_keys=True))
+    for e in evidence:
+        status = "OK " if e["qualifies"] else "-- "
+        print(f"{status}{str(e['bundle_hash'])[:12]} {e['decision']} machine={str(e['machine_id'])[:12]} scheme={e.get('scheme')} {'; '.join(e['reasons'])}")
+
+
 def cmd_upload(args: argparse.Namespace) -> None:
     state = state_path(args)
     ensure_state(state)
@@ -2390,6 +2597,13 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("upload", help="upload local seed bundles and payout reports to CursiveRoot")
     remote = sub.add_parser("remote-status", help="show latest seed uploads from CursiveRoot")
     remote.add_argument("--limit", type=int, default=10)
+    confirm = sub.add_parser(
+        "confirm-variant",
+        help="derive confirmation evidence for a variant from CursiveRoot bundles (system-owned, replaces caller-attested counts)",
+    )
+    confirm.add_argument("--variant-id", required=True, help="candidate variant id, e.g. candidate-v0.13-vfscache50")
+    confirm.add_argument("--allow-local-sim", action="store_true", help="count legacy local-sim identities (forgeable; audit/back-compat only)")
+    confirm.add_argument("--json-out", help="write the machine-readable aggregation report to this path")
     recover = sub.add_parser("recover-result", help="ingest an existing full-test JSON after an interrupted upload")
     recover.add_argument("--result-json", required=True, help="saved full-test JSON from the Linux host")
     recover.add_argument("--variant", default="references/seed-organism/variant.genesis-linux.json")
@@ -2430,6 +2644,7 @@ def main(argv: list[str] | None = None) -> int:
             "export": cmd_export,
             "upload": cmd_upload,
             "remote-status": cmd_remote_status,
+            "confirm-variant": cmd_confirm_variant,
             "recover-result": cmd_recover_result,
             "simulate-qd": cmd_simulate_qd,
         }[args.cmd](args)

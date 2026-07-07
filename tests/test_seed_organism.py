@@ -210,7 +210,17 @@ def acceptance_grade_metrics(
         suffix=machine_id,
     )
     metrics = seed_organism.load_full_test_metrics_json(result_path)
-    return seed_organism.attach_local_verifier_fields(metrics, result_path)
+    # Each fixture machine gets its own real identity keypair (mirrors production:
+    # distinct hosts hold distinct keys; a shared key across "machines" is the
+    # funded-adversary shape and is rightly rejected by the independence gate).
+    key_dir = TEST_RAW_ROOT / "identities" / machine_id
+    old_dir, old_key = seed_organism.IDENTITY_DIR, seed_organism.IDENTITY_KEY_PATH
+    seed_organism.IDENTITY_DIR = key_dir
+    seed_organism.IDENTITY_KEY_PATH = key_dir / "machine_ed25519"
+    try:
+        return seed_organism.attach_local_verifier_fields(metrics, result_path)
+    finally:
+        seed_organism.IDENTITY_DIR, seed_organism.IDENTITY_KEY_PATH = old_dir, old_key
 
 
 class CoreEvaluationTest(unittest.TestCase):
@@ -589,6 +599,87 @@ class HonestHardwareConditionScopingTest(unittest.TestCase):
             FIXTURE_VARIANT, sensor, regression, seed_organism.DEFAULT_CONFIG, metrics
         )
         self.assertEqual(decision, "rejected_unverified_evidence", reason)
+
+
+class SshsigIdentityTest(unittest.TestCase):
+    """Real Ed25519 machine identity (SSHSIG) replaces the local-sim shim."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._identity_dir = tempfile.mkdtemp(prefix="cursiveos-identity-test-")
+        cls._orig_dir = seed_organism.IDENTITY_DIR
+        cls._orig_key = seed_organism.IDENTITY_KEY_PATH
+        seed_organism.IDENTITY_DIR = Path(cls._identity_dir)
+        seed_organism.IDENTITY_KEY_PATH = Path(cls._identity_dir) / "machine_ed25519"
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        seed_organism.IDENTITY_DIR = cls._orig_dir
+        seed_organism.IDENTITY_KEY_PATH = cls._orig_key
+
+    def _require_ssh_keygen(self) -> None:
+        import shutil as _shutil
+
+        if not _shutil.which("ssh-keygen"):
+            self.skipTest("ssh-keygen not available")
+
+    def test_sign_verify_roundtrip_and_tamper_rejection(self) -> None:
+        self._require_ssh_keygen()
+        identity = seed_organism.make_signed_identity("test-machine-a", "rawfp-1234")
+        self.assertEqual(identity["scheme"], seed_organism.SSHSIG_SIGNATURE_SCHEME)
+        payload = seed_organism.sshsig_payload(
+            identity["identity_public_key"], identity["session_nonce"], "rawfp-1234"
+        )
+        self.assertTrue(
+            seed_organism.sshsig_verify(
+                payload, identity["signature"], identity["identity_public_key"], identity["principal"]
+            )
+        )
+        tampered = seed_organism.sshsig_payload(
+            identity["identity_public_key"], identity["session_nonce"], "rawfp-EVIL"
+        )
+        self.assertFalse(
+            seed_organism.sshsig_verify(
+                tampered, identity["signature"], identity["identity_public_key"], identity["principal"]
+            )
+        )
+
+    def test_signed_identity_gate_accepts_sshsig_and_rejects_tampered_fp(self) -> None:
+        self._require_ssh_keygen()
+        metrics = acceptance_grade_metrics(coldstart_pct=8.0, machine_id="sshsig-gate-rig")
+        self.assertEqual(metrics["signed_identity"]["scheme"], seed_organism.SSHSIG_SIGNATURE_SCHEME)
+        self.assertEqual(seed_organism.signed_identity_failures(metrics), [])
+        forged = json.loads(json.dumps(metrics))
+        forged["signed_identity"]["session_nonce"] = "deadbeefdeadbeefdeadbeef"
+        self.assertTrue(seed_organism.signed_identity_failures(forged))
+
+    def test_confirmation_evidence_excludes_local_sim_and_collapses_replays(self) -> None:
+        self._require_ssh_keygen()
+        metrics = acceptance_grade_metrics(coldstart_pct=8.0, machine_id="confirm-rig-a")
+        identity = metrics["signed_identity"]
+        row = {
+            "bundle_hash": "h1",
+            "decision": "inconclusive",
+            "fitness_score": 0.01,
+            "machine_id": "confirm-rig-a",
+            "result_bundle": {"metrics": metrics},
+        }
+        registered = {identity["identity_public_key"]}
+        ok = seed_organism.bundle_confirmation_evidence(row, allow_local_sim=False, registered_keys=registered)
+        self.assertTrue(ok["qualifies"], ok["reasons"])
+        unregistered = seed_organism.bundle_confirmation_evidence(row, allow_local_sim=False, registered_keys=set())
+        self.assertFalse(unregistered["qualifies"])
+        local_sim_metrics = json.loads(json.dumps(metrics))
+        local_sim_metrics["signed_identity"] = {
+            "scheme": seed_organism.LOCAL_SIGNATURE_SCHEME,
+            "identity_public_key": "local-sim-abc",
+            "session_nonce": "n",
+            "signature": "s",
+        }
+        sim_row = dict(row, result_bundle={"metrics": local_sim_metrics})
+        excluded = seed_organism.bundle_confirmation_evidence(sim_row, allow_local_sim=False, registered_keys=registered)
+        self.assertFalse(excluded["qualifies"])
+        self.assertIn("local-sim identity is forgeable; excluded without --allow-local-sim", excluded["reasons"])
 
 
 class ConfigVersionUpgradeTest(unittest.TestCase):
