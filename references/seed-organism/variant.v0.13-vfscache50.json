@@ -1,0 +1,16 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.13-vfscache50",
+  "parent_variant_id": "parent-baseline-v0.12",
+  "contributor_id": "organism-proposer",
+  "commit_ref": "candidate-v0.13-vfscache50",
+  "preset_version": "v0.13-vfscache50",
+  "preset_path": "presets/cursiveos-presets-v0.13-vfscache50.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "knobs_removed_vs_parent": 0,
+  "proposed_by": "organism_proposer.v0.1",
+  "declared_scope": "The v0.12 parent stack plus a single reversible sysctl: vm.vfs_cache_pressure=50 (channel: memory). Autonomously proposed; one knob added, nothing removed.",
+  "hypothesis": "Halving vfs_cache_pressure (100->50) makes the kernel retain dentry/inode cache longer, which can lower cold-start and memory-refault cost on repeated access. Risk: on tight RAM it trades file-cache for metadata cache; the memory + cold-start channels adjudicate.",
+  "rollback_method": "Restores the prior vm.vfs_cache_pressure value captured at apply time, then delegates the rest of the revert to the v0.12 preset undo; harness reverts at run end."
+}
