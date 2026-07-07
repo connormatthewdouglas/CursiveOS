@@ -120,6 +120,17 @@ Phase 0 selection loop is operational. CursiveRoot has **2 accepted mutation bun
   `os0_identity_keys`, `os0_raw_artifact_index`, and `os0_trust_evaluations`.
   Seed bundle upload writes those rows alongside `seed_bundles`; `payout_eligible`
   is constrained false at the database layer.
+- **Real signed identity shipped 2026-07-06 (scheme v0.2):** per-machine Ed25519
+  keypair, SSHSIG detached signatures binding identity + session nonce to the
+  raw-artifact fingerprint, verified via `ssh-keygen -Y` (zero new packages).
+  Local-sim shim demoted to non-independence-grade fallback.
+- **CursiveRoot-owned confirmation counting shipped 2026-07-06:**
+  `seed_organism confirm-variant` derives independent confirmation count +
+  confidence from the DB (signature verification, key registration, replay/Sybil
+  tuple collapse) — replaces caller-attested `--confirmations N` as the evidence
+  source. Verified live: legacy local-sim bundles correctly count **zero**.
+  Remaining before money: origin-side raw recompute for remote bundles,
+  wallet/hardware independence, key rotation/revocation policy.
 - Replace founder-attested `--confirmations N` with CursiveRoot-owned
   independent aggregation over signed identities and immutable raw artifacts.
 - Continue promoting the V local/global replay index and funded-adversary
