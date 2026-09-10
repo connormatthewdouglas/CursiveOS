@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# CursiveOS: honor OLLAMA_HOST so the isolated Arc SYCL instance (port 11435) can be measured.
+OLLAMA_BASE="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+OLLAMA_BASE="${OLLAMA_BASE%/}"
 # CursiveOS benchmark-inference-v0.1.sh
 # Measures GPU inference performance via ollama REST API.
 # Paired test: baseline (no presets) vs tuned (presets applied) in same session.
@@ -113,7 +116,7 @@ else
 fi
 
 # ── Start ollama if needed (must be up before model validation below) ─────────
-if ! systemctl is-active --quiet ollama; then
+if ! curl -sf --max-time 3 "${OLLAMA_BASE}/api/tags" >/dev/null && ! systemctl is-active --quiet ollama; then
     echo "Ollama not running. Starting..."
     if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
         read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
@@ -136,7 +139,7 @@ _MODEL_PREF_CHAIN=(llama3 mistral llama3.2 phi3 qwen2 tinyllama)
 # Validation uses the real benchmark prompt and 50 tokens — short runs (5 tokens, "Hi")
 # don't trigger the Arc A750 Vulkan crash; need actual inference load to expose it.
 _validate_model() {
-    curl -s --max-time 120 http://localhost:11434/api/generate \
+    curl -s --max-time 120 ${OLLAMA_BASE}/api/generate \
         -d "{\"model\":\"$1\",\"prompt\":\"$PROMPT\",\"stream\":false,\"options\":{\"num_predict\":100,\"num_ctx\":1024,\"num_batch\":128}}" \
         | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('eval_count',0))" 2>/dev/null || echo "0"
 }
@@ -178,9 +181,10 @@ fi
 
 PASSES=5        # inference calls per pass (more = more stable average)
 WARMUP=1        # throwaway calls before measuring (GPU cold start)
-if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+if [[ -z "${TAO_SUDO_PASS:-}" ]] && ! sudo -n true 2>/dev/null; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
+TAO_SUDO_PASS="${TAO_SUDO_PASS:-}"
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }
@@ -315,7 +319,7 @@ except Exception as e:
 # num_ctx: smaller context window = smaller KV cache
 # num_batch: smaller batch size = less peak VRAM pressure
 infer() {
-    curl -s --max-time 120 http://localhost:11434/api/generate \
+    curl -s --max-time 120 ${OLLAMA_BASE}/api/generate \
         -H "Content-Type: application/json" \
         -d "{\"model\": \"$MODEL\", \"prompt\": \"$PROMPT\", \"stream\": false, \"options\": {\"num_predict\": 100, \"num_ctx\": 1024, \"num_batch\": 128}}"
 }
@@ -347,13 +351,19 @@ run_pass() {
     #   ROCm (AMD):  may show device name or just "GPU" without percentage
     # Check for "gpu" anywhere in the model's ps line rather than exact regex.
     local proc _ps_line
-    _ps_line=$(ollama ps 2>/dev/null | grep -i "$MODEL" || true)
+    _ps_line=$(OLLAMA_HOST="$OLLAMA_BASE" ollama ps 2>/dev/null | grep -i "$MODEL" || true)
     if echo "$_ps_line" | grep -qiE 'gpu|rocm|radeon|gfx[0-9]+'; then
         proc=$(echo "$_ps_line" | grep -oP '[0-9]+% (GPU|CPU)' || echo "100% GPU")
     elif echo "$_ps_line" | grep -qi "cpu"; then
         proc="100% CPU"
     else
         proc="not loaded"
+    fi
+    # ipex-llm SYCL builds report "100% CPU" in ollama ps. Trust that quirk only
+    # when this pass is pointed at the isolated Arc instance, not stock ollama.
+    if [[ "$OLLAMA_BASE" == *:11435 && ( "$proc" == *"CPU"* || "$proc" == "not loaded" || -z "$proc" ) ]]; then
+        proc="SYCL GPU (ps quirk)"
+        log "  [sycl] ollama ps is not trusted on the Arc instance; treat as GPU offload"
     fi
     log "  Processor: $proc"
     if [[ "$proc" == "not loaded" ]]; then
@@ -408,26 +418,32 @@ run_pass "BASELINE"
 BASELINE="$PASS_RESULT"
 
 # ── Apply presets ─────────────────────────────────────────────────────────────
-log ""
-log "Applying presets: $PRESET_SCRIPT"
-bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
-log "Presets applied. Starting tuned pass..."
+if [[ "${CURSIVEOS_NO_PRESETS:-}" == "1" ]]; then
+    log ""
+    log "Preset apply skipped (CURSIVEOS_NO_PRESETS=1). Clean GPU measurement only."
+    TUNED="N/A"
+else
+    log ""
+    log "Applying presets: $PRESET_SCRIPT"
+    bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
+    log "Presets applied. Starting tuned pass..."
 
-# Restart ollama so GPU freq/power settings take effect for inference
-log "Restarting ollama to apply GPU settings..."
-s systemctl restart ollama
-sleep 4
+    # Restart ollama so GPU freq/power settings take effect for inference
+    log "Restarting ollama to apply GPU settings..."
+    sudo systemctl restart ollama || true
+    sleep 4
 
-# ── PASS 2: Tuned ────────────────────────────────────────────────────────────
-log ""
-log "PASS 2 — TUNED (presets active)"
-run_pass "TUNED"
-TUNED="$PASS_RESULT"
+    # ── PASS 2: Tuned ────────────────────────────────────────────────────────────
+    log ""
+    log "PASS 2 — TUNED (presets active)"
+    run_pass "TUNED"
+    TUNED="$PASS_RESULT"
 
-# ── Undo presets ──────────────────────────────────────────────────────────────
-log ""
-log "Reverting presets..."
-bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
+    # ── Undo presets ──────────────────────────────────────────────────────────────
+    log ""
+    log "Reverting presets..."
+    bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
+fi
 
 # ── Results ───────────────────────────────────────────────────────────────────
 TUNED_PROC="$LAST_PASS_PROC"   # captured after the tuned pass

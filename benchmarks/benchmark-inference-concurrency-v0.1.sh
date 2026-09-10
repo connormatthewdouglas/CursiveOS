@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# CursiveOS: honor OLLAMA_HOST so the isolated Arc SYCL instance (port 11435) can be measured.
+OLLAMA_BASE="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+OLLAMA_BASE="${OLLAMA_BASE%/}"
 # CursiveOS benchmark-inference-concurrency-v0.1.sh
 # Measures aggregate sustained throughput under N parallel Ollama inference streams.
 #
@@ -100,7 +103,7 @@ trap 'rm -rf "$TMPDIR_WORK"' EXIT
 worker() {
     local id="$1"
     local out="$TMPDIR_WORK/worker_${id}.json"
-    curl -s --max-time 180 http://localhost:11434/api/generate \
+    curl -s --max-time 180 ${OLLAMA_BASE}/api/generate \
         -H "Content-Type: application/json" \
         -d "{\"model\": \"$MODEL\", \"prompt\": \"$PROMPT\", \"stream\": false, \"options\": {\"num_predict\": 80, \"num_ctx\": 1024, \"num_batch\": 128}}" \
         > "$out" 2>/dev/null || echo '{}' > "$out"

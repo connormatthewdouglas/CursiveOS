@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# CursiveOS: honor OLLAMA_HOST so the isolated Arc SYCL instance (port 11435) can be measured.
+# Prefer the isolated Arc SYCL instance when this box has it and the caller
+# did not pin a host. Stock ollama stays the fallback on other machines.
+if [[ -z "${OLLAMA_HOST:-}" && -x "$HOME/ollama-arc/ollama" ]]; then
+    OLLAMA_HOST="http://127.0.0.1:11435"
+fi
+OLLAMA_BASE="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+OLLAMA_BASE="${OLLAMA_BASE%/}"
+export OLLAMA_HOST="$OLLAMA_BASE"
+if [[ "$OLLAMA_BASE" == *:11435 && -x "$HOME/ollama-arc/ollama" ]]; then
+    OLLAMA_BIN="$HOME/ollama-arc/ollama"
+else
+    OLLAMA_BIN="ollama"
+fi
+cursive_ollama() { OLLAMA_HOST="$OLLAMA_BASE" "$OLLAMA_BIN" "$@"; }
 # CursiveOS Full Test v1.4
 # Single command for Bittensor miners to measure their system's baseline
 # and the impact of CursiveOS performance presets.
@@ -15,7 +30,7 @@
 #     kernel_version, distro, submission_timestamp + split power fields
 #   - wrapper_version â†’ v1.4
 #
-# Requirements: ollama installed, tinyllama pulled (ollama pull tinyllama)
+# Requirements: ollama installed, tinyllama pulled (cursive_ollama pull tinyllama)
 # Usage: ./cursiveos-full-test-v1.4.sh
 #
 # All changes are TEMPORARY. Presets revert after each test.
@@ -32,7 +47,7 @@ PRESET_VERSION="${PRESET_VERSION%.sh}"
 # Auto-select best available model â€” same preference order as benchmark-inference-v0.1.sh
 MODEL=""
 for _m in llama3 mistral llama3.2 phi3 qwen2 tinyllama; do
-    if ollama list 2>/dev/null | grep -q "^${_m}:"; then
+    if cursive_ollama list 2>/dev/null | grep -q "^${_m}:"; then
         MODEL="$_m"
         break
     fi
@@ -50,14 +65,19 @@ SUPABASE_URL="https://iovvktpuoinmjdgfxgvm.supabase.co"
 SUPABASE_KEY="sb_publishable_4WefsfMl0sNNo9O2c_lxnA_q2VQ01jn"
 
 # â”€â”€ Sudo prompt (once â€” exported so child scripts skip re-prompting) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+if [[ -z "${TAO_SUDO_PASS:-}" ]] && ! sudo -n true 2>/dev/null; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
+TAO_SUDO_PASS="${TAO_SUDO_PASS:-}"
 export TAO_SUDO_PASS
 
 # â”€â”€ Self-update â€” always run latest version from repo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-echo "Checking for updatesâ€¦"
+if git -C "$SCRIPT_DIR" diff --quiet && git -C "$SCRIPT_DIR" diff --cached --quiet; then
+echo "Checking for updates..."
 git -C "$SCRIPT_DIR" pull --quiet 2>/dev/null && echo "  â†’ Up to date." || echo "  â†’ git pull skipped (no remote or offline)."
+else
+    echo "  -> git pull skipped (local harness edits)."
+fi
 
 # â”€â”€ Preflight checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 echo ""
@@ -86,9 +106,18 @@ SKIP_INFERENCE=${SKIP_INFERENCE:-0}
 
 ensure_ollama_ready() {
     [[ "$SKIP_INFERENCE" == "1" ]] && return 0
-    command -v ollama >/dev/null 2>&1 || { SKIP_INFERENCE=1; return 0; }
+    if curl -sf --max-time 3 "${OLLAMA_BASE}/api/tags" >/dev/null; then
+        return 0
+    fi
+    command -v "$OLLAMA_BIN" >/dev/null 2>&1 || command -v ollama >/dev/null 2>&1 || { SKIP_INFERENCE=1; return 0; }
 
-    if ollama list >/dev/null 2>&1; then
+    if [[ "$OLLAMA_BASE" == *:11435 ]]; then
+        echo "Arc Ollama at ${OLLAMA_BASE} is not answering; inference benchmarks will be skipped."
+        SKIP_INFERENCE=1
+        return 0
+    fi
+
+    if cursive_ollama list >/dev/null 2>&1; then
         return 0
     fi
 
@@ -98,13 +127,13 @@ ensure_ollama_ready() {
         sleep 3
     fi
 
-    if ! ollama list >/dev/null 2>&1; then
+    if ! cursive_ollama list >/dev/null 2>&1; then
         echo "  â†’ system service unavailable; trying local ollama serve..."
         nohup ollama serve > "$LOG_DIR/ollama-serve-$(date +%Y%m%d-%H%M%S).log" 2>&1 &
         sleep 5
     fi
 
-    if ! ollama list >/dev/null 2>&1; then
+    if ! cursive_ollama list >/dev/null 2>&1; then
         echo "  â†’ Ollama did not become ready; inference benchmarks will be skipped."
         SKIP_INFERENCE=1
     else
@@ -137,9 +166,9 @@ done
 
 ensure_ollama_ready
 
-if [[ "$SKIP_INFERENCE" != "1" ]] && ! ollama list 2>/dev/null | grep -q "$MODEL"; then
+if [[ "$SKIP_INFERENCE" != "1" ]] && ! cursive_ollama list 2>/dev/null | grep -q "$MODEL"; then
     echo "Pulling $MODEL..."
-    if ! ollama pull "$MODEL"; then
+    if ! cursive_ollama pull "$MODEL"; then
         echo "  â†’ Could not pull $MODEL; inference benchmarks will be skipped."
         SKIP_INFERENCE=1
     fi
@@ -154,7 +183,7 @@ if [[ "$SKIP_INFERENCE" != "1" ]]; then
     _VAL_PROMPT="Explain how Bittensor's proof of intelligence consensus mechanism works and why it rewards miners for useful AI computation rather than wasteful hash calculations. Be concise."
     _VAL_PREF_CHAIN=(llama3 mistral llama3.2 phi3 qwen2 tinyllama)
     _val_model() {
-        curl -s --max-time 120 http://localhost:11434/api/generate \
+        curl -s --max-time 120 ${OLLAMA_BASE}/api/generate \
             -d "{\"model\":\"$1\",\"prompt\":\"$_VAL_PROMPT\",\"stream\":false,\"options\":{\"num_predict\":100,\"num_ctx\":1024,\"num_batch\":128}}" \
             | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('eval_count',0))" 2>/dev/null || echo "0"
     }
@@ -178,9 +207,9 @@ if [[ "$SKIP_INFERENCE" != "1" ]]; then
             elif [[ $_vram -ge 4 ]]; then _rec_model="phi3"
             else                           _rec_model=""
             fi
-            if [[ -n "$_rec_model" ]] && ! ollama list 2>/dev/null | grep -q "^${_rec_model}:"; then
+            if [[ -n "$_rec_model" ]] && ! cursive_ollama list 2>/dev/null | grep -q "^${_rec_model}:"; then
                 echo "  Discrete GPU detected â€” auto-installing ${_rec_model} for meaningful benchmark..."
-                ollama pull "$_rec_model" && MODEL="$_rec_model" || true
+                cursive_ollama pull "$_rec_model" && MODEL="$_rec_model" || true
             elif [[ -n "$_rec_model" ]]; then
                 MODEL="$_rec_model"
             fi
@@ -198,8 +227,8 @@ if [[ "$SKIP_INFERENCE" != "1" ]]; then
                 if [[ "$_vfb" == "$MODEL" ]]; then _vpast=true; continue; fi
                 if [[ "$_vpast" == false ]]; then continue; fi
                 echo "  Trying $_vfb..."
-                if ! ollama list 2>/dev/null | grep -q "^${_vfb}:"; then
-                    ollama pull "$_vfb" || { echo "  Pull failed â€” skipping."; continue; }
+                if ! cursive_ollama list 2>/dev/null | grep -q "^${_vfb}:"; then
+                    cursive_ollama pull "$_vfb" || { echo "  Pull failed â€” skipping."; continue; }
                 fi
                 _vtok=$(_val_model "$_vfb")
                 if [[ "$_vtok" != "0" ]]; then

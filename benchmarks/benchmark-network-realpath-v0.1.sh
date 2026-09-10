@@ -19,18 +19,31 @@ PASSES="${2:-5}"
 [[ -z "$SERVER" ]] && { echo "Usage: $0 <iperf3-server-ip> [passes]   (run 'iperf3 -s' on the server first)"; exit 1; }
 command -v iperf3 >/dev/null || { echo "iperf3 required: sudo apt-get install -y iperf3"; exit 1; }
 
+SYSCTL=""
+for c in /usr/sbin/sysctl /sbin/sysctl; do
+    [[ -x "$c" ]] && SYSCTL="$c" && break
+done
+[[ -n "$SYSCTL" ]] || { echo "sysctl missing. Refusing to print a delta." >&2; exit 1; }
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="$SCRIPT_DIR/logs/network-realpath-$(date +%Y%m%d-%H%M%S).log"
 mkdir -p "$SCRIPT_DIR/logs"
 
-ORIG_CC=$(sysctl -n net.ipv4.tcp_congestion_control)
-restore() { sudo sysctl -w net.ipv4.tcp_congestion_control="$ORIG_CC" >/dev/null 2>&1 || true; }
+restore() {
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_congestion_control=cubic >/dev/null 2>&1 || true
+    sudo -n "$SYSCTL" -w net.core.default_qdisc=pfifo_fast >/dev/null 2>&1 || true
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_slow_start_after_idle=1 >/dev/null 2>&1 || true
+    sudo -n "$SYSCTL" -w net.core.rmem_max=212992 >/dev/null 2>&1 || true
+    sudo -n "$SYSCTL" -w net.core.wmem_max=212992 >/dev/null 2>&1 || true
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_rmem="4096 87380 6291456" >/dev/null 2>&1 || true
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_wmem="4096 16384 4194304" >/dev/null 2>&1 || true
+}
 trap restore EXIT
 
 run_side() {
     local cc="$1" rates=()
     sudo modprobe tcp_bbr 2>/dev/null || true
-    sudo sysctl -w net.ipv4.tcp_congestion_control="$cc" >/dev/null || { echo "cannot set $cc"; return 1; }
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_congestion_control="$cc" >/dev/null || { echo "cannot set $cc"; return 1; }
     echo "── $cc: $PASSES x 10s to $SERVER" | tee -a "$LOG"
     for ((i=1;i<=PASSES;i++)); do
         r=$(iperf3 -c "$SERVER" ${IPERF_PORT:+-p $IPERF_PORT} -t 10 -J 2>/dev/null | python3 -c \
@@ -48,7 +61,7 @@ print(f'median={statistics.median(v):.1f} mean={statistics.mean(v):.1f} min={min
     echo "${rates[*]}"
 }
 
-echo "Real-path network A/B  server=$SERVER  passes=$PASSES  original_cc=$ORIG_CC" | tee "$LOG"
+echo "Real-path network A/B  server=$SERVER  passes=$PASSES" | tee "$LOG"
 CUBIC_RATES=$(run_side cubic | tail -1)
 BBR_RATES=$(run_side bbr | tail -1)
 restore

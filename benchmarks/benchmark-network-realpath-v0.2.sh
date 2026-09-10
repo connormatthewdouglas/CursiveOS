@@ -18,7 +18,7 @@ SERVER="${1:-}"; PASSES="${2:-5}"
 [[ -z "$SERVER" ]] && { echo "Usage: $0 <iperf3-server-ip> [passes]"; exit 1; }
 command -v iperf3 >/dev/null || { echo "iperf3 required"; exit 1; }
 SP="${TAO_SUDO_PASS:-}"
-s() { if [[ -n "$SP" ]]; then echo "$SP" | sudo -S "$@" 2>/dev/null; else sudo "$@"; fi; }
+s() { if [[ -n "$SP" ]]; then echo "$SP" | sudo -S "$@" 2>/dev/null; else sudo -n "$@"; fi; }
 NETEM="${NETEM:-}"
 IFACE="${IFACE:-$(ip route get "$SERVER" 2>/dev/null | grep -oP 'dev \K\S+' | head -1)}"
 
@@ -26,28 +26,51 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="$SCRIPT_DIR/logs/network-realpath2-$(date +%Y%m%d-%H%M%S).log"
 mkdir -p "$SCRIPT_DIR/logs"
 
+SYSCTL=""
+for c in /usr/sbin/sysctl /sbin/sysctl; do
+    [[ -x "$c" ]] && SYSCTL="$c" && break
+done
+TC=""
+for c in /sbin/tc /usr/sbin/tc; do
+    [[ -x "$c" ]] && TC="$c" && break
+done
+[[ -n "$SYSCTL" ]] || { echo "sysctl missing. Refusing to print a delta." >&2; exit 1; }
+if [[ -n "${NETEM:-}" && -z "$TC" ]]; then
+    echo "tc missing. Refusing to print a delta." >&2
+    exit 1
+fi
+
 declare -A ORIG
-for k in net.ipv4.tcp_congestion_control net.core.rmem_max net.core.wmem_max \
-         net.ipv4.tcp_rmem net.ipv4.tcp_wmem net.core.default_qdisc \
-         net.ipv4.tcp_slow_start_after_idle net.core.netdev_max_backlog net.core.somaxconn; do
-    ORIG[$k]="$(sysctl -n "$k" 2>/dev/null)"
+for k in net.core.netdev_max_backlog net.core.somaxconn; do
+    ORIG[$k]="$("$SYSCTL" -n "$k" 2>/dev/null || true)"
 done
 restore_all() {
-    for k in "${!ORIG[@]}"; do s sysctl -w "$k=${ORIG[$k]}" >/dev/null 2>&1 || true; done
-    [[ -n "$NETEM" && -n "$IFACE" ]] && s tc qdisc del dev "$IFACE" root 2>/dev/null || true
+    s "$SYSCTL" -w net.ipv4.tcp_congestion_control=cubic >/dev/null 2>&1 || true
+    s "$SYSCTL" -w net.core.default_qdisc=pfifo_fast >/dev/null 2>&1 || true
+    s "$SYSCTL" -w net.ipv4.tcp_slow_start_after_idle=1 >/dev/null 2>&1 || true
+    s "$SYSCTL" -w net.core.rmem_max=212992 >/dev/null 2>&1 || true
+    s "$SYSCTL" -w net.core.wmem_max=212992 >/dev/null 2>&1 || true
+    s "$SYSCTL" -w net.ipv4.tcp_rmem="4096 87380 6291456" >/dev/null 2>&1 || true
+    s "$SYSCTL" -w net.ipv4.tcp_wmem="4096 16384 4194304" >/dev/null 2>&1 || true
+    for k in net.core.netdev_max_backlog net.core.somaxconn; do
+        [[ -n "${ORIG[$k]:-}" ]] && s "$SYSCTL" -w "$k=${ORIG[$k]}" >/dev/null 2>&1 || true
+    done
+    if [[ -n "${NETEM:-}" && -n "${IFACE:-}" && -n "${TC:-}" ]]; then
+        s "$TC" qdisc del dev "$IFACE" root >/dev/null 2>&1 || true
+    fi
 }
 trap restore_all EXIT
 
 reset_buffers() {
-    s sysctl -w net.core.rmem_max="${ORIG[net.core.rmem_max]}" net.core.wmem_max="${ORIG[net.core.wmem_max]}" \
-        net.ipv4.tcp_rmem="${ORIG[net.ipv4.tcp_rmem]}" net.ipv4.tcp_wmem="${ORIG[net.ipv4.tcp_wmem]}" \
-        net.core.default_qdisc="${ORIG[net.core.default_qdisc]}" \
-        net.ipv4.tcp_slow_start_after_idle="${ORIG[net.ipv4.tcp_slow_start_after_idle]}" \
-        net.core.netdev_max_backlog="${ORIG[net.core.netdev_max_backlog]}" \
-        net.core.somaxconn="${ORIG[net.core.somaxconn]}" >/dev/null
+    s "$SYSCTL" -w net.core.rmem_max=212992 net.core.wmem_max=212992 \
+        net.ipv4.tcp_rmem="4096 87380 6291456" net.ipv4.tcp_wmem="4096 16384 4194304" \
+        net.core.default_qdisc=pfifo_fast \
+        net.ipv4.tcp_slow_start_after_idle=1 >/dev/null
+    [[ -n "${ORIG[net.core.netdev_max_backlog]:-}" ]] && s "$SYSCTL" -w "net.core.netdev_max_backlog=${ORIG[net.core.netdev_max_backlog]}" >/dev/null
+    [[ -n "${ORIG[net.core.somaxconn]:-}" ]] && s "$SYSCTL" -w "net.core.somaxconn=${ORIG[net.core.somaxconn]}" >/dev/null
 }
 apply_stack() {
-    s sysctl -w net.core.rmem_max=16777216 net.core.wmem_max=16777216 \
+    s "$SYSCTL" -w net.core.rmem_max=16777216 net.core.wmem_max=16777216 \
         net.ipv4.tcp_rmem="4096 262144 16777216" net.ipv4.tcp_wmem="4096 262144 16777216" \
         net.core.default_qdisc=fq net.ipv4.tcp_slow_start_after_idle=0 \
         net.core.netdev_max_backlog=5000 net.core.somaxconn=4096 >/dev/null
@@ -56,9 +79,15 @@ apply_stack() {
 s modprobe tcp_bbr 2>/dev/null || true
 echo "Real-path v0.2  server=$SERVER iface=${IFACE:-?} passes=$PASSES netem='${NETEM:-none}'" | tee "$LOG"
 if [[ -n "$NETEM" && -n "$IFACE" ]]; then
-    s tc qdisc del dev "$IFACE" root 2>/dev/null || true
-    s tc qdisc add dev "$IFACE" root netem $NETEM && echo "netem applied on $IFACE: $NETEM" | tee -a "$LOG" \
-        || echo "WARN netem failed on $IFACE" | tee -a "$LOG"
+    [[ -n "$TC" ]] || { echo "tc missing. Refusing to print a delta." >&2; exit 1; }
+    s "$TC" qdisc del dev "$IFACE" root >/dev/null 2>&1 || true
+    s "$TC" qdisc add dev "$IFACE" root netem $NETEM || { echo "netem setup failed. Refusing to print a delta." >&2; exit 1; }
+    NETEM_ACTIVE=$(s "$TC" qdisc show dev "$IFACE" | grep -c netem || true)
+    echo "netem applied on $IFACE: $NETEM ($NETEM_ACTIVE rule(s))" | tee -a "$LOG"
+    if [[ "${NETEM_ACTIVE:-0}" -lt 1 ]]; then
+        echo "netem not active. Refusing to print a delta." | tee -a "$LOG" >&2
+        exit 1
+    fi
 fi
 
 measure() {  # $1 label
@@ -73,11 +102,11 @@ measure() {  # $1 label
     python3 -c "import statistics,sys;v=[float(x) for x in sys.argv[1:]];print(f'{statistics.median(v):.1f}' if v else 'NA')" "${rates[@]}"
 }
 
-reset_buffers; s sysctl -w net.ipv4.tcp_congestion_control=cubic >/dev/null
+reset_buffers; s "$SYSCTL" -w net.ipv4.tcp_congestion_control=cubic >/dev/null
 C1=$(measure "1: CUBIC + host-default buffers")
-reset_buffers; s sysctl -w net.ipv4.tcp_congestion_control=bbr >/dev/null
+reset_buffers; s "$SYSCTL" -w net.ipv4.tcp_congestion_control=bbr >/dev/null
 C2=$(measure "2: BBR + host-default buffers")
-apply_stack; s sysctl -w net.ipv4.tcp_congestion_control=bbr >/dev/null
+apply_stack; s "$SYSCTL" -w net.ipv4.tcp_congestion_control=bbr >/dev/null
 C3=$(measure "3: BBR + CursiveOS stack")
 restore_all; trap - EXIT
 

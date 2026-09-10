@@ -20,9 +20,10 @@
 set -euo pipefail
 
 PRESET_SCRIPT="${1:-../presets/cursiveos-presets-v0.7.sh}"
-if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+if [[ -z "${TAO_SUDO_PASS:-}" ]] && ! sudo -n true 2>/dev/null; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
+TAO_SUDO_PASS="${TAO_SUDO_PASS:-}"
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }
@@ -72,6 +73,16 @@ cleanup() {
     # Kill any leftover iperf3 server
     pkill -f "iperf3 -s" 2>/dev/null || true
     restore_original_network
+    force_stock_network || true
+}
+force_stock_network() {
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_congestion_control=cubic >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.core.default_qdisc=pfifo_fast >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_slow_start_after_idle=1 >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.core.rmem_max=212992 >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.core.wmem_max=212992 >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_rmem="4096 87380 6291456" >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_wmem="4096 16384 4194304" >/dev/null
 }
 trap cleanup EXIT
 
@@ -96,14 +107,34 @@ sleep 2
 
 # ── Apply WAN simulation (tc netem on loopback) ──────────────────────────────
 apply_netem() {
-    # Clear any leftover qdisc first — replace can fail if prior run crashed mid-flight
-    sc "tc qdisc del dev lo root 2>/dev/null || true"
-    sc "tc qdisc add dev lo root netem delay $WAN_DELAY loss $WAN_LOSS"
-    log "  WAN sim: ${WAN_DELAY} one-way + ${WAN_LOSS} loss (loopback)"
+    local tcbin=""
+    for c in /sbin/tc /usr/sbin/tc; do
+        [[ -x "$c" ]] && tcbin="$c" && break
+    done
+    if [[ -z "$tcbin" ]]; then
+        log "tc missing. Refusing to print a network delta."
+        exit 1
+    fi
+    sudo -n "$tcbin" qdisc del dev lo root >/dev/null 2>&1 || true
+    if ! sudo -n "$tcbin" qdisc add dev lo root netem delay "$WAN_DELAY" loss "$WAN_LOSS"; then
+        log "netem setup failed. Refusing to print a network delta."
+        exit 1
+    fi
+    local n
+    n=$(sudo -n "$tcbin" qdisc show dev lo | grep -c netem || true)
+    if [[ "${n:-0}" -lt 1 ]]; then
+        log "netem not active. Refusing to print a network delta."
+        exit 1
+    fi
+    log "  WAN sim: ${WAN_DELAY} one-way + ${WAN_LOSS} loss (loopback, $n netem rule(s))"
 }
 
 remove_netem() {
-    sc "tc qdisc del dev lo root 2>/dev/null || true"
+    local tcbin=""
+    for c in /sbin/tc /usr/sbin/tc; do
+        [[ -x "$c" ]] && tcbin="$c" && break
+    done
+    [[ -n "$tcbin" ]] && sudo -n "$tcbin" qdisc del dev lo root >/dev/null 2>&1 || true
 }
 
 # ── Start iperf3 server ───────────────────────────────────────────────────────
@@ -220,7 +251,7 @@ TUNED="$PASS_RESULT"
 # ── Undo presets ──────────────────────────────────────────────────────────────
 log ""
 log "Reverting presets..."
-bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
+bash "$PRESET_SCRIPT" --undo 2>&1 | grep -E "Revert|stock network|reverted" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
 
 # ── Results ───────────────────────────────────────────────────────────────────
 if (( $(echo "$BASELINE > 0" | bc -l) )); then

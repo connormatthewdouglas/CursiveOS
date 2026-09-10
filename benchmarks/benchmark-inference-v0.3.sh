@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# CursiveOS: honor OLLAMA_HOST so the isolated Arc SYCL instance (port 11435) can be measured.
+OLLAMA_BASE="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+OLLAMA_BASE="${OLLAMA_BASE%/}"
 # CursiveOS benchmark-inference-v0.3.sh
 # Cold-start latency benchmark: measures GPU wakeup + model load penalty.
 #
@@ -23,11 +26,12 @@ set -euo pipefail
 
 PRESET_SCRIPT="${1:-../presets/cursiveos-presets-v0.7.sh}"
 MODEL="${2:-tinyllama}"
-PASSES=5          # cold-start calls per pass
+PASSES=${CURSIVEOS_COLD_PASSES:-5}          # cold-start calls per pass
 IDLE_SLEEP=15     # seconds to wait for GPU to drop to idle freq between calls
-if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+if [[ -z "${TAO_SUDO_PASS:-}" ]] && ! sudo -n true 2>/dev/null; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
+TAO_SUDO_PASS="${TAO_SUDO_PASS:-}"
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
 s() { echo "$SP" | sudo -S "$@" 2>/dev/null; }
@@ -63,14 +67,14 @@ trap restore_original_baseline_state EXIT
 PROMPT="What is Bittensor? Answer in one sentence."
 
 # ── Preflight ─────────────────────────────────────────────────────────────────
-if ! systemctl is-active --quiet ollama; then
+if ! curl -sf --max-time 3 "${OLLAMA_BASE}/api/tags" >/dev/null && ! systemctl is-active --quiet ollama; then
     echo "Ollama not running. Starting..."
     s systemctl start ollama
     sleep 3
 fi
 
-if ! ollama list 2>/dev/null | grep -q "$MODEL"; then
-    echo "Model '$MODEL' not found. Pull it first: ollama pull $MODEL"
+if ! OLLAMA_HOST="$OLLAMA_BASE" ollama list 2>/dev/null | grep -q "$MODEL"; then
+    echo "Model '$MODEL' not found on ${OLLAMA_BASE}. Pull it first."
     exit 1
 fi
 
@@ -116,7 +120,7 @@ except Exception as e:
 
 # ── Single cold-start call (model unloads after, forcing reload next time) ───
 infer_cold() {
-    curl -s --max-time 120 http://localhost:11434/api/generate \
+    curl -s --max-time 120 ${OLLAMA_BASE}/api/generate \
         -H "Content-Type: application/json" \
         -d "{\"model\": \"$MODEL\", \"prompt\": \"$PROMPT\", \"stream\": false, \"keep_alive\": \"0s\", \"options\": {\"num_predict\": 30, \"num_ctx\": 512, \"num_batch\": 64}}"
 }
@@ -149,6 +153,9 @@ run_pass() {
         sleep "$IDLE_SLEEP"
 
         local gpu_before
+        if [[ "$label" == "TUNED" ]]; then
+            hold_arc_pin || { log "Pin dropped before call $i. Stopping. Not a result."; return 1; }
+        fi
         gpu_before=$(cat /sys/class/drm/card*/gt/gt0/rps_cur_freq_mhz 2>/dev/null | head -1 || echo N/A)
 
         local result load_ms ttft_ms cold_ms tps toks
@@ -215,10 +222,35 @@ _preset_out=$(bash "$PRESET_SCRIPT" --apply-temp 2>&1 || true)
 echo "$_preset_out" | grep -E "✓|WARNING|skip" | sed 's/^/  /' >> "$LOG_FILE" || true
 log "Presets applied."
 
-# Restart ollama so GPU freq/power settings take effect
-log "Restarting ollama..."
-s systemctl restart ollama
-sleep 4
+# Stock systemctl restart resets the Arc pin and is the wrong server when
+# OLLAMA_HOST is the isolated instance. Re-apply the direct SLPC write after.
+if [[ "$OLLAMA_BASE" != *:11435 ]]; then
+    log "Restarting ollama..."
+    s systemctl restart ollama
+    sleep 4
+else
+    log "Skipping systemctl restart (Arc instance is already the inference host)."
+fi
+
+hold_arc_pin() {
+    local gt cur min
+    gt=$(echo /sys/class/drm/card*/gt/gt0)
+    [[ -f "$gt/rps_min_freq_mhz" ]] || return 1
+    sudo -n bash -c "echo 1 > $gt/slpc_ignore_eff_freq; echo 2000 > $gt/rps_min_freq_mhz"
+    sleep 2
+    min=$(cat "$gt/rps_min_freq_mhz" 2>/dev/null || echo 0)
+    cur=$(cat "$gt/rps_cur_freq_mhz" 2>/dev/null || echo 0)
+    log "  pin check: min=${min} MHz cur=${cur} MHz"
+    [[ "$min" -ge 2000 && "$cur" -ge 1800 ]]
+}
+
+if ! hold_arc_pin; then
+    log "Pin did not hold after apply. Stopping tuned sample. Not a result."
+    bash "$PRESET_SCRIPT" --undo >/dev/null 2>&1 || true
+    gt=$(echo /sys/class/drm/card*/gt/gt0)
+    sudo -n bash -c "echo 0 > $gt/slpc_ignore_eff_freq; echo 300 > $gt/rps_min_freq_mhz" || true
+    exit 1
+fi
 
 # ── PASS 2: Tuned ─────────────────────────────────────────────────────────────
 log ""
