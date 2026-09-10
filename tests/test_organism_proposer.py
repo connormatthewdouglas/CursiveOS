@@ -18,8 +18,8 @@ class ProposerSelectionTest(unittest.TestCase):
     def test_selects_highest_priority_available(self) -> None:
         knob = prop.select_proposal("v0.12", taken=set())
         self.assertIsNotNone(knob)
-        # priority-100 memory knob (zram companion) should be proposed first
-        self.assertEqual(knob.candidate_id, "v0.13-pagecluster0")
+        # mined-out honest nulls (pagecluster / vfs) must not be proposed again
+        self.assertEqual(knob.candidate_id, "v0.13-watermark200")
 
     def test_skips_already_proposed_candidates(self) -> None:
         first = prop.select_proposal("v0.12", taken=set())
@@ -36,6 +36,14 @@ class ProposerSelectionTest(unittest.TestCase):
     def test_unknown_parent_raises(self) -> None:
         with self.assertRaises(FileNotFoundError):
             prop.select_proposal("v9.99-does-not-exist", taken=set())
+
+
+    def test_skips_mined_out_honest_nulls(self) -> None:
+        knob = prop.select_proposal("v0.12", taken=set())
+        self.assertIsNotNone(knob)
+        self.assertNotIn(knob.slug, prop.MINED_OUT_SLUGS)
+        self.assertNotIn("pagecluster0", knob.candidate_id)
+        self.assertNotIn("vfscache", knob.candidate_id)
 
 
 class ProposerMaterializationTest(unittest.TestCase):

@@ -145,12 +145,23 @@ def parent_variant(parent_id: str) -> dict:
     return load_json(path)
 
 
+MINED_OUT_SLUGS = frozenset({"pagecluster0", "vfscache50"})
+MINED_OUT_KEYS = frozenset({"vm.page-cluster", "vm.vfs_cache_pressure"})
+
+
 def select_proposal(parent_id: str = DEFAULT_PARENT_ID, taken: set[str] | None = None) -> Knob | None:
-    """Highest-priority audited knob whose candidate does not already exist. None if exhausted."""
+    """Highest-priority audited knob whose candidate does not already exist. None if exhausted.
+
+    Honest-null knobs (pagecluster0, vfscache50) are skipped even if their variant
+    files are deleted. HANDOVER 2026-09-10: stop mining vfs_cache / page-cluster cousins.
+    Remaining library knobs are leftovers, not QD-grounded.
+    """
     parent_variant(parent_id)  # validate the parent exists before proposing against it
     if taken is None:
         taken = existing_candidate_ids()
     for knob in sorted(KNOB_LIBRARY, key=lambda k: k.priority, reverse=True):
+        if knob.slug in MINED_OUT_SLUGS or knob.key in MINED_OUT_KEYS:
+            continue
         if knob.candidate_id not in taken:
             return knob
     return None
@@ -304,6 +315,8 @@ def cmd_propose(args: argparse.Namespace) -> int:
         return 0
 
     print(f"=== next proposed candidate: {knob.candidate_id} ===")
+    print("NOTE: this is a leftover audited-library knob, not a QD-archive proposal.")
+    print("      Wire tools/qd_organism.py to live CursiveRoot fitness before mining further.")
     print(f"parent        : {args.parent}")
     print(f"knob          : {knob.key}={knob.value}  (channel: {knob.channel}, priority {knob.priority})")
     print(f"hypothesis    : {knob.hypothesis}")
@@ -329,7 +342,12 @@ def cmd_list_knobs(args: argparse.Namespace) -> int:
     taken = existing_candidate_ids()
     print("Audited knob library (priority order):")
     for knob in sorted(KNOB_LIBRARY, key=lambda k: k.priority, reverse=True):
-        state = "proposed" if knob.candidate_id in taken else "available"
+        if knob.slug in MINED_OUT_SLUGS:
+            state = "mined-out"
+        elif knob.candidate_id in taken:
+            state = "proposed"
+        else:
+            state = "available"
         print(f"  [{state:9}] {knob.candidate_id:22} {knob.key}={knob.value:<10} channel={knob.channel}")
     return 0
 

@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 """
-Layer 5 tokenomics CLI — v3.1
+Layer 5 tokenomics CLI — v3.1  **FROZEN**
+
+This wraps the v3.1 playground (validators, pool/governance-shaped sim).
+It is NOT the v3.3 economics engine. Running it will silently teach the
+wrong split, yield, and participant model.
+
+Use instead:
+  python3 tools/layer5_economics_v33.py close --revenue-sats 100000
+  (portable TypeScript: operator/engine/economics.ts)
+
+This CLI remains only so historical reports stay reproducible.
 
 Wraps layer5_tokenomics_playground.py for interactive scenario editing and sim runs.
 
@@ -22,6 +32,11 @@ ACTIVE_SCENARIO = ROOT / 'references' / 'layer5-sim-scenario.active.json'
 BASELINE_SCENARIO = ROOT / 'references' / 'layer5-sim-scenario.json'
 DEFAULT_OUT = ROOT / 'reports' / 'layer5-sim-report-active.json'
 SIM_MODULE_PATH = ROOT / 'tools' / 'layer5_tokenomics_playground.py'
+
+FROZEN_NOTICE = (
+    "FROZEN v3.1 playground — not Layer 5 economics v3.3. "
+    "No pool, no yield, no governance. Use tools/layer5_economics_v33.py."
+)
 
 
 def load_sim_module():
@@ -243,6 +258,7 @@ def build_parser():
 
 
 def main():
+    print(FROZEN_NOTICE, file=sys.stderr)
     p = build_parser()
     args = p.parse_args()
     cmds = {
