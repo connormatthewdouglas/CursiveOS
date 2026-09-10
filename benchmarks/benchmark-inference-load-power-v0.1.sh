@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# CursiveOS: honor OLLAMA_HOST so the isolated Arc SYCL instance (port 11435) can be measured.
+OLLAMA_BASE="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+OLLAMA_BASE="${OLLAMA_BASE%/}"
 # Load-time power during parallel Ollama inference (observe-only).
 #
 # Samples CPU RAPL + GPU energy counter watts each second while N parallel
@@ -57,7 +60,7 @@ read_pair() {
 
 worker() {
     local id="$1" out="$2"
-    curl -s --max-time 180 http://localhost:11434/api/generate \
+    curl -s --max-time 180 ${OLLAMA_BASE}/api/generate \
         -H "Content-Type: application/json" \
         -d "{\"model\": \"$MODEL\", \"prompt\": \"$PROMPT\", \"stream\": false, \"options\": {\"num_predict\": 80, \"num_ctx\": 1024, \"num_batch\": 128}}" \
         >"$out" 2>/dev/null || echo '{}' >"$out"
@@ -70,7 +73,7 @@ echo "=== LOAD-POWER INFERENCE SENSOR (v0.1) ==="
 echo "model=$MODEL streams=$STREAMS time=$(date -Iseconds)"
 echo "cpu_energy=${CPU_E:-none} gpu_energy=${GPU_E:-none}"
 
-curl -s http://localhost:11434/api/generate -H "Content-Type: application/json" \
+curl -s ${OLLAMA_BASE}/api/generate -H "Content-Type: application/json" \
     -d "{\"model\": \"$MODEL\", \"prompt\": \"hi\", \"stream\": false, \"options\": {\"num_predict\": 1}}" >/dev/null 2>&1 || true
 
 START_NS=$(date +%s%N)

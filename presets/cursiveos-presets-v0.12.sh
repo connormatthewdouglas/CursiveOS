@@ -14,6 +14,20 @@
 # Implementation: delegates entirely to v0.11-zram-swappiness.sh (same knobs).
 
 set -uo pipefail
+
+force_stock_network() {
+    # sysctl is not on the user PATH, and the v0.8 backup is often empty, so
+    # --undo must not trust the saved snapshot. Exit on the canonical reference.
+    local SYSCTL="/usr/sbin/sysctl"
+    [[ -x "$SYSCTL" ]] || SYSCTL="sysctl"
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_congestion_control=cubic >/dev/null
+    sudo -n "$SYSCTL" -w net.core.default_qdisc=pfifo_fast >/dev/null
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_slow_start_after_idle=1 >/dev/null
+    sudo -n "$SYSCTL" -w net.core.rmem_max=212992 >/dev/null
+    sudo -n "$SYSCTL" -w net.core.wmem_max=212992 >/dev/null
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_rmem="4096 87380 6291456" >/dev/null
+    sudo -n "$SYSCTL" -w net.ipv4.tcp_wmem="4096 16384 4194304" >/dev/null
+}
 ACTION="${1:---help}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 V11="$SCRIPT_DIR/cursiveos-presets-v0.11-zram-swappiness.sh"
@@ -26,7 +40,14 @@ case "$ACTION" in
     echo "Scope: canonical parent = v0.9 stack + zram + swappiness=60 (delegates to v0.11)."
     ;;
   --dry-run|--apply-temp|--undo)
-    bash "$V11" "$ACTION"
+    if [[ "$ACTION" == "--undo" ]]; then
+        force_stock_network
+    fi
+    bash "$V11" "$ACTION" </dev/null
+    if [[ "$ACTION" == "--undo" ]]; then
+        force_stock_network
+        echo "stock network: $(/usr/sbin/sysctl -n net.ipv4.tcp_congestion_control) $(/usr/sbin/sysctl -n net.core.default_qdisc) rmem=$(/usr/sbin/sysctl -n net.core.rmem_max)"
+    fi
     ;;
   *)
     echo "Unknown option: $ACTION"; exit 1 ;;

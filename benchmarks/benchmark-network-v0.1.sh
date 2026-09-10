@@ -11,8 +11,8 @@
 # METHOD:
 #   Uses tc netem on loopback to simulate WAN: 50ms RTT + 0.5% packet loss.
 #   (50ms is typical inter-datacenter RTT; 0.5% loss is moderate internet conditions.)
-#   Runs iperf3 client→server through this simulated link.
-#   Paired: baseline (no presets) → tuned (BBR + buffers), same session.
+#   Runs iperf3 client->server through this simulated link.
+#   Paired: baseline (no presets) -> tuned (BBR + buffers), same session.
 #   Cleans up netem rules on exit.
 #
 # Usage: ./benchmark-network-v0.1.sh [preset-script]
@@ -20,19 +20,33 @@
 set -euo pipefail
 
 PRESET_SCRIPT="${1:-../presets/cursiveos-presets-v0.7.sh}"
-if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
+if [[ -z "${TAO_SUDO_PASS:-}" ]] && ! sudo -n true 2>/dev/null; then
     read -rsp "[CursiveOS] sudo password: " TAO_SUDO_PASS && echo
 fi
+TAO_SUDO_PASS="${TAO_SUDO_PASS:-}"
 SP="$TAO_SUDO_PASS"
 export TAO_SUDO_PASS
 s()  { echo "$SP" | sudo -S "$@" 2>/dev/null; }
 sc() { echo "$SP" | sudo -S bash -c "$1" 2>/dev/null; }
 
-DURATION=10      # iperf3 test duration per run (seconds)
-RUNS=5           # runs per pass (averaged — more runs smooths CUBIC variance)
-WAN_DELAY="25ms" # one-way delay → 50ms RTT
-WAN_LOSS="0.5%"  # packet loss rate
+DURATION=10
+RUNS=5
+WAN_DELAY="25ms"
+WAN_LOSS="0.5%"
 IPERF_PORT=15201
+
+TC=""
+for c in /sbin/tc /usr/sbin/tc; do
+    [[ -x "$c" ]] && TC="$c" && break
+done
+if [[ -z "$TC" ]]; then
+    echo "tc missing. Refusing to print a network delta." >&2
+    exit 1
+fi
+if ! command -v iperf3 >/dev/null 2>&1; then
+    echo "iperf3 required. Refusing to print a network delta." >&2
+    exit 1
+fi
 
 LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs"
 mkdir -p "$LOG_DIR"
@@ -42,7 +56,6 @@ ORIGINAL_NET_STATE="$(mktemp)"
 
 log() { echo "$1" | tee -a "$LOG_FILE"; }
 
-# ── Cleanup trap ──────────────────────────────────────────────────────────────
 save_original_network() {
     local key
     for key in \
@@ -65,48 +78,67 @@ restore_original_network() {
 }
 
 cleanup() {
-    # Revert a partially applied preset if the benchmark aborts mid-pass.
     bash "$PRESET_SCRIPT" --undo >/dev/null 2>&1 || true
-    # Remove netem rules if they exist
     sc "tc qdisc del dev lo root 2>/dev/null || true"
-    # Kill any leftover iperf3 server
     pkill -f "iperf3 -s" 2>/dev/null || true
     restore_original_network
+    force_stock_network || true
+}
+force_stock_network() {
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_congestion_control=cubic >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.core.default_qdisc=pfifo_fast >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_slow_start_after_idle=1 >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.core.rmem_max=212992 >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.core.wmem_max=212992 >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_rmem="4096 87380 6291456" >/dev/null
+    sudo -n /usr/sbin/sysctl -w net.ipv4.tcp_wmem="4096 16384 4194304" >/dev/null
 }
 trap cleanup EXIT
 
-# ── Preflight ─────────────────────────────────────────────────────────────────
 log "Ensuring clean state for baseline..."
-# First try the preset undo (in case a partial apply left a backup)
 bash "$PRESET_SCRIPT" --undo 2>/dev/null | grep -E "Revert|reverted|No backup" | sed 's/^/  /' || true
 save_original_network
-# Hard-reset network sysctls to the canonical untuned reference regardless of backup state.
-# This is necessary because --undo relies on a state file that may not exist,
-# or may have been written when the system was already in a tuned state
-# (causing a ratchet where BBR is saved as the "original" and never cleared).
 log "  Applying canonical untuned network reference for the baseline..."
-echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_congestion_control=cubic    2>/dev/null && log "    tcp_congestion_control → cubic"     || true
-echo "$SP" | sudo -S sysctl -w net.core.default_qdisc=pfifo_fast         2>/dev/null && log "    default_qdisc → pfifo_fast"         || true
-echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_slow_start_after_idle=1      2>/dev/null && log "    tcp_slow_start_after_idle → 1"       || true
-echo "$SP" | sudo -S sysctl -w net.core.rmem_max=212992                   2>/dev/null && log "    rmem_max → 212992 (kernel default)"  || true
-echo "$SP" | sudo -S sysctl -w net.core.wmem_max=212992                   2>/dev/null && log "    wmem_max → 212992 (kernel default)"  || true
-echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_rmem="4096 87380 6291456"    2>/dev/null && log "    tcp_rmem → kernel default"           || true
-echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_wmem="4096 16384 4194304"    2>/dev/null && log "    tcp_wmem → kernel default"           || true
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_congestion_control=cubic    2>/dev/null && log "    tcp_congestion_control -> cubic"     || true
+echo "$SP" | sudo -S sysctl -w net.core.default_qdisc=pfifo_fast         2>/dev/null && log "    default_qdisc -> pfifo_fast"         || true
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_slow_start_after_idle=1      2>/dev/null && log "    tcp_slow_start_after_idle -> 1"       || true
+echo "$SP" | sudo -S sysctl -w net.core.rmem_max=212992                   2>/dev/null && log "    rmem_max -> 212992 (kernel default)"  || true
+echo "$SP" | sudo -S sysctl -w net.core.wmem_max=212992                   2>/dev/null && log "    wmem_max -> 212992 (kernel default)"  || true
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_rmem="4096 87380 6291456"    2>/dev/null && log "    tcp_rmem -> kernel default"           || true
+echo "$SP" | sudo -S sysctl -w net.ipv4.tcp_wmem="4096 16384 4194304"    2>/dev/null && log "    tcp_wmem -> kernel default"           || true
 sleep 2
 
-# ── Apply WAN simulation (tc netem on loopback) ──────────────────────────────
 apply_netem() {
-    # Clear any leftover qdisc first — replace can fail if prior run crashed mid-flight
-    sc "tc qdisc del dev lo root 2>/dev/null || true"
-    sc "tc qdisc add dev lo root netem delay $WAN_DELAY loss $WAN_LOSS"
-    log "  WAN sim: ${WAN_DELAY} one-way + ${WAN_LOSS} loss (loopback)"
+    local tcbin=""
+    for c in /sbin/tc /usr/sbin/tc; do
+        [[ -x "$c" ]] && tcbin="$c" && break
+    done
+    if [[ -z "$tcbin" ]]; then
+        log "tc missing. Refusing to print a network delta."
+        exit 1
+    fi
+    sudo -n "$tcbin" qdisc del dev lo root >/dev/null 2>&1 || true
+    if ! sudo -n "$tcbin" qdisc add dev lo root netem delay "$WAN_DELAY" loss "$WAN_LOSS"; then
+        log "netem setup failed. Refusing to print a network delta."
+        exit 1
+    fi
+    local n
+    n=$(sudo -n "$tcbin" qdisc show dev lo | grep -c netem || true)
+    if [[ "${n:-0}" -lt 1 ]]; then
+        log "netem not active. Refusing to print a network delta."
+        exit 1
+    fi
+    log "  WAN sim: ${WAN_DELAY} one-way + ${WAN_LOSS} loss (loopback, $n netem rule(s))"
 }
 
 remove_netem() {
-    sc "tc qdisc del dev lo root 2>/dev/null || true"
+    local tcbin=""
+    for c in /sbin/tc /usr/sbin/tc; do
+        [[ -x "$c" ]] && tcbin="$c" && break
+    done
+    [[ -n "$tcbin" ]] && sudo -n "$tcbin" qdisc del dev lo root >/dev/null 2>&1 || true
 }
 
-# ── Start iperf3 server ───────────────────────────────────────────────────────
 start_server() {
     pkill -f "iperf3 -s" 2>/dev/null || true
     sleep 1
@@ -114,7 +146,6 @@ start_server() {
     sleep 1
 }
 
-# ── Parse iperf3 JSON output ──────────────────────────────────────────────────
 parse_iperf() {
     python3 -c "
 import json, sys
@@ -129,7 +160,6 @@ except Exception as e:
 "
 }
 
-# ── Run a pass ────────────────────────────────────────────────────────────────
 run_pass() {
     local label="$1"
     log ""
@@ -140,7 +170,7 @@ run_pass() {
     cc=$(cat /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null || echo N/A)
     rmem=$(cat /proc/sys/net/core/rmem_max 2>/dev/null || echo N/A)
     log "  TCP CC:    $cc"
-    log "  rmem_max:  $rmem bytes ($(echo "scale=1; $rmem/1048576" | bc -l) MB)"
+    log "  rmem_max:  $rmem bytes ($(echo \"scale=1; $rmem/1048576\" | bc -l) MB)"
 
     apply_netem
 
@@ -150,12 +180,10 @@ run_pass() {
 
     for _ in $(seq 1 $RUNS); do
         local result mbps retx rtt
-        # Restart server before each run — daemon can crash after very high-throughput connections
         pkill -f "iperf3 -s" 2>/dev/null || true
         sleep 1
         iperf3 -s -p $IPERF_PORT -D --logfile /tmp/tao-iperf3-server.log 2>/dev/null
         sleep 1
-        # || true: iperf3 exits non-zero on some error paths; don't let pipefail kill the script
         result=$(iperf3 -c 127.0.0.1 -p $IPERF_PORT -t $DURATION -J 2>/dev/null | parse_iperf) || true
         mbps=$(echo "$result" | cut -d'|' -f1)
         retx=$(echo "$result" | cut -d'|' -f2)
@@ -181,48 +209,41 @@ run_pass() {
     PASS_RESULT="$avg_mbps"
 }
 
-# ── Header ────────────────────────────────────────────────────────────────────
 log "CursiveOS Network Benchmark v0.1"
 log "Preset:   $PRESET_SCRIPT"
 log "WAN sim:  ${WAN_DELAY} one-way delay + ${WAN_LOSS} loss (loopback netem)"
-log "Duration: ${DURATION}s per run × ${RUNS} runs"
+log "Duration: ${DURATION}s per run x ${RUNS} runs"
 log "Started:  $(date)"
 log "========================================"
 log "Hardware:"
 log "  CPU: $(lscpu | grep 'Model name:' | cut -d':' -f2 | xargs)"
-log "  NIC: $(ip link show | grep -v 'lo\|link' | grep '^[0-9]' | awk '{print $2}' | tr -d ':' | head -3 | tr '\n' ' ')"
+log "  NIC: $(ip link show | grep -v 'lo\\|link' | grep '^[0-9]' | awk '{print $2}' | tr -d ':' | head -3 | tr '\\n' ' ')"
 log "========================================"
 
-# Start iperf3 server once (stays up for both passes)
 log ""
 log "Starting iperf3 server on port $IPERF_PORT..."
 start_server
 log "  Server ready."
 
-# ── PASS 1: Baseline ──────────────────────────────────────────────────────────
 log ""
 log "PASS 1 — BASELINE (canonical CUBIC/reference buffers)"
 run_pass "BASELINE"
 BASELINE="$PASS_RESULT"
 
-# ── Apply presets ─────────────────────────────────────────────────────────────
 log ""
 log "Applying presets: $PRESET_SCRIPT"
-bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "✓\|WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
+bash "$PRESET_SCRIPT" --apply-temp 2>&1 | grep "WARNING\|skip" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
 log "Presets applied."
 
-# ── PASS 2: Tuned ─────────────────────────────────────────────────────────────
 log ""
 log "PASS 2 — TUNED (BBR + 16MB buffers)"
 run_pass "TUNED"
 TUNED="$PASS_RESULT"
 
-# ── Undo presets ──────────────────────────────────────────────────────────────
 log ""
 log "Reverting presets..."
-bash "$PRESET_SCRIPT" --undo 2>&1 | grep "✓\|Revert" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
+bash "$PRESET_SCRIPT" --undo 2>&1 | grep -E "Revert|stock network|reverted" | sed 's/^/  /' | tee -a "$LOG_FILE" || true
 
-# ── Results ───────────────────────────────────────────────────────────────────
 if (( $(echo "$BASELINE > 0" | bc -l) )); then
     DELTA=$(echo "scale=2; ($TUNED - $BASELINE) * 100 / $BASELINE" | bc -l | awk '{printf "%.2f", $1}')
 else

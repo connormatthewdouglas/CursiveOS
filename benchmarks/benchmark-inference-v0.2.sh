@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# CursiveOS: honor OLLAMA_HOST so the isolated Arc SYCL instance (port 11435) can be measured.
+OLLAMA_BASE="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+OLLAMA_BASE="${OLLAMA_BASE%/}"
 # CursiveOS benchmark-inference-v0.2.sh
 # Cold-start latency benchmark: measures GPU wakeup + model load penalty.
 #
@@ -95,7 +98,7 @@ except Exception as e:
 
 # ── Single cold-start call (model unloads after, forcing reload next time) ───
 infer_cold() {
-    curl -s --max-time 120 http://localhost:11434/api/generate \
+    curl -s --max-time 120 ${OLLAMA_BASE}/api/generate \
         -H "Content-Type: application/json" \
         -d "{\"model\": \"$MODEL\", \"prompt\": \"$PROMPT\", \"stream\": false, \"keep_alive\": \"0s\", \"options\": {\"num_predict\": 30, \"num_ctx\": 512, \"num_batch\": 64}}"
 }
