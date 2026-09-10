@@ -135,3 +135,17 @@ test("founder-only accepted lineage produces a metabolic R, not a population sig
 test("cellKey round-trips", () => {
   assert.equal(cellKey([1, 1, 1, 2]), "cneu-sneu-ineu-mpos");
 });
+
+test("cell elite prefers an accepted occupant over a higher-fitness baseline", () => {
+  const genesis: SeedBundle = {
+    ...v9c,
+    variant_id: "genesis-baseline-v0.8",
+    decision: "measured_baseline",
+    fitness_score: 0.6012012,
+    result_bundle: v11.result_bundle,
+  };
+  const archive = buildArchive([genesis, v11]);
+  const cell = archive.cells.find((c) => c.key === "cneu-sneu-ineu-mpos");
+  assert.equal(cell?.coverage, "covered");
+  assert.equal(cell?.elite_variant_id, "candidate-v0.11-zram-swappiness");
+});
