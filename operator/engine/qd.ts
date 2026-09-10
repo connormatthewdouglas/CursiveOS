@@ -145,7 +145,9 @@ function coverageOf(
 }
 
 function bestOf(occupants: SeedBundle[]) {
-  return [...occupants].sort((a, b) => Number(b.fitness_score ?? 0) - Number(a.fitness_score ?? 0))[0];
+  const accepted = occupants.filter((b) => b.decision === "accepted");
+  const pool = accepted.length ? accepted : occupants;
+  return [...pool].sort((a, b) => Number(b.fitness_score ?? 0) - Number(a.fitness_score ?? 0))[0];
 }
 
 export function buildArchive(bundles: SeedBundle[]): QdArchive {
