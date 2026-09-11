@@ -6,7 +6,7 @@ This file = live operational state. Supersedes the 2026-09-10 handover.
 ## TL;DR
 
 - **Canonical parent: v0.12.** Two accepted bundles (v0.9c, v0.11). Genome did not move on 2026-09-11.
-- **Two surfaces.** Public notebook = science log. Desktop **CursiveOS window** = task manager (update, now/next, phase bar, Stop). Occupancy is **not** published to CursiveRoot.
+- **Two surfaces.** **CursiveRoot** = public science log. Desktop **CursiveOS window** = task manager (update, now/next, phase bar, Stop). Occupancy is **not** published to CursiveRoot.
 - **Cycle 7 leftovers (Stardust, 2026-09-11) all rejected:** `v0.13-watermark200`, `v0.13-dirtyexpire1500`, `v0.13-migcost5ms`, `v0.13-notsentlowat16k`.
 - **Do not promote** `v0.13-pagecluster0` or `v0.13-vfscache50`.
 - **Enqueue fail-closed.** Anon INSERT on `measurement_requests` is denied. Proposer materializes files; it does not put work on the wire.
@@ -42,7 +42,7 @@ This file = live operational state. Supersedes the 2026-09-10 handover.
 - No auto-enqueue until a signed proposer identity exists.
 - No mining pagecluster / vfscache cousins.
 - Stop lives on the Desktop, not the public app.
-- Ideas in the notebook stay local drafts until a privileged rail exists.
+- Ideas on CursiveRoot stay local drafts until a privileged rail exists.
 
 ## Next (priority)
 

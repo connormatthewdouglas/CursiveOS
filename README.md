@@ -13,12 +13,12 @@ CursiveOS is **not** a website that reaches into your PC, and it is **not** yet 
 
 | Surface | Lives where | Job |
 | --- | --- | --- |
-| **Notebook** | the public ledger + dashboard | genome, what was tested, what stuck. Science log. |
+| **CursiveRoot** | the public site | genome, what was tested, what stuck. The organism's memory. |
 | **CursiveOS window** | the tester's Desktop | Update from GitHub, what's running, what's next, Stop. Occupancy stays on that machine. |
 
 Payouts are simulated. `payout_eligible` is hard-false. Real Bitcoin does not move.
 
-Full direction: [ROADMAP.md](ROADMAP.md) · thesis: [white-paper.md](white-paper.md) · operator state: [HANDOVER.md](HANDOVER.md). Notebook UI source: [notebook/](notebook/).
+Full direction: [ROADMAP.md](ROADMAP.md) · thesis: [white-paper.md](white-paper.md) · operator state: [HANDOVER.md](HANDOVER.md). CursiveRoot UI source: [site/](site/).
 
 ## Try it — Linux only
 
@@ -34,7 +34,7 @@ After that, **do not paste again.** Open the **CursiveOS** icon on the Desktop:
 - **Now / next** — which screen is on this box, which leftover is lined up
 - **Stop** — give the computer back; presets undo
 
-Windows and WSL can watch the notebook. They cannot join the test fleet. The genome is Linux kernel settings.
+Windows and WSL can watch CursiveRoot. They cannot join the test fleet. The genome is Linux kernel settings.
 
 **Data transparency:** a run uploads hardware and performance metadata (CPU/GPU model, OS/kernel, benchmark deltas) to **CursiveRoot** — **not** personal files, documents, browser data, or shell history. Occupancy ("this PC is busy") is **not** written to the public ledger. Durability: [supabase/README.md](supabase/README.md).
 

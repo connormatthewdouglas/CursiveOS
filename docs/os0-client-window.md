@@ -3,7 +3,7 @@
 **Status:** ACTIVE (2026-09-11)
 **Files:** `tools/cursive_panel.py`, `tools/cursive_desk.py`, `tools/cursive_status.py`, `tools/cursive-stop.sh`
 
-The public notebook and the tester PC are two different jobs. This window is the client-side one.
+**CursiveRoot** and the tester PC are two different jobs. This window is the client-side one.
 
 ## What it is
 
@@ -20,7 +20,7 @@ Occupancy is written to `.cursiveos/closed-loop/panel.json` and **never** to Cur
 
 ## What it is not
 
-- Not the website. A button in the notebook cannot stop this PC.
+- Not the website. A button on CursiveRoot cannot stop this PC.
 - Not a remote shell. GitHub / the dashboard never SSH in.
 - Not an ISO. First install is still the one-paste; this window is what you use after that.
 

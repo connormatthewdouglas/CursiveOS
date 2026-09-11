@@ -7,7 +7,7 @@
 
 ### 2026-09-11 (catch-up)
 
-- Desktop **CursiveOS window** is the client task manager. Public notebook is science only.
+- Desktop **CursiveOS window** is the client task manager. **CursiveRoot** is science only.
 - Cycle 7 leftover screens on Stardust all **rejected** (`watermark200`, `dirtyexpire1500`, `migcost5ms`, `notsentlowat16k`).
 - Arc A750 inference **un-voided** (idle 5.50 W CV 0.006; cold 3703 ms; 141.5 tok/s; 23/23 offload).
 - Enqueue remains fail-closed. `payout_eligible` remains hard-false.

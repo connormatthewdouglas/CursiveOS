@@ -9,14 +9,14 @@ This roadmap describes what CursiveOS is becoming. It's organized around four tr
 The current state of the project:
 
 - Canonical parent preset **v0.12** (v0.9 stack + zram + swappiness=60), promoted from accepted v0.11 (cycle 3, 2026-06-26). **Still the genome.** Cycle 7 leftover screens (2026-09-11) all rejected.
-- **Two surfaces, un-mashed.** The public notebook (ledger + dashboard) shows science: genome, what passed, what failed. The **CursiveOS Desktop window** is the client-side task manager: Update from GitHub, now/next, phase bar, Stop. Occupancy is local; it is not written to CursiveRoot.
+- **Two surfaces, un-mashed.** **CursiveRoot** shows science: genome, what passed, what failed. The **CursiveOS Desktop window** is the client-side task manager: Update from GitHub, now/next, phase bar, Stop. Occupancy is local; it is not written to CursiveRoot.
 - **The loop can run a screen without the founder at the keyboard** (first time: cycle 5, 2026-07-06). Proposal, execution, and judgment ran. **Enqueue is still founder-gated** — anon INSERT on `measurement_requests` is denied. That is load-bearing, not a bug.
 - **Trust spine live:** signed identity, raw-artifact, trust-evaluation rows; `payout_eligible` hard-false. Independent aggregation is still pending.
 - Harness **v1.4.x** with five measured channels (network gate-only, cold-start, sustained, idle power, memory-pressure); concurrency observe-only.
 - **Stardust Arc A750 un-voided (2026-09-11):** idle package 5.50 W (CV 0.006), GPU 36.94 W (CV 0.002); cold 3703 ms (CV 0.002); sustained 141.5 tok/s (CV 0.005); 23/23 layers offloaded.
 - CursiveRoot: physical machines in the low single digits, **2 accepted bundles**, simulated payouts only. Rejected verdicts are kept and shown.
 - Layer 5 economics v3.3 specified. Real money stays gated behind production Sybil resistance.
-- The operator-facing public surface is a **read-only organism notebook**. Do not grow it into a remote kill-switch for someone else's PC.
+- The operator-facing public surface is a **read-only CursiveRoot**. Do not grow it into a remote kill-switch for someone else's PC.
 
 The immediate engineering frontier: a signed proposer identity so leftovers can be enqueued without a human SQL paste; CursiveRoot-owned independent aggregation; QD-archive-grounded proposal instead of mining the audited sysctl library. Real money stays gated.
 

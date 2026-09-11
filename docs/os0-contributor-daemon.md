@@ -6,7 +6,7 @@ CursiveOS OS.0 starts with a small nervous-system loop:
 2. A Linux bare-metal host runs `tools/contributor_daemon.py`.
 3. The daemon reports `machine_capabilities` (hardware, not occupancy), claims one request, runs `seed_organism.py screen-variant --execute`, uploads the resulting seed bundle, and writes a `measurement_jobs` record.
 4. While a screen runs it writes **local** progress for the Desktop window (`docs/os0-client-window.md`). That status is not uploaded.
-5. The notebook reads queue/job/capability tables alongside `runs`, `seed_bundles`, and simulated payouts.
+5. CursiveRoot reads queue/job/capability tables alongside `runs`, `seed_bundles`, and simulated payouts.
 
 This is alpha infrastructure. It is **not payout eligible** and it is **Linux-first**.
 Windows/WSL probes may test protocol plumbing later, but they must not enter Linux selection truth.

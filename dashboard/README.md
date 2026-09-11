@@ -5,7 +5,7 @@ config, lineage, OS.0 request queue, daemon jobs, contribution history, latest
 accepted improvement, simulated reward, the fleet, and recent measurements — in
 plain language for a non-technical reader.
 
-It is the **notebook**, not the task manager. Occupancy of a tester PC (busy/free,
+This older static page is being replaced by **CursiveRoot** in `site/`. It is not the Desktop task manager. Occupancy of a tester PC (busy/free,
 Stop) lives in the Desktop window (`docs/os0-client-window.md`), not here.
 
 ## Design (deliberately minimal)
