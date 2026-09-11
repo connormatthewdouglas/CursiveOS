@@ -2,109 +2,79 @@
 
 **A new species that inherited its founding genome from Linux and now evolves independently under its own selection pressure.**
 
-Measurement-first Linux optimization for local compute. One command. Measurable results. A Bitcoin-native economic layer with no token tricks, no pool, and no governance theater.
+Measurement-first Linux optimization for local compute. The organism keeps kernel and memory tweaks that measurably help real computers, and throws the rest away.
 
-CursiveOS is built for two core audiences:
+Two audiences, same bottlenecks:
 
 - Crypto miners and decentralized compute operators
-- Local AI/LLM users running Ollama, llama.cpp, and home inference nodes
+- Local AI / LLM users running Ollama, llama.cpp, and home inference nodes
 
-The OS-layer bottlenecks are the same for both: network transport ceilings, scheduler and governor latency, memory pressure, and GPU/CPU power-state behavior. CursiveOS benchmarks your machine, applies reversible presets, benchmarks again, and shows you the measured delta.
+CursiveOS is **not** a website that reaches into your PC, and it is **not** yet a downloadable distro. It is a Linux organism with two surfaces:
 
-CursiveOS is building toward a v1.0 release that ships with a **natural-language shell as the default terminal**. The interface humans have used to operate Linux for fifty years becomes a conversation with a local agent. You describe outcomes; the agent finds the mechanism. Full roadmap: [ROADMAP.md](ROADMAP.md).
+| Surface | Lives where | Job |
+| --- | --- | --- |
+| **Notebook** | the public ledger + dashboard | genome, what was tested, what stuck. Science log. |
+| **CursiveOS window** | the tester's Desktop | Update from GitHub, what's running, what's next, Stop. Occupancy stays on that machine. |
 
-## Try It Now — one paste, full session
+Payouts are simulated. `payout_eligible` is hard-false. Real Bitcoin does not move.
 
-Paste this one command on a Linux test machine. It runs the entire Phase 0
-measurement session and uploads everything to CursiveRoot automatically:
+Full direction: [ROADMAP.md](ROADMAP.md) · thesis: [white-paper.md](white-paper.md) · operator state: [HANDOVER.md](HANDOVER.md).
+
+## Try it — Linux only
+
+**First time** on a machine you control. Ubuntu / Mint / Debian-family. You will be asked for sudo. GitHub never applies settings remotely.
 
 ```bash
 command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; (curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh || wget -qO- https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-session-linux-test.sh) | bash
 ```
 
-What it does, in order:
+After that, **do not paste again.** Open the **CursiveOS** icon on the Desktop:
 
-1. **Recovers** any results still saved locally from earlier installs.
-2. **Genesis baseline** — records this machine's v0.8 baseline under its
-   hardware fingerprint (skipped automatically if CursiveRoot already has one).
-3. **Optional mutation screen** — no candidate is active by default. To run an
-   explicit historical or new screen, set `CURSIVEOS_SCREENS="normal:<variant>"`;
-   the script compares that candidate against the current parent preset (`v0.12`).
-   A single screen is diagnostic only — one observation can never accept a
-   mutation or create a payout.
-4. **Uploads** all artifacts and prints the analyzer verdict.
+- **Update from GitHub** when the machine is free
+- **Now / next** — which screen is on this box, which leftover is lined up
+- **Stop** — give the computer back; presets undo
 
-Every step is idempotent — if anything is interrupted, just paste the same
-command again. All presets are reverted automatically at the end of each
-benchmark pass. The genesis baseline does not produce a payout; accepted
-variants can later flow through a *simulated* revenue cycle that pays no real
-money, and benchmark testers are not paid for running a test unless they are
-also the contributor of an accepted variant.
+Windows and WSL can watch the notebook. They cannot join the test fleet. The genome is Linux kernel settings.
 
-**Data transparency:** At the end of a run, CursiveOS uploads benchmark results to **CursiveRoot** (the project's sensor array and hardware-performance database). It uploads hardware and performance metadata (CPU/GPU model, OS/kernel version, benchmark deltas) — **not** personal files, documents, browser data, or shell history. The organism needs this data to learn which optimizations work on which hardware and to improve recommendations safely over time.
+**Data transparency:** a run uploads hardware and performance metadata (CPU/GPU model, OS/kernel, benchmark deltas) to **CursiveRoot** — **not** personal files, documents, browser data, or shell history. Occupancy ("this PC is busy") is **not** written to the public ledger. Durability: [supabase/README.md](supabase/README.md).
 
-> **CursiveRoot durability:** CursiveRoot runs on free-tier Supabase and is backed up daily (encrypted) with an auto-pause keep-alive. See [supabase/README.md](supabase/README.md) and [docs/specs/cursiveroot-data-durability-v1.md](docs/specs/cursiveroot-data-durability-v1.md).
-
-**See live results from all machines:**
+Live ledger from a clone:
 
 ```
 ./scripts/cursiveroot-status.sh
 ```
 
-### Current mutation status
+## Current organism status (2026-09-11)
 
-There is **no active candidate configured by default**. Cycle 3 already accepted
-**v0.11-zram-swappiness** (v0.9 + zram + `vm.swappiness=60`) and promoted it to
-**canonical parent v0.12**. Follow-on swappiness 100 (`v0.12b`) and scheduler
-(`v0.13-sched`) screens were rejected. **Seed Organism → OS.0 is now running:**
-in cycle 5 (2026-07-06) the autonomous proposer materialized its own candidate
-(`v0.13-pagecluster0`), contributor daemons on two machines claimed it from the
-CursiveRoot request queue and screened it unattended, and the sensors returned
-an honest null — the first loop iteration with no manual screen step.
-The V verifier-hardening pass extends H2*: fabricated evidence is rejected by
-raw-artifact recompute, cross-state replays by a CursiveRoot/global fingerprint
-index, parsimony overclaims by invariant gates, and funded confirmation-Sybil
-patterns by independent-aggregation policy. Honest noisy/weird-hardware controls
-are accepted or held inconclusive rather than fraud-rejected. The first OS.0 DB
-trust spine now stores signed identity keys, raw-artifact replay pointers, and
-trust evaluations in CursiveRoot. Real BTC/reward remains simulated/gated until
-production Sybil resistance exists.
+- **Canonical parent: v0.12** (v0.9 stack + zram + `vm.swappiness=60`). Accepted cycle 3, 2026-06-26. Do not treat v0.8 as current.
+- **Accepted bundles: 2** (v0.9c cycle 1, v0.11 cycle 3). Rejected / honest-null candidates are kept on the ledger. That is selection working.
+- **Do not promote** `v0.13-pagecluster0`, `v0.13-vfscache50` (cycles 5–6, mined out).
+- **Cycle 7 leftover screens (2026-09-11, Stardust):** `watermark200`, `dirtyexpire1500`, `migcost5ms`, `notsentlowat16k` — all **rejected**. Genome stays v0.12.
+- **Enqueue is fail-closed.** Anon cannot insert `measurement_requests`. The proposer materializes files; a privileged identity is still required to put work on the wire.
+- **Stardust Arc A750 un-voided (2026-09-11).** Clean idle: package **5.50 W** (CV 0.006), GPU **36.94 W** (CV 0.002). Cold-start **3703 ms** (CV 0.002), sustained **141.5 tok/s** (CV 0.005) at ~114 W / 2400 MHz, **23/23 layers offloaded**. Inference on this box is a real channel again.
+- **Trust spine live.** Signed identity, raw-artifact pointers, trust evaluations. Independent aggregation still pending. Real BTC stays gated.
 
-To run an explicit historical screen on a Linux box, name the candidate:
+To run an explicit historical screen (diagnostic only — one observation cannot accept a mutation):
 
 ```bash
 command -v curl >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y curl; }; curl -fsSL https://raw.githubusercontent.com/connormatthewdouglas/CursiveOS/main/seed-mutation-linux-test.sh | CURSIVEOS_CANDIDATE_VARIANT=v0.12b-swappiness bash
 ```
 
-Cycle 3 result (accepted 2026-06-26): v0.11-zram-swappiness vs v0.9 parent,
-three confirming screens (Stardust normal +0.0954, laptop +0.1004, Stardust
-reversed +0.0947) → **accepted**, confidence 0.875, fitness +0.1004. Memory
-channel drove the win; no inference regression. **Canonical parent is now v0.12**
-(= settled v0.11 stack). CursiveRoot holds 2 accepted bundles and 2 payout
-reports.
+Cycle 3 result (accepted 2026-06-26): v0.11-zram-swappiness vs v0.9 parent, three confirming screens → **accepted**, confidence 0.875, fitness +0.1004. Memory channel drove the win; no inference regression.
 
 ### A note on the network numbers (honesty box)
 
-The old headline "+500–900% network" numbers are now scoped more tightly. The
-large measured win on ordinary ≤1GbE lossy paths is the **CUBIC → BBR** switch;
-with BBR held constant, the CursiveOS buffer/qdisc stack measured ~0% on that
-real path. Loopback lossy-WAN tests remain useful for mechanism debugging, but
-their magnitudes do not transfer directly to real links. Because in-tree BBRv1
-has known multi-flow fairness / retransmit risks, public copy and future default
-recommendations should stay scoped to "single flow under loss" until the
-multi-flow fairness test is done.
+The old headline "+500–900% network" numbers are scoped tightly. The large measured win on ordinary ≤1GbE lossy paths is the **CUBIC → BBR** switch; with BBR held constant, the CursiveOS buffer/qdisc stack measured ~0% on that real path. Loopback lossy-WAN tests remain useful for mechanism debugging, but their magnitudes do not transfer directly to real links. In-tree BBRv1 has known multi-flow fairness / retransmit risks; public copy stays scoped to "single flow under loss" until that test is done.
 
 ### Individual test paths (advanced)
 
-The full session above supersedes these for normal testing, but each phase can
-still be run on its own:
+- **Benchmark only:** `git clone https://github.com/connormatthewdouglas/CursiveOS.git; cd ~/CursiveOS && bash cursiveos-full-test-v1.4.sh`
+- **Genesis baseline only:** `seed-session-linux-test.sh` / `seed-organism-linux-test.sh`
+- **Mutation screen only:** `seed-mutation-linux-test.sh`
+- **Desktop window:** `python3 tools/cursive_panel.py` (or the CursiveOS Desktop icon)
+- **Unattended daemon:** `python3 tools/contributor_daemon.py daemon --interval 300`
 
-- **Benchmark only** (no seed organism bookkeeping):
-  `git clone https://github.com/connormatthewdouglas/CursiveOS.git; cd ~/CursiveOS && bash cursiveos-full-test-v1.4.sh`
-- **Genesis baseline only:** `seed-organism-linux-test.sh` (same curl-pipe pattern as above)
-- **Mutation screen only:** `seed-mutation-linux-test.sh` (same curl-pipe pattern as above)
-
-Details and development workflows: [docs/specs/seed-organism-runbook-v0.1.md](docs/specs/seed-organism-runbook-v0.1.md).
+Details: [docs/specs/seed-organism-runbook-v0.1.md](docs/specs/seed-organism-runbook-v0.1.md), [docs/os0-client-window.md](docs/os0-client-window.md), [docs/os0-contributor-daemon.md](docs/os0-contributor-daemon.md).
 
 ## Results
 
@@ -115,22 +85,22 @@ picture is per-channel and hardware-scoped. What the measurement loop has actual
 established, on real hardware, with repeat + counterbalanced + cross-machine
 confirmation:
 
-- **Selection loop closed twice.** Lineage advanced **v0.8 → v0.9 → v0.12** through
+- **Selection loop closed twice, then kept rejecting.** Lineage advanced **v0.8 → v0.9 → v0.12** through
   two accepted cycles (v0.9c cold-start retention, cycle 1; v0.11-zram-swappiness
-  memory win, cycle 3). Equally important, a string of candidates were **rejected**
-  by measurement — v0.10 (neutral), v0.12b (worse), v0.13-sched (regressed),
-  v0.13-pagecluster0 (neutral; the first autonomously proposed candidate) — which is the
-  half of selection most projects never show. CursiveRoot holds 2 accepted bundles
-  and 2 (simulated) payout reports.
+  memory win, cycle 3). Later candidates were **rejected** — v0.10 (neutral), v0.12b (worse),
+  v0.13-sched (regressed), v0.13-pagecluster0 and v0.13-vfscache50 (autonomous honest nulls),
+  and the 2026-09-11 leftover quartet (`watermark200`, `dirtyexpire1500`, `migcost5ms`,
+  `notsentlowat16k`). CursiveRoot still holds **2 accepted bundles** and 2 (simulated) payout reports.
 - **Network — scoped honestly.** On ordinary ≤1GbE lossy links the real win is the
   **CUBIC → BBR** congestion-control switch (large under loss); with BBR held
   constant, the CursiveOS buffer/qdisc stack measured **~0%**. The old "+500–900%"
   figures were loopback-BDP artifacts and do not transfer to real links. Claim is
   scoped to **single flow under loss** pending multi-flow fairness testing (see the
   honesty box above).
-- **Cold-start latency — real but hardware-scoped.** ~**−51%** on the Ryzen 7 5700 +
-  Arc A750 desktop and large gains on older CPU-only hardware; **~0%** on some
-  laptops. Reported by hardware class, never as a universal number.
+- **Cold-start / sustained — hardware-scoped.** Historical cold-start gains were large on
+  older CPU-only boxes and small on Arc under the later-dropped GPU pin. **2026-09-11 clean
+  Arc numbers** (SYCL, 23/23 offload): cold-start **3703 ms** (CV 0.002), sustained **141.5 tok/s**
+  (CV 0.005). Report by hardware class, never as a universal number.
 - **Memory pressure — the newest earned win.** v0.11 (zram + `vm.swappiness=60`) cut
   cgroup memory-pressure refault time **~4×** vs the v0.9 parent (e.g. Stardust
   45s→11s) with **no inference regression** (cold-start −0.5%, sustained 0.0%),
@@ -280,7 +250,7 @@ The incentive layer is Bitcoin-native and has no token, no pool, and no governan
 - **Two-year claim window.** Accruals must be claimed within two years or redistribute to active claimants. Lifetime fitness itself is permanent.
 - **Forks inherit obligations.** The lifetime ledger is Bitcoin-anchored; forks that use the genome owe the same payments to the same contributors.
 
-**Current status (July 6, 2026):** v3.3 economics is specified, not deployed for real payment. Phase 0 has **2 accepted variants** (v0.9c cycle 1, v0.11 cycle 3) with simulated payout reports across **5 cycles run**. Parent preset v0.12. Harness v1.4.5 with memory channel integrated. The OS.0 request/job queue, contributor daemon, autonomous proposer, and trust spine are live and have run a full cycle end-to-end (cycle 5); every upload now writes signed-identity/raw-artifact/trust rows, with `payout_eligible` hard-false at the database layer. Write paths remain simulated/not payout eligible and must move to real signed identity + CursiveRoot-owned aggregation before broader testing.
+**Current status (2026-09-11):** v3.3 economics is specified, not deployed for real payment. **2 accepted variants** (v0.9c, v0.11) with simulated payout reports. Parent **v0.12**. Cycle 7 leftover screens all rejected. `payout_eligible` is hard-false. Occupancy of a tester PC is not published. Signed identity + CursiveRoot-owned aggregation still gate any real reward and any auto-enqueue.
 
 ---
 

@@ -5,6 +5,9 @@ config, lineage, OS.0 request queue, daemon jobs, contribution history, latest
 accepted improvement, simulated reward, the fleet, and recent measurements — in
 plain language for a non-technical reader.
 
+It is the **notebook**, not the task manager. Occupancy of a tester PC (busy/free,
+Stop) lives in the Desktop window (`docs/os0-client-window.md`), not here.
+
 ## Design (deliberately minimal)
 - **No backend, no build step, no framework.** One HTML file with inline CSS + vanilla JS.
 - Reads the **already-public** CursiveRoot data directly via Supabase REST using the

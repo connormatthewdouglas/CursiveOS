@@ -2,33 +2,21 @@
 
 CursiveOS OS.0 starts with a small nervous-system loop:
 
-1. CursiveRoot stores explicit `measurement_requests`.
+1. CursiveRoot stores explicit `measurement_requests` (**privileged insert**).
 2. A Linux bare-metal host runs `tools/contributor_daemon.py`.
-3. The daemon reports `machine_capabilities`, claims one request, runs `seed_organism.py screen-variant --execute`, uploads the resulting seed bundle, and writes a `measurement_jobs` record.
-4. The dashboard reads the queue/job/capability tables alongside the existing `runs`, `seed_bundles`, and simulated payout tables.
+3. The daemon reports `machine_capabilities` (hardware, not occupancy), claims one request, runs `seed_organism.py screen-variant --execute`, uploads the resulting seed bundle, and writes a `measurement_jobs` record.
+4. While a screen runs it writes **local** progress for the Desktop window (`docs/os0-client-window.md`). That status is not uploaded.
+5. The notebook reads queue/job/capability tables alongside `runs`, `seed_bundles`, and simulated payouts.
 
 This is alpha infrastructure. It is **not payout eligible** and it is **Linux-first**.
 Windows/WSL probes may test protocol plumbing later, but they must not enter Linux selection truth.
 
 ## Files
 
-- `supabase/migrations/20260701000000_os0_measurement_queue.sql`
-  - `machine_capabilities`
-  - `measurement_requests`
-  - `measurement_jobs`
-  - public alpha RLS policies for daemon bootstrap
-  - one seeded request: `v0.12` parent vs `v0.12b-swappiness` candidate
-- `tools/contributor_daemon.py`
-  - capability probe
-  - request validation
-  - dry-run planning
-  - local request execution
-  - CursiveRoot poll/claim/report path
-- `references/seed-organism/variant.v0.12b-swappiness.json`
-  - explicit candidate metadata for the first OS.0 queue seed
-- `dashboard/index.html`
-  - polished static dashboard with OS.0 queue, jobs, contribution history, heartbeats, evidence, fleet, and simulated reward sections
-  - closed requests remain visible and daemon jobs are joined back to their request/candidate/reward metadata so an operator can see both what the organism asked for and what their machine contributed
+- `tools/contributor_daemon.py` — capability probe, claim, execute, upload
+- `tools/cursive_status.py` — local busy/progress JSON
+- `tools/cursive_panel.py` — optional Desktop face
+- `supabase/migrations/20260701000000_os0_measurement_queue.sql` plus later RLS tightening (`measurement_requests` anon INSERT revoked)
 
 ## Local dry-run
 
@@ -40,10 +28,10 @@ python tools/contributor_daemon.py write-sample-request --out .cursiveos/contrib
 python tools/contributor_daemon.py --state-dir .cursiveos/contributor-daemon run-once --request-json .cursiveos/contributor-daemon/sample-request.json --dry-run
 ```
 
-On Windows this should normally report the sample request as ineligible, because OS.0 selection truth is Linux bare-metal only.
-On the Linux laptop, the same dry-run should produce a planned `seed_organism.py screen-variant --execute` command.
+On Windows this should normally report the sample request as ineligible.
+On Linux, the same dry-run should produce a planned `seed_organism.py screen-variant --execute` command.
 
-## Live daemon once the migration is applied
+## Live daemon
 
 ```bash
 python3 tools/contributor_daemon.py capabilities --register
@@ -56,6 +44,8 @@ For a single claim/run cycle:
 python3 tools/contributor_daemon.py --state-dir ~/.cursiveos/contributor-daemon daemon --once
 ```
 
+Sit at the machine: open the CursiveOS window so Stop is one click. The daemon can run headless; the window is optional.
+
 ## Safety rails
 
 - Every executable request must name both parent and candidate variant files.
@@ -63,4 +53,6 @@ python3 tools/contributor_daemon.py --state-dir ~/.cursiveos/contributor-daemon 
 - `trust_scope` must be `simulated_not_payout_eligible` or `observe_only_not_payout_eligible`.
 - `selection_scope` must remain Linux-scoped.
 - The daemon refuses non-Linux/non-bare-metal selection-truth requests.
-- The SQL migration keeps public alpha writes for convenience; tighten RLS before opening the fleet beyond founder-controlled machines.
+- **Anon cannot inject work.** `measurement_requests` insert is privileged. Do not re-open that from a cloud agent.
+- **Do not publish occupancy.** Heartbeats may include hardware capability. They must not include "this PC is busy."
+- Tighten remaining `USING(true)` update policies on capabilities/jobs before a public tester blast (G4).

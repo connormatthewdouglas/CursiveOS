@@ -1,3 +1,5 @@
+**Current practice (2026-09-11):** testers are Linux machines running the contributor daemon and, if someone is at the chair, the CursiveOS Desktop window. There is no wallet bind, no Fast-tier rebate, and no real payout. The economic design below is specified; it is not live. Occupancy is not a public signal.
+
 # Testers
 
 **Status:** ACTIVE

@@ -1,6 +1,6 @@
 # CursiveOS
 
-### Technical White Paper — v2.6 (July 2026)
+### Technical White Paper — v2.7 (September 2026)
 
 **A measurement-driven Linux optimization layer for local compute workloads, with a Bitcoin-native economic architecture and a planned natural-language operator interface.**
 
@@ -8,11 +8,13 @@
 
 ## Abstract
 
-CursiveOS is a Linux optimization layer for local compute operators — AI inference nodes, crypto miners, and other workload-specialized Linux hosts. It applies a curated stack of reversible system tweaks, measures their effect via paired before-and-after benchmarks on the host's actual hardware, and records structured results to a shared performance database (CursiveRoot). Its design separates deterministic measurement from the operator interface, enables a fully specified Bitcoin-native economic layer for contributor compensation, and is structured to grow from its current state as a tuning layer into a full distribution as the architecture matures.
+CursiveOS is a Linux organism: a measurement-driven optimization layer for local compute operators — AI inference nodes, crypto miners, and other workload-specialized Linux hosts. It applies a curated stack of reversible system tweaks, measures their effect via paired before-and-after benchmarks on the host's actual hardware, and records structured results to a shared performance database (CursiveRoot). Selection — not marketing — decides what stays in the genome.
 
-On the hardware configurations measured so far, the current preset stack has produced a large throughput change in a controlled WAN simulation and mixed results on inference and idle power. On May 25, 2026, the first real Phase 0 seed baseline recorded on an AMD Ryzen 7 5700 / Intel Arc host measured +515.20% simulated-WAN throughput, -3.11% cold-start latency, -0.36% sustained inference, and +3.2W idle power under v0.8. These results are directional, limited to a small hardware sample and narrow benchmark surface, and do not justify broader claims without more data.
+The project has two surfaces that must not be mashed together. The **notebook** (public ledger and dashboard) is the science log: current genome, what was tested, what stuck. The **CursiveOS window** on a tester's Desktop is the client-side task manager: update from git, now/next, a real phase bar, Stop. Occupancy of a person's PC is not a public signal. The public website never applies settings remotely.
 
-This document describes the current implementation, the validated results and their limits, the architectural design (including the fully specified economic layer), the planned agent layer (measurement daemon and natural-language shell), and the roadmap from here to a full operating system release. The conceptual thesis within which this architecture was designed — the software organism frame — is argued in a companion document, [Software Organisms](software-organisms.md).
+**Current genome (September 2026): preset v0.12** (v0.9 stack + zram + `vm.swappiness=60`), accepted in cycle 3. Two variants have ever been accepted. Later autonomous and leftover candidates were rejected, including a four-screen leftover pass on 2026-09-11. That is the loop working. Network headline percentages from early loopback WAN simulations are **not** the current claim; see the honesty scoping in the README. Founder Arc A750 inference was un-voided on 2026-09-11 (23/23 layer offload; sustained 141.5 tok/s, CV 0.005). Layer 5 economics is specified; `payout_eligible` is hard-false; real Bitcoin does not move.
+
+This document describes the current implementation, the validated results and their limits, the architectural design (including the fully specified economic layer), the agent split (deterministic measurement daemon vs planned natural-language shell), and the roadmap from here to a full operating system release. The conceptual thesis is [Software Organisms](software-organisms.md).
 
 ---
 
@@ -52,7 +54,7 @@ The current implemented system consists of three integrated components and a sha
 
 ### 3.1 Preset Layer
 
-The preset layer applies a curated set of system-level tuning parameters. The current canonical preset (`cursiveos-presets-v0.8.sh`, 28 parameters) covers network buffer configuration, TCP behavior, scheduler parameters, memory pressure response, swap and VM tuning, and selected CPU governor settings. Each parameter is applied non-destructively with the prior value captured for rollback. Users can apply, revert, or apply-temporarily with scoped lifetime.
+The preset layer applies a curated set of system-level tuning parameters. The current canonical preset (`cursiveos-presets-v0.12.sh`; early lineage was v0.8, 28 parameters) covers network buffer configuration, TCP behavior, scheduler parameters, memory pressure response, swap and VM tuning, and selected CPU governor settings. Each parameter is applied non-destructively with the prior value captured for rollback. Users can apply, revert, or apply-temporarily with scoped lifetime.
 
 The preset stack is workload-targeted: it optimizes for hosts running sustained compute workloads (inference, mining, network-intensive operations) rather than for general desktop use. Applying it to a general desktop may or may not help and is not its intended use case.
 
@@ -82,7 +84,7 @@ CursiveOS is organized into five architectural layers. Each is a first-class com
 
 **Layer 2 — Sensory nervous system (CursiveRoot + sensor array).** The measurement infrastructure that evaluates phenotype fitness. Currently implemented as the benchmark suite plus CursiveRoot. In future iterations, additional sensors will be added to the array as workload coverage expands.
 
-**Layer 3 — Evolutionary loop.** The mechanism by which contributed changes are evaluated against the sensory array and accepted or rejected based on measured fitness. Currently manually operated (Connor proposes preset changes, benchmark results validate them). In Phase 0 forward, the loop becomes the formal mechanism for handling contributed changes from external contributors.
+**Layer 3 — Evolutionary loop.** The mechanism by which contributed changes are evaluated against the sensory array and accepted or rejected based on measured fitness. Proposal is automated from an audited knob library (`tools/organism_proposer.py`); screens are executed by `tools/contributor_daemon.py`. Enqueue onto the public request queue is still privileged. Sensors decide. A founder-rig leftover loop (`tools/closed_loop.py`) ran cycle 7 without promoting anything.
 
 **Layer 4 — Inheritance.** The accumulated record of validated changes. Currently: version-controlled preset history and CursiveRoot's benchmark record. In future iterations: the sensor-validated lineage record that forks inherit.
 

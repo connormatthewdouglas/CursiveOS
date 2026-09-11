@@ -5,59 +5,60 @@ experiment from a measured history and materializes a real, runnable, reversible
 candidate that a contributor daemon can screen through the normal acceptance loop.
 **It proposes; the sensors decide.** No probabilistic judgment enters selection.
 
+**Enqueue is still privileged.** The proposer writes files. It does not insert
+`measurement_requests`. Anon INSERT is denied. That is the remaining founder-shaped hole
+in the loop, by design, until a signed proposer identity exists.
+
 ## What it does
 
 1. **Selects** the next candidate from an audited library of reversible `sysctl` knobs
    (`KNOB_LIBRARY`), in priority order, skipping any candidate that already has a
-   variant file. Priority favors the memory channel first, because that is where the
-   lineage's most recent measured win came from (v0.11 zram+swappiness, +75.4%).
-2. **Materializes** two real files that mirror the existing lineage exactly:
-   - `references/seed-organism/variant.<id>.json` — a `candidate_screen`, fitness-eligible
-     variant with a pre-registered hypothesis and a rollback method.
-   - `presets/cursiveos-presets-<id>.sh` — delegates apply/undo to the parent preset and
-     adds exactly one sysctl, capturing the prior value on apply and restoring it on undo.
-3. **Prints a privileged enqueue SQL** for the founder / service role to run.
+   variant file. Memory-channel first, because that is where the lineage's last measured
+   win came from (v0.11 zram+swappiness).
+2. **Materializes** two real files:
+   - `references/seed-organism/variant.<id>.json`
+   - `presets/cursiveos-presets-<id>.sh` — parent-delegating, one sysctl, undo restores
+     the prior value.
+3. **Prints privileged enqueue SQL** for a human / service role. Do not paste that SQL
+   from a cloud agent into live CursiveRoot.
+
+`tools/closed_loop.py` is the founder-rig runner: leftover propose → screen → upload →
+stack only if kept. Cycle 7 (2026-09-11) ran four leftovers this way; all rejected.
 
 ## Safety model (load-bearing)
 
-- **Audited knobs only.** The proposer composes solely from `KNOB_LIBRARY` — plain,
-  reversible `sysctl` keys. It never generates free-form shell. This preserves the
-  mutation-safety and reversibility invariants, and keeps the daemon's containment
-  guarantee intact (it still only runs repo-contained, existing variant paths).
-- **Reversible by construction.** Every generated preset restores the prior sysctl value
-  before delegating the rest of the revert to the parent.
-- **Simulated + Linux-scoped.** Materialized candidates are `simulated_not_payout_eligible`
-  and `linux_bare_metal`.
-- **Enqueue is privileged.** Because `measurement_requests` is privileged-authored
-  (anon INSERT revoked in migration `20260702000000`), the proposer does **not** insert a
-  request with the public key. It prints SQL for a human/service-role to run. During
-  bootstrap this keeps a founder in the loop on exactly what daemons execute with sudo,
-  while the *proposal* is automated.
+- **Audited knobs only.** Never free-form shell.
+- **Reversible by construction.**
+- **Simulated + Linux-scoped.** `simulated_not_payout_eligible`, `linux_bare_metal`.
+- **Enqueue is privileged.**
+- **Do not mine** `pagecluster0` or `vfscache50`. Both already returned honest nulls.
 
 ## Usage
 
 ```bash
-python tools/organism_proposer.py list-knobs                 # show the library + what's proposed
-python tools/organism_proposer.py propose                    # dry run: show the next candidate
-python tools/organism_proposer.py propose --materialize      # write variant.json + preset.sh + print enqueue SQL
+python tools/organism_proposer.py list-knobs
+python tools/organism_proposer.py propose
+python tools/organism_proposer.py propose --materialize
 ```
 
-Then (privileged): review + commit the two files so daemons can pull them, and run the
-printed `insert into public.measurement_requests ...` via the service role (or a
-migration / the Supabase SQL editor). A daemon claims it, screens it, and the sensors
-decide — exactly as for a hand-authored candidate.
+Then commit the two files so daemons can `git pull` them (Desktop window → Update from
+GitHub). A privileged identity still has to enqueue. A daemon claims, screens, sensors
+decide.
 
-## First autonomous candidate
+## Screened so far (do not re-run)
 
-`v0.13-pagecluster0` — `vm.page-cluster=0` on top of v0.12. This is the standard
-companion tuning for a zram swap device (fault a single page per swap-in instead of an
-8-page cluster), which v0.12 does not yet set, targeting the memory-pressure channel.
+| Candidate | Cycle | Verdict |
+| --- | --- | --- |
+| v0.13-pagecluster0 | 5 | honest null |
+| v0.13-vfscache50 | 6 | honest null |
+| v0.13-watermark200 | 7 | rejected |
+| v0.13-dirtyexpire1500 | 7 | rejected |
+| v0.13-migcost5ms | 7 | rejected |
+| v0.13-notsentlowat16k | 7 | rejected |
 
 ## Next (not yet built)
 
-- Ground selection in the **live QD archive** (`tools/qd_organism.py`) driven by real
-  fitness pulled from CursiveRoot, rather than a static priority-ordered library —
-  explore under-covered behavioral cells and mutate the best real elites.
-- Optional **gated auto-enqueue** via a dedicated authenticated proposer identity once
-  the signed-identity write path (G4) exists, so the loop can close without the manual
-  SQL step — still with real reward hard-gated.
+- Ground selection in the **live QD archive** (`tools/qd_organism.py`) from real
+  CursiveRoot fitness — explore under-covered cells, mutate real elites.
+- **Gated auto-enqueue** via a dedicated signed proposer identity (G4). Real reward
+  stays hard-gated.

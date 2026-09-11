@@ -1,10 +1,19 @@
 # CursiveOS Action Plan
-**Last updated:** 2026-07-06 (post first autonomous cycle)
-**Current parent preset:** v0.12 (promoted from accepted v0.11-zram-swappiness; cycle 3 closed 2026-06-26)
-**Current candidate:** none — v0.13-pagecluster0 screened **neutral** in the first autonomous cycle (cycle 5, 2026-07-06); v0.12b-swappiness **rejected** 2026-06-28; v0.13-sched **rejected** 2026-06-27
-**Current wrapper:** v1.4.5 (memory-pressure 5th channel + idle-power gate-only + observe-only concurrency probe)
-**Next focus:** Seed Organism → OS.0 — remove the founder from the loop's center (contributor daemon + requests queue first). V has hardened the acceptance referee enough to proceed, while real BTC/reward remains simulated and gated until the trust layer is productionized. See "Next Phase" section below.
+**Last updated:** 2026-09-11
+**Current parent preset:** v0.12 (unchanged)
+**Current candidate:** none — cycle 7 leftovers rejected 2026-09-11; do not re-run pagecluster0 / vfscache50
+**Current wrapper:** v1.4.x
+**Next focus:** signed proposer identity (gated auto-enqueue) + QD-archive-grounded proposal. Client window is live. Occupancy is local. Real BTC still gated.
 
+### 2026-09-11 (catch-up)
+
+- Desktop **CursiveOS window** is the client task manager. Public notebook is science only.
+- Cycle 7 leftover screens on Stardust all **rejected** (`watermark200`, `dirtyexpire1500`, `migcost5ms`, `notsentlowat16k`).
+- Arc A750 inference **un-voided** (idle 5.50 W CV 0.006; cold 3703 ms; 141.5 tok/s; 23/23 offload).
+- Enqueue remains fail-closed. `payout_eligible` remains hard-false.
+- G1 daemon is live and writes local progress. G3 proposer materializes leftovers. G4 identity/aggregation still blocks auto-enqueue and money.
+
+Historical July/June notes follow. They are still true; they are no longer the frontier.
 
 ---
 

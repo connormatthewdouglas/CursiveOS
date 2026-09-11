@@ -2,6 +2,8 @@
 
 ### Why human governance loses, and what replaces it
 
+*Thesis document. CursiveOS is the attempt. Current genome, surfaces, and gates: [README.md](README.md) (2026-09-11).*
+
 ---
 
 *A software organism is not software that behaves like a living thing. It is software whose governance structure is isomorphic to a living thing. The difference matters because one is decorative and the other is architecture.*

@@ -4,21 +4,23 @@
 
 This roadmap describes what CursiveOS is becoming. It's organized around four transitions — each one changes what the project fundamentally is, not just what features it has. Every architectural decision in the current specifications is sized for the end state, which is why some choices look overbuilt for where the project is now. They're sized for where it's going.
 
-## Where We Are: Pre-Transition-One (July 6, 2026)
+## Where We Are: Pre-Transition-One (September 11, 2026)
 
 The current state of the project:
 
-- Canonical parent preset **v0.12** (v0.9 stack + zram + swappiness=60), promoted from accepted v0.11 (cycle 3, 2026-06-26)
-- **The loop runs without the founder in the middle** (first time, cycle 5, 2026-07-06): the autonomous proposer selected and materialized a candidate from an audited knob library, a privileged enqueue put it in the CursiveRoot queue, contributor daemons on two machines claimed and screened it unattended, and the sensors delivered an honest null. Proposal, coordination, execution, and judgment each ran without a manual screen step — only the enqueue is still founder-gated, by design.
-- **Trust spine live and exercised**: every uploaded bundle now writes signed-identity, raw-artifact, and trust-evaluation rows; new bundles pass recompute/identity/replay checks with independent aggregation correctly pending; `payout_eligible` is hard-false at the database layer. The public dashboard renders the trust ledger.
-- Harness **v1.4.5** with five measured channels (network gate-only, cold-start, sustained, idle power, memory-pressure); concurrency probe observe-only. Honest hardware conditions void only their channel (never fraud-reject a run), and selection math is version-stamped so rig-local config can no longer drift from retuned weights.
-- CursiveRoot: **144 runs, 3 physical machines (7 fingerprint aliases), 18 bundles — 2 accepted (cycles 1, 3), 2 simulated payout reports, 5 cycles run.** Rejected/inconclusive verdicts are kept and shown; honest nulls are outcomes, not failures.
-- **GPU inference unlocked on founder hardware** (2026-07-06): laptop CUDA path enabled (5.0× sustained tok/s over CPU); Stardust Arc A750 SYCL backend built and functionally verified (23/23 layers offload), clean benchmark + harness integration pending an idle window.
-- Layer 5 economics v3.3 specified; simulated payouts only. The legacy hub API is locked down as scaffolding; the operator-facing surface is the **single-page static dashboard** (queue, jobs, contributions, trust ledger, fleet, honesty box) — deliberately small until a real external operator validates the need for more.
+- Canonical parent preset **v0.12** (v0.9 stack + zram + swappiness=60), promoted from accepted v0.11 (cycle 3, 2026-06-26). **Still the genome.** Cycle 7 leftover screens (2026-09-11) all rejected.
+- **Two surfaces, un-mashed.** The public notebook (ledger + dashboard) shows science: genome, what passed, what failed. The **CursiveOS Desktop window** is the client-side task manager: Update from GitHub, now/next, phase bar, Stop. Occupancy is local; it is not written to CursiveRoot.
+- **The loop can run a screen without the founder at the keyboard** (first time: cycle 5, 2026-07-06). Proposal, execution, and judgment ran. **Enqueue is still founder-gated** — anon INSERT on `measurement_requests` is denied. That is load-bearing, not a bug.
+- **Trust spine live:** signed identity, raw-artifact, trust-evaluation rows; `payout_eligible` hard-false. Independent aggregation is still pending.
+- Harness **v1.4.x** with five measured channels (network gate-only, cold-start, sustained, idle power, memory-pressure); concurrency observe-only.
+- **Stardust Arc A750 un-voided (2026-09-11):** idle package 5.50 W (CV 0.006), GPU 36.94 W (CV 0.002); cold 3703 ms (CV 0.002); sustained 141.5 tok/s (CV 0.005); 23/23 layers offloaded.
+- CursiveRoot: physical machines in the low single digits, **2 accepted bundles**, simulated payouts only. Rejected verdicts are kept and shown.
+- Layer 5 economics v3.3 specified. Real money stays gated behind production Sybil resistance.
+- The operator-facing public surface is a **read-only organism notebook**. Do not grow it into a remote kill-switch for someone else's PC.
 
-The immediate engineering frontier: replace the local-sim signature scheme with real signed identity, move confirmation aggregation from caller-attested to CursiveRoot-owned, and gate the proposer's auto-enqueue behind that identity — the last pieces between "founder-gated autonomy" and "an external machine can contribute end-to-end." Real money stays gated behind production Sybil resistance.
+The immediate engineering frontier: a signed proposer identity so leftovers can be enqueued without a human SQL paste; CursiveRoot-owned independent aggregation; QD-archive-grounded proposal instead of mining the audited sysctl library. Real money stays gated.
 
-What exists today is a measurement apparatus that has begun to run itself. It is not yet an operating system. Making it one is Transition 1.
+What exists today is a measurement apparatus that has begun to run itself, plus an honest client window for the person sitting at the chair. It is not yet an operating system. Making it one is Transition 1.
 
 ---
 
