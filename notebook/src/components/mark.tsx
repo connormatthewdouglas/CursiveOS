@@ -1,0 +1,22 @@
+export function CursiveMark({ className = "size-7" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
+      <rect width="32" height="32" rx="8" fill="currentColor" className="text-accent" />
+      <path
+        d="M9 16.5c0-4.2 3-7 7.2-7 2.6 0 4.4 1 5.6 2.5M9.8 19.2C11 21.6 13.4 23.5 17 23.5c3.4 0 5.8-1.7 6.8-4"
+        fill="none"
+        stroke="#090b0f"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7 21h3l2-5 2.5 8 2-6 1.5 3H25"
+        fill="none"
+        stroke="#090b0f"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
