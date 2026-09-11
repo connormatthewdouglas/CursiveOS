@@ -96,9 +96,9 @@ export const GAPS: Gap[] = [
     area: "workflow",
     severity: "now",
     title: "QD-archive-grounded proposer",
-    why: "Default propose() reads the live seed_bundles archive and mutates the accepted parent toward an empty neighboring cell. pagecluster/vfs cells are skipped. Production auto-enqueue is still unsigned; qd_organism.py remains a simulation.",
+    why: "Default propose() reads the live seed_bundles archive and mutates the accepted parent toward an empty neighboring cell. Materializer writes a reversible preset only when an operator-opt-in leftover matches the changed axis. Cold-start neighbors are hypothesis-only — no audited leftover maps there. Production auto-enqueue is still unsigned.",
     status: "partial",
-    evidence: "qd.ts + propose.ts; live CursiveRoot seed_bundles (19 rows, 7 occupied cells)",
+    evidence: "qd.ts + materialize.ts; tools/qd_archive.py",
   },
   {
     id: "auto-enqueue",
@@ -114,9 +114,9 @@ export const GAPS: Gap[] = [
     area: "security",
     severity: "now",
     title: "Tighten OS.0 write policies before external testers",
-    why: "Policy engine denies USING(true) cross-writes. Live RLS on capabilities/jobs is still open. Identity-gated writes are the close.",
+    why: "Policy engine denies USING(true) cross-writes. Live RLS on capabilities/jobs is still open. SQL draft at operator/sql/20260911_os0_identity_gated_writes_DRAFT.sql — do not apply while keys are local_sim.",
     status: "partial",
-    evidence: "policy.ts; origin.ts; 20260702000000_os0_queue_rls_hardening.sql",
+    evidence: "policy.ts; origin.ts; holes.ts; 20260911_os0_identity_gated_writes_DRAFT.sql",
   },
   {
     id: "origin-writes",

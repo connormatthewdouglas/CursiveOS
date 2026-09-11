@@ -41,7 +41,31 @@ test("july heartbeats and empty queue are stale idle", () => {
   assert.equal(r.state, "stale");
   assert.ok(r.reasons.includes("queue_empty"));
   assert.ok(r.reasons.includes("daemon_heartbeat_stale"));
-  assert.equal(r.playbook[0].ready, false);
+  assert.equal(r.playbook.find((s) => s.id === "propose")?.ready, false);
+});
+
+test("QD empty neighbors mark the propose step ready", () => {
+  const r = loopStatus({
+    requests: [],
+    jobs: [],
+    capabilities: [
+      {
+        machine_id: "m",
+        daemon_version: "os0",
+        platform: "linux",
+        os_name: "linux",
+        kernel: "6",
+        cpu: "x",
+        gpu: "y",
+        selection_scopes: ["linux_bare_metal"],
+        last_seen_at: "2026-09-10T17:00:00Z",
+      },
+    ],
+    now_iso: "2026-09-10T18:00:00Z",
+    independent_aggregation_ok: false,
+    qd_elites: 6,
+  });
+  assert.equal(r.playbook.find((s) => s.id === "propose")?.ready, true);
 });
 
 test("fresh heartbeat plus open request is queued", () => {

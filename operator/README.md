@@ -18,7 +18,9 @@ here are what CursiveRoot origin should host next.
 | `recompute.ts` | Origin-side hash of payloads. Missing payload fails closed |
 | `propose.ts` | QD-default proposer. pagecluster/vfs cousins refused |
 | `qd.ts` | Live seed_bundles MAP-Elites archive + empty-neighbor elites |
+| `materialize.ts` | Hypothesis JSON always; reversible preset only if leftover matches QD axis |
 | `origin.ts` | GET-only CursiveRoot adapter. Writes never leave this console |
+| `holes.ts` | Catalog of live USING(true) RLS holes |
 | `policy.ts` | Identity-gated writes. `USING(true)` denied |
 | `loop.ts` | Selection-loop watchdog + revival playbook |
 | `ledger.ts` | `l5_cycles` / lifetime / tester rebates (local rehearsal) |

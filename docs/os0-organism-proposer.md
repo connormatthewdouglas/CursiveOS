@@ -55,9 +55,17 @@ companion tuning for a zram swap device (fault a single page per swap-in instead
 
 ## Next (not yet built)
 
-- Ground selection in the **live QD archive** (`tools/qd_organism.py`) driven by real
-  fitness pulled from CursiveRoot, rather than a static priority-ordered library —
-  explore under-covered behavioral cells and mutate the best real elites.
 - Optional **gated auto-enqueue** via a dedicated authenticated proposer identity once
   the signed-identity write path (G4) exists, so the loop can close without the manual
   SQL step — still with real reward hard-gated.
+
+## What landed 2026-09-11 (operator console + this branch)
+
+- `operator/engine/qd.ts` and `tools/qd_archive.py` bin live `seed_bundles` into the
+  MAP-Elites archive. Parent elite is v0.11 memory-positive. Empty neighbors are the
+  next screen. `pagecluster0` / `vfscache50` cells are skipped.
+- `operator/engine/materialize.ts` writes a variant JSON always, and a reversible
+  preset only when an operator-opt-in leftover matches the changed QD axis. Cold-start
+  neighbors currently have **no** audited leftover — hypothesis only, do not invent a
+  sysctl.
+- Enqueue SQL is printed, never executed from the console.

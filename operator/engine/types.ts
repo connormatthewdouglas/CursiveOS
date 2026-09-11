@@ -88,6 +88,14 @@ export type MachineCapability = {
   last_seen_at: string | null;
 };
 
+export type BundleMetrics = {
+  idle_watts?: number | null;
+  coldstart_ms?: number | null;
+  network_mbps?: number | null;
+  sustained_tokps?: number | null;
+  memory_refault_s?: number | null;
+};
+
 export type SeedBundle = {
   variant_id: string;
   confidence: number | null;
@@ -96,7 +104,30 @@ export type SeedBundle = {
   machine_id: string | null;
   decision?: string | null;
   created_at: string;
+  cycle_id?: string | number | null;
+  contributor_id?: string | null;
+  bundle_hash?: string | null;
+  result_bundle?: {
+    metrics?: {
+      variant?: BundleMetrics;
+      baseline?: BundleMetrics;
+      comparison?: Record<string, unknown>;
+    } | null;
+  } | null;
 };
+
+export type RawArtifact = {
+  artifact_kind: string;
+  artifact_sha256: string | null;
+  artifact_uri: string | null;
+  bundle_hash: string | null;
+  variant_id: string | null;
+  machine_id: string | null;
+  decision: string | null;
+  identity_public_key: string | null;
+  first_seen_at: string | null;
+};
+
 
 export type PayoutContributor = {
   contributor_id: string;
@@ -134,6 +165,7 @@ export type TrustEvaluation = {
   selection_truth_eligible: boolean | null;
   payout_eligible: boolean | null;
   evaluated_at: string | null;
+  reasons?: string[] | null;
 };
 
 export type IdentityKey = {
@@ -165,6 +197,8 @@ export type CursiveSnapshot = {
   jobs: MeasurementJob[];
   capabilities: MachineCapability[];
   accepted: SeedBundle[];
+  bundles: SeedBundle[];
+  artifacts: RawArtifact[];
   payouts: PayoutReport[];
   trust: TrustEvaluation[];
   identity_keys: IdentityKey[];
