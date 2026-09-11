@@ -31,6 +31,7 @@ export function loopStatus(input: {
   capabilities: MachineCapability[];
   now_iso: string;
   independent_aggregation_ok: boolean;
+  qd_elites?: number;
 }): LoopReport {
   const now = Date.parse(input.now_iso);
   const open = input.requests.filter((r) => r.status === "open");
@@ -69,8 +70,11 @@ export function loopStatus(input: {
       id: "propose",
       title: "Propose from QD, not vfs cousins",
       owner: "organism_proposer / this console",
-      ready: false,
-      note: "Default source is the QD archive. Library leftovers are operator opt-in.",
+      ready: (input.qd_elites ?? 0) > 0,
+      note:
+        (input.qd_elites ?? 0) > 0
+          ? `${input.qd_elites} empty-neighbor cells off the accepted parent. Do not mine vfs cousins.`
+          : "Default source is the QD archive. Library leftovers are operator opt-in.",
     },
     {
       id: "enqueue",

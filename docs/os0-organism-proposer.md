@@ -56,9 +56,22 @@ decide.
 | v0.13-migcost5ms | 7 | rejected |
 | v0.13-notsentlowat16k | 7 | rejected |
 
+## What landed with the operator nervous system
+
+- `operator/engine/qd.ts` and `tools/qd_archive.py` bin live `seed_bundles` into the
+  MAP-Elites archive. Parent elite is v0.11 memory-positive. Empty neighbors are the
+  next screen. `pagecluster0` / `vfscache50` cells are skipped.
+- `operator/engine/materialize.ts` writes a variant JSON always, and a reversible
+  preset only when an operator-opt-in leftover matches the changed QD axis. Cold-start
+  neighbors currently have **no** audited leftover — hypothesis only, do not invent a
+  sysctl.
+- Enqueue SQL is printed, never executed from the console.
+- Cycle 7 leftovers are mined-out in the library; do not re-screen them.
+
 ## Next (not yet built)
 
-- Ground selection in the **live QD archive** (`tools/qd_organism.py`) from real
-  CursiveRoot fitness — explore under-covered cells, mutate real elites.
+- Ground selection in the **live QD archive** (`tools/qd_organism.py` /
+  `operator/engine/qd.ts`) from real CursiveRoot fitness — explore under-covered
+  cells, mutate real elites.
 - **Gated auto-enqueue** via a dedicated signed proposer identity (G4). Real reward
   stays hard-gated.
