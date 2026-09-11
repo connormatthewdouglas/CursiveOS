@@ -5,7 +5,7 @@ import { AppProviders } from "@/components/providers";
 import { Shell } from "@/components/shell";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "CursiveOS";
+const APP_NAME = "CursiveRoot dashboard";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -16,7 +16,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "CursiveOS — a Linux organism. See the current genome, what passed, which machines tested it. Simulated payouts only.",
+          "CursiveRoot dashboard — genome, what passed, which machines tested it. Simulated payouts only.",
       },
       { name: "theme-color", content: "#090b0f" },
     ],

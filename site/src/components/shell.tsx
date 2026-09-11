@@ -53,8 +53,8 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-2.5 px-4 py-5">
           <CursiveMark />
           <div>
-            <div className="text-sm font-medium tracking-tight">CursiveOS</div>
-            <div className="text-xs text-muted">a Linux organism</div>
+            <div className="text-sm font-medium tracking-tight">CursiveRoot</div>
+            <div className="text-xs text-muted">dashboard</div>
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 px-2 pb-4">
@@ -118,7 +118,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-8">
             <div className="flex items-center gap-2 md:hidden">
               <CursiveMark className="size-6" />
-              <span className="text-sm font-medium">CursiveOS</span>
+              <span className="text-sm font-medium">CursiveRoot</span>
             </div>
             <div className="hidden items-center gap-2 md:flex">
               <Badge tone="warn">not real money</Badge>

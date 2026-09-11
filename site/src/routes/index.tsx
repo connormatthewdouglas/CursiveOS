@@ -51,7 +51,7 @@ function OrganismHome() {
   return (
     <div>
       <PageHead
-        kicker="CursiveOS"
+        kicker="CursiveRoot"
         title="This is the organism."
         lede="It keeps Linux tweaks that measurably help real computers, and throws the rest away. You should be able to read this page without knowing the internals."
       />
