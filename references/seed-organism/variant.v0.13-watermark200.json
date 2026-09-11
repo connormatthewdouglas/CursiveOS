@@ -1,0 +1,16 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.13-watermark200",
+  "parent_variant_id": "parent-baseline-v0.12",
+  "contributor_id": "organism-proposer",
+  "commit_ref": "candidate-v0.13-watermark200",
+  "preset_version": "v0.13-watermark200",
+  "preset_path": "presets/cursiveos-presets-v0.13-watermark200.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "knobs_removed_vs_parent": 0,
+  "proposed_by": "organism_proposer.v0.1",
+  "declared_scope": "The v0.12 parent stack plus a single reversible sysctl: vm.watermark_scale_factor=200 (channel: memory). Autonomously proposed; one knob added, nothing removed.",
+  "hypothesis": "Raising watermark_scale_factor (10->200) starts reclaim earlier, reducing direct-reclaim stalls under the memory-pressure probe. Expect steadier refault time; watch idle power / neutral elsewhere.",
+  "rollback_method": "Restores the prior vm.watermark_scale_factor value captured at apply time, then delegates the rest of the revert to the v0.12 preset undo; harness reverts at run end."
+}

@@ -150,7 +150,10 @@ def select_proposal(parent_id: str = DEFAULT_PARENT_ID, taken: set[str] | None =
     parent_variant(parent_id)  # validate the parent exists before proposing against it
     if taken is None:
         taken = existing_candidate_ids()
+    mined = {"pagecluster0", "vfscache50"}
     for knob in sorted(KNOB_LIBRARY, key=lambda k: k.priority, reverse=True):
+        if knob.slug in mined:
+            continue
         if knob.candidate_id not in taken:
             return knob
     return None

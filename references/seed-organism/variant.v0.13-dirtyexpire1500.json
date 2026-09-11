@@ -1,0 +1,16 @@
+{
+  "schema_version": "seed-organism.variant.v0.1",
+  "variant_id": "candidate-v0.13-dirtyexpire1500",
+  "parent_variant_id": "parent-baseline-v0.12",
+  "contributor_id": "organism-proposer",
+  "commit_ref": "candidate-v0.13-dirtyexpire1500",
+  "preset_version": "v0.13-dirtyexpire1500",
+  "preset_path": "presets/cursiveos-presets-v0.13-dirtyexpire1500.sh",
+  "evaluation_role": "candidate_screen",
+  "fitness_eligible": true,
+  "knobs_removed_vs_parent": 0,
+  "proposed_by": "organism_proposer.v0.1",
+  "declared_scope": "The v0.12 parent stack plus a single reversible sysctl: vm.dirty_expire_centisecs=1500 (channel: memory). Autonomously proposed; one knob added, nothing removed.",
+  "hypothesis": "Expiring dirty pages sooner (3000->1500 cs) smooths writeback bursts that can interfere with reclaim under pressure. Expect memory channel neutral-to-better, sustained neutral.",
+  "rollback_method": "Restores the prior vm.dirty_expire_centisecs value captured at apply time, then delegates the rest of the revert to the v0.12 preset undo; harness reverts at run end."
+}

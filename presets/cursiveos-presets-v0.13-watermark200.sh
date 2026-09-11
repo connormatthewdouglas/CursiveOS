@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# CursiveOS v0.13-vfscache50 candidate — AUTONOMOUSLY PROPOSED by organism_proposer.
+# CursiveOS v0.13-watermark200 candidate — AUTONOMOUSLY PROPOSED by organism_proposer.
 #
-# = the v0.12 parent stack PLUS one reversible sysctl knob: vm.vfs_cache_pressure=50.
+# = the v0.12 parent stack PLUS one reversible sysctl knob: vm.watermark_scale_factor=200.
 # Primary sensor channel: memory.
 #
-# Hypothesis (pre-registered): Halving vfs_cache_pressure (100->50) makes the kernel retain dentry/inode cache longer, which can lower cold-start and memory-refault cost on repeated access. Risk: on tight RAM it trades file-cache for metadata cache; the memory + cold-start channels adjudicate.
+# Hypothesis (pre-registered): Raising watermark_scale_factor (10->200) starts reclaim earlier, reducing direct-reclaim stalls under the memory-pressure probe. Expect steadier refault time; watch idle power / neutral elsewhere.
 #
 # Safety: exactly one audited sysctl is changed. The prior value is captured on apply
 # and restored on undo before delegating the rest of the revert to the parent preset.
@@ -14,9 +14,9 @@ set -uo pipefail
 ACTION="${1:---help}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARENT="$SCRIPT_DIR/cursiveos-presets-v0.12.sh"
-STATE="$HOME/CursiveOS/preset_state_v0.13-vfscache50.txt"
-KEY="vm.vfs_cache_pressure"
-VAL="50"
+STATE="$HOME/CursiveOS/preset_state_v0.13-watermark200.txt"
+KEY="vm.watermark_scale_factor"
+VAL="200"
 
 if [[ -z "${TAO_SUDO_PASS:-}" ]]; then
     # non-interactive sudo if already granted; otherwise prompt once.
@@ -30,7 +30,7 @@ s() {
     else sudo -n "$@" 2>/dev/null; fi
 }
 
-echo "CursiveOS Candidate v0.13-vfscache50 (v0.12 stack + $KEY=$VAL)"
+echo "CursiveOS Candidate v0.13-watermark200 (v0.12 stack + $KEY=$VAL)"
 
 case "$ACTION" in
   --help)
@@ -53,7 +53,7 @@ case "$ACTION" in
     else
         echo "  sysctl set failed for $KEY — parent stack still applied"
     fi
-    echo "OK Applied v0.13-vfscache50 temporarily."
+    echo "OK Applied v0.13-watermark200 temporarily."
     ;;
   --undo)
     if [[ -f "$STATE" ]]; then
@@ -62,7 +62,7 @@ case "$ACTION" in
         rm -f "$STATE"
     fi
     bash "$PARENT" --undo
-    echo "OK v0.13-vfscache50 reverted (sysctl + v0.12 stack)."
+    echo "OK v0.13-watermark200 reverted (sysctl + v0.12 stack)."
     ;;
   *) echo "Unknown option: $ACTION"; exit 1 ;;
 esac

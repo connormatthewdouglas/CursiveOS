@@ -370,6 +370,53 @@ def parse_bundle_hash(stdout: str) -> str | None:
     return None
 
 
+
+def _run_screen_live(cmd: list[str], job_id: str, req: dict[str, Any], state: Path) -> tuple[str, str, int]:
+    """Run a screen with live progress on the local Desktop window. Status stays off the public ledger."""
+    from cursive_status import write_status, progress_from_line
+    write_status(
+        busy=True,
+        parent=req.get("parent_variant_id"),
+        candidate=req.get("candidate_variant_id"),
+        note=f"measuring {req.get('candidate_variant_id')} against {req.get('parent_variant_id')}",
+        step=0,
+        total=10,
+        label="Starting",
+        counts={},
+    )
+    live = state / "jobs" / f"{job_id}.live.log"
+    live.parent.mkdir(parents=True, exist_ok=True)
+    chunks: list[str] = []
+    progress: dict[str, Any] = {"counts": {}, "step": 0, "total": 10, "label": "Starting"}
+    with live.open("w", encoding="utf-8") as fh:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            fh.write(line)
+            fh.flush()
+            chunks.append(line)
+            progress = progress_from_line(line, progress)
+            write_status(
+                busy=True,
+                step=progress.get("step"),
+                total=progress.get("total"),
+                label=progress.get("label"),
+                counts=progress.get("counts"),
+                parent=req.get("parent_variant_id"),
+                candidate=req.get("candidate_variant_id"),
+            )
+        rc = proc.wait()
+    write_status(busy=False, label="Idle", step=0, note="Screen finished on this machine.")
+    return "".join(chunks), "", rc
+
+
 def execute_request(raw_request: dict[str, Any], *, dry_run: bool, state: Path, remote_job_id: str | None = None) -> dict[str, Any]:
     caps = collect_capabilities()
     ok, failures, req = request_match(caps, raw_request)
@@ -398,10 +445,10 @@ def execute_request(raw_request: dict[str, Any], *, dry_run: bool, state: Path, 
         save_local_job(state, job)
         return job
 
-    result = subprocess.run(job["command"], cwd=ROOT, text=True, capture_output=True, check=False)
-    job["stdout"] = result.stdout
-    job["stderr"] = result.stderr
-    job["returncode"] = result.returncode
+    stdout, stderr, returncode = _run_screen_live(job["command"], job["job_id"], req, state)
+    job["stdout"] = stdout
+    job["stderr"] = stderr
+    job["returncode"] = returncode
     job["result_bundle_hash"] = parse_bundle_hash(result.stdout or "")
     if result.returncode == 0:
         upload = subprocess.run([sys.executable or "python3", str(SEED), "upload"], cwd=ROOT, text=True, capture_output=True, check=False)
