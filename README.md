@@ -18,7 +18,7 @@ CursiveOS is **not** a website that reaches into your PC, and it is **not** yet 
 
 Payouts are simulated. `payout_eligible` is hard-false. Real Bitcoin does not move.
 
-Full direction: [ROADMAP.md](ROADMAP.md) · thesis: [white-paper.md](white-paper.md) · operator state: [HANDOVER.md](HANDOVER.md).
+Full direction: [ROADMAP.md](ROADMAP.md) · thesis: [white-paper.md](white-paper.md) · operator state: [HANDOVER.md](HANDOVER.md). Notebook UI source: [notebook/](notebook/).
 
 ## Try it — Linux only
 
