@@ -115,4 +115,30 @@ benchmark` one-liners.
 - Isolated Arc ollama is port **11435**, own model dir, leave STOPPED when
   idle.
 - Hub API under `hub-api/` is legacy v3.1 scaffolding. Do not treat it as
-  the v3.3 economics interface.
+  the v3.3 economics interface. See `hub-api/HUB_FROZEN.md`.
+
+## 2026-09-10 evening — operator nervous system (branch `operator/nervous-system`)
+
+Portable engines landed under `operator/engine/`. They are the source of truth
+for the live operator console. They do **not** write CursiveRoot.
+
+Shipped in this sprint:
+
+- v3.3 cycle-close + local ledger (`l5_cycles`, lifetime, tester rebates)
+- Origin-side recompute engine (fail-closed without payloads; never pays)
+- QD-default proposer; `pagecluster0` / `vfscache50` refused in
+  `tools/organism_proposer.py` and `operator/engine/propose.ts`
+- Identity-gated write policy (USING(true) denied in engine)
+- Loop watchdog + revival playbook
+- Unsigned PSBT intents; mainnet cannot sign
+- v3.1 tokenomics CLI freeze warning; `tools/layer5_economics_v33.py` is the
+  v3.3 CLI. SQL draft at `operator/sql/20260910_l5_v33_ledger_DRAFT.sql` —
+  **do not apply**.
+
+Still origin / rig work (unchanged):
+
+1. Clean Stardust Arc idle benchmark
+2. Host recompute + key rotation on CursiveRoot
+3. Wire QD archive to live fitness, then signed auto-enqueue
+4. nvidia-smi laptop power channel
+5. Confirm backup Action secrets
