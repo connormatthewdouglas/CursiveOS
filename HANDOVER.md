@@ -36,20 +36,31 @@ This file = live operational state. Supersedes the 2026-09-10 handover.
 - Arc idle + inference probes taken; sustained channel un-voided on founder desktop.
 - `llama3.2:3b` pulled on Stardust for proposer tests (disk cap: keep extra models under 30% of then-free space).
 
+## Operator nervous system (`operator/engine/`)
+
+Portable engines for the live operator console. They do **not** write CursiveRoot.
+
+- v3.3 cycle-close + local ledger; unsigned PSBT; mainnet cannot sign
+- Origin GET-only adapter; `payout_eligible` hard-false in trust/queue
+- QD-default proposer from live `seed_bundles`; pagecluster / vfscache refused
+- Cycle 7 leftovers treated as mined-out in the library (do not re-screen)
+- Identity-gated write policy; RLS `USING(true)` holes catalogued, not closed
+- Hub v3.1 frozen (`hub-api/HUB_FROZEN.md`). SQL drafts under `operator/sql/` — **do not apply**
+
 ## Safety rails (do not relax)
 
 - No live CursiveRoot writes from the Grok / cloud sandbox.
 - No auto-enqueue until a signed proposer identity exists.
-- No mining pagecluster / vfscache cousins.
+- No mining pagecluster / vfscache cousins or cycle-7 leftovers.
 - Stop lives on the Desktop, not the public app.
 - Ideas on CursiveRoot stay local drafts until a privileged rail exists.
 
 ## Next (priority)
 
 1. Signed proposer identity + gated auto-enqueue of leftovers (still simulated, still Linux-only).
-2. Ground `organism_proposer.py` in the live QD archive (`tools/qd_organism.py`) instead of static library order.
+2. Ground `organism_proposer.py` in the live QD archive (`tools/qd_organism.py` / `operator/engine/qd.ts`) instead of static library order.
 3. CursiveRoot-owned independent aggregation (the remaining G4 hard piece).
-4. Rebase Stardust's two local commits onto `origin/main` (`f8fd956` and docs follow-up) without discarding the Desktop window.
+4. Identity-gated RLS on `machine_capabilities` / `measurement_jobs` (holes catalogued in `operator/engine/holes.ts`).
 5. First *invited* external Linux tester using the Desktop window — not a public Join blast.
 
 ## How to run (Stardust)
