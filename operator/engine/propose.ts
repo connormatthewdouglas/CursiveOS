@@ -22,8 +22,8 @@ export type Knob = {
   mined_out: boolean;
 };
 
-export const MINED_OUT_SLUGS = new Set(["pagecluster0", "vfscache50"]);
-export const MINED_OUT_KEYS = new Set(["vm.page-cluster", "vm.vfs_cache_pressure"]);
+export const MINED_OUT_SLUGS = new Set(["pagecluster0", "vfscache50", "watermark200", "dirtyexpire1500", "migcost5ms", "notsentlowat16k"]);
+export const MINED_OUT_KEYS = new Set(["vm.page-cluster", "vm.vfs_cache_pressure", "vm.watermark_scale_factor", "vm.dirty_expire_centisecs", "kernel.sched_migration_cost_ns", "net.ipv4.tcp_notsent_lowat"]);
 
 export const KNOB_LIBRARY: Knob[] = [
   {
@@ -50,7 +50,7 @@ export const KNOB_LIBRARY: Knob[] = [
     value: "200",
     channel: "memory",
     priority: 70,
-    mined_out: false,
+    mined_out: true,
     hypothesis:
       "Raising watermark_scale_factor (10->200) starts reclaim earlier. Library leftover — not QD-grounded.",
   },
@@ -60,7 +60,7 @@ export const KNOB_LIBRARY: Knob[] = [
     value: "1500",
     channel: "memory",
     priority: 55,
-    mined_out: false,
+    mined_out: true,
     hypothesis: "Expire dirty pages sooner. Library leftover — not QD-grounded.",
   },
   {
@@ -69,7 +69,7 @@ export const KNOB_LIBRARY: Knob[] = [
     value: "5000000",
     channel: "sustained",
     priority: 50,
-    mined_out: false,
+    mined_out: true,
     hypothesis: "Less eager migration of warm inference threads. Near noise floor.",
   },
   {
@@ -78,7 +78,7 @@ export const KNOB_LIBRARY: Knob[] = [
     value: "16384",
     channel: "network",
     priority: 40,
-    mined_out: false,
+    mined_out: true,
     hypothesis: "Network is gate-only. Mapping axis, expected neutral for scoring.",
   },
 ];

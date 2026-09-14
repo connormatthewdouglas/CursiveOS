@@ -39,35 +39,13 @@ test("QD cold-pos neighbor has no audited leftover — hypothesis only", () => {
   assert.match(mat.enqueue_sql, /simulated_not_payout_eligible/);
 });
 
-test("sustained leftover may attach, mined-out knobs may not", () => {
-  const p = proposeNext({
-    parent_variant_id: "v0.12",
-    taken: [],
-    source: "qd",
-    elites: [
-      {
-        cell: "cneu-spos-ineu-mpos",
-        variant_id: "candidate-v0.11-zram-swappiness",
-        fitness: 0.1,
-        coverage: "under",
-        knobs: [],
-      },
-    ],
-    cycle_id: 7,
-  });
-  const axes = changedAxes("cneu-sneu-ineu-mpos", "cneu-spos-ineu-mpos");
-  assert.equal(leftoverForAxis("sustained")?.slug, "migcost5ms");
-  assert.equal(attachLeftover(axes, "migcost5ms")?.slug, "migcost5ms");
+test("cycle-7 leftovers are mined out — no axis leftover attaches", () => {
+  const axes = changedAxes("cneu-sneu-ineu-mneu", "cneu-spos-ineu-mneu");
+  assert.equal(leftoverForAxis("sustained"), null);
+  assert.equal(leftoverForAxis("memory"), null);
+  assert.equal(attachLeftover(axes, "migcost5ms"), null);
   assert.equal(attachLeftover(axes, "pagecluster0"), null);
-  const mat = materializeProposal({
-    proposal: p,
-    parentCell: "cneu-sneu-ineu-mpos",
-    attachSlug: "migcost5ms",
-  });
-  assert.equal(mat.files_ok, true);
-  assert.ok(mat.preset_sh?.includes("kernel.sched_migration_cost_ns=5000000"));
-  assert.match(mat.preset_sh ?? "", /--undo/);
-  assert.equal(mat.payout_eligible, false);
+  assert.equal(attachLeftover(axes, "watermark200"), null);
 });
 
 test("refused proposal does not materialize files", () => {

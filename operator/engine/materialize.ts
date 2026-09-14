@@ -52,8 +52,9 @@ export function leftoverForAxis(axis: (typeof QD_AXES)[number], taken: string[] 
   const want: Record<(typeof QD_AXES)[number], string[]> = {
     cold: [],
     idle: [],
-    memory: ["watermark200", "dirtyexpire1500"],
-    sustained: ["migcost5ms"],
+    // Cycle 7 leftovers rejected — no audited leftover currently maps to these axes.
+    memory: [],
+    sustained: [],
   };
   const pool = availableLibrary(taken);
   for (const slug of want[axis] ?? []) {

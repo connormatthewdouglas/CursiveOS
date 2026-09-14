@@ -8,18 +8,19 @@ import {
   signProposal,
 } from "./propose.ts";
 
-test("mined-out knobs are never the default proposal", () => {
+test("audited library is mined out after cycle 7", () => {
   const p = proposeNext({
     parent_variant_id: "v0.12",
     taken: [],
     source: "library",
-    cycle_id: 7,
+    cycle_id: 8,
   });
-  assert.equal(p.source, "library-opt-in");
-  assert.equal(p.candidate_variant_id, "v0.13-watermark200");
+  assert.equal(p.source, "refused");
+  assert.equal(p.candidate_variant_id, "");
   assert.equal(p.payout_eligible, false);
   assert.equal(isMinedOut({ slug: "pagecluster0", key: "vm.page-cluster" }), true);
-  assert.ok(!availableLibrary([]).some((k) => k.slug === "pagecluster0"));
+  assert.equal(isMinedOut({ slug: "watermark200", key: "vm.watermark_scale_factor" }), true);
+  assert.equal(availableLibrary([]).length, 0);
 });
 
 test("explicit pagecluster opt-in is refused", () => {
