@@ -8,7 +8,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path("/home/elizabeth/CursiveOS")
+ROOT = Path(__file__).resolve().parent.parent
 STATE_DIR = ROOT / ".cursiveos" / "closed-loop"
 STATUS_PATH = STATE_DIR / "panel.json"
 

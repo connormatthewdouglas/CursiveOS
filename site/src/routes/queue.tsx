@@ -84,7 +84,7 @@ function QueuePage() {
       return;
     }
     addRequest(enq.request);
-    setMsg("Drafted locally. Not sent to the live ledger. Download the script if you want a machine to run it.");
+    setMsg("Local browser draft only. Live measurement_requests was not touched. Download the files if a founder wants to enqueue them by hand.");
   }
 
   return (
@@ -98,8 +98,9 @@ function QueuePage() {
       <Card className="mb-4">
         <CardTitle>Ask for the next experiment</CardTitle>
         <CardHint>
-          Default: pick the next unused reversible leftover. Retired experiments (page cluster, vfs cache) cannot
-          come back. A leftover setting is optional.
+          Default is the living archive (QD). The audited leftover library is mined out through cycle 7 —
+          page cluster, vfs cache, and the four Stardust leftovers cannot come back. Drafts stay in this
+          browser; nothing is written to the live ledger from here.
         </CardHint>
         <div className="mt-4 flex flex-wrap items-end gap-3">
           <Select value={source} onChange={(e) => setSource(e.target.value as "qd" | "library")}>

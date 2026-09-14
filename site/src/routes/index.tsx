@@ -40,6 +40,26 @@ const FAILED = [
     title: "Scheduler concurrency tweak",
     body: "Observed only. Not part of the score. Not promoted.",
   },
+  {
+    id: "watermark200",
+    title: "Start reclaim earlier",
+    body: "Cycle 7 leftover on Stardust. Rejected. Not promoted.",
+  },
+  {
+    id: "dirtyexpire1500",
+    title: "Expire dirty pages sooner",
+    body: "Cycle 7 leftover on Stardust. Rejected. Not promoted.",
+  },
+  {
+    id: "migcost5ms",
+    title: "Less eager thread migration",
+    body: "Cycle 7 leftover on Stardust. Rejected. Near noise floor.",
+  },
+  {
+    id: "notsentlowat16k",
+    title: "Cap unsent TCP bytes",
+    body: "Cycle 7 leftover on Stardust. Rejected. Network is gate-only.",
+  },
 ];
 
 function OrganismHome() {
