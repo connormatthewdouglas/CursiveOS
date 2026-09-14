@@ -10,12 +10,13 @@ CursiveOS OS.0 starts with a small nervous-system loop:
 
 This is alpha infrastructure. It is **not payout eligible** and it is **Linux-first**.
 Windows/WSL probes may test protocol plumbing later, but they must not enter Linux selection truth.
+Android / iOS / tablet clients are a research class (`docs/specs/platform-substrates.md`). They must upload `observe_only_not_payout_eligible` and must not move the v0.12 desktop parent.
 
 ## Files
 
-- `tools/contributor_daemon.py` — capability probe, claim, execute, upload
-- `tools/cursive_status.py` — local busy/progress JSON
-- `tools/cursive_panel.py` — optional Desktop face
+- `tools/contributor_daemon.py` -- capability probe, claim, execute, upload
+- `tools/cursive_status.py` -- local busy/progress JSON
+- `tools/cursive_panel.py` -- optional Desktop face
 - `supabase/migrations/20260701000000_os0_measurement_queue.sql` plus later RLS tightening (`measurement_requests` anon INSERT revoked)
 
 ## Local dry-run
