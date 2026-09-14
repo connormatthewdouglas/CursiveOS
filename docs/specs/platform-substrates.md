@@ -21,7 +21,7 @@ Related: `docs/research/mobile-local-compute-2026-09-14.md`.
 
 ## Why the desktop genome does not move to a pocket
 
-Accepted desktop wins so far are memory-pressure (zram + `vm.swappiness=60`) and, on real links, CUBIC\u2192BBR. Phones already run compressed anonymous memory and an OEM thermal/power HAL that will undo or ignore most of the audited sysctl library on the next wakeup.
+Accepted desktop wins so far are memory-pressure (zram + `vm.swappiness=60`) and, on real links, CUBIC->BBR. Phones already run compressed anonymous memory and an OEM thermal/power HAL that will undo or ignore most of the audited sysctl library on the next wakeup.
 
 Stock Android is a Linux kernel with a vendor kernel, SELinux, Project Treble HALs, and a locked bootloader. Root (Magisk / KernelSU / APatch) plus apps like SysctlGUI can write some sysctls. That is not the same control plane as `./presets/cursiveos-presets-v0.12.sh --undo` on Mint. Vendor thermal governors have been observed to floor GPU frequency mid-inference and abort the run.
 
@@ -31,10 +31,10 @@ iOS does not expose a CursiveOS-shaped daemon, paired kernel A/B, or reversible 
 
 | Substrate | Selection-truth? | What it is | When |
 | --- | --- | --- | --- |
-| `linux-x86_64-workstation` | **yes \u2014 only current truth** | Founder fleet, ISO 0.9 target | now |
+| `linux-x86_64-workstation` | **yes -- only current truth** | Founder fleet, ISO 0.9 target | now |
 | `linux-arm64-sbc` | later, own parent | Pi / RK3588 class; same userspace contract | after amd64 alpha exists |
 | `linux-arm64-phone` | later, own parent | postmarketOS / Droidian / Ubuntu Touch / AVF Debian VM | invited device only |
-| `android-qcom` / `android-tensor` / `android-exynos` | measure-only until N>1 and a mobile parent exists | App \u00b1 Shizuku/root daemon | research client |
+| `android-qcom` / `android-tensor` / `android-exynos` | measure-only until N>1 and a mobile parent exists | App +/- Shizuku/root daemon | research client |
 | `ios-apple-silicon` | never selection-truth for the Linux genome | Optional measurement app | not scheduled |
 
 A phone reject must not move the desktop parent. Transition 3 already wants preset families by workload. Add a **platform axis** the same way.
@@ -43,12 +43,12 @@ A phone reject must not move the desktop parent. Transition 3 already wants pres
 
 `docs/os0-machine-identity-contract.md` stays the v2 fingerprint. New rows should also carry:
 
-- `platform` \u2014 one of the substrate ids above
-- `arch` \u2014 `x86_64` / `aarch64` / \u2026
-- `soc` \u2014 example `sm8750`, `intel-alder-lake`, `apple-m-class`
-- `accelerator` \u2014 `arc-a750` / `hexagon-v79` / `adreno` / `ane` / `cpu`
-- `runtime` \u2014 `ollama+llama.cpp` / `executorch-qnn` / `mlc` / `genie` / \u2026
-- `selection_scope` \u2014 remain `linux` for current truth; mobile uploads `observe_only_not_payout_eligible` until a mobile parent is declared
+- `platform` -- one of the substrate ids above
+- `arch` -- `x86_64` / `aarch64` / ...
+- `soc` -- example `sm8750`, `intel-alder-lake`, `apple-m-class`
+- `accelerator` -- `arc-a750` / `hexagon-v79` / `adreno` / `ane` / `cpu`
+- `runtime` -- `ollama+llama.cpp` / `executorch-qnn` / `mlc` / `genie` / ...
+- `selection_scope` -- remain `linux` for current truth; mobile uploads `observe_only_not_payout_eligible` until a mobile parent is declared
 
 Existing founder rows are `linux-x86_64-workstation`. Backfill is optional and must not rewrite fingerprints.
 
@@ -82,7 +82,7 @@ Natural-language shell is a client. It does not require the phone to be CursiveO
 
 - `payout_eligible` stays hard-false.
 - Anon still cannot INSERT `measurement_requests`.
-- Occupancy stays local. A phone \u201cbusy inferencing\u201d bit does not go to CursiveRoot.
+- Occupancy stays local. A phone "busy inferencing" bit does not go to CursiveRoot.
 - Stop / undo live on the device, not on the website.
 - Model weights on-device are an integrity surface (see CursiveResearch security chapter). Hash before load.
 - llama.cpp-class Android JNI has had real memory-safety CVEs. A mobile client is a new attack surface, not a skin.
