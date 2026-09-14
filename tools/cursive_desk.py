@@ -14,10 +14,22 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path("/home/elizabeth/CursiveOS")
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 from cursive_status import write_status  # noqa: E402
-DESKTOP = Path("/home/elizabeth/Desktop")
+
+def _desktop_dir() -> Path:
+    # Prefer XDG user-dirs; fall back to ~/Desktop.
+    xdg = Path.home() / ".config" / "user-dirs.dirs"
+    if xdg.exists():
+        for line in xdg.read_text(encoding="utf-8", errors="replace").splitlines():
+            if line.startswith("XDG_DESKTOP_DIR="):
+                raw = line.split("=", 1)[1].strip().strip('"')
+                raw = raw.replace("$HOME", str(Path.home()))
+                return Path(raw)
+    return Path.home() / "Desktop"
+
+DESKTOP = _desktop_dir()
 STATE_DIR = ROOT / ".cursiveos" / "closed-loop"
 STOP_PATH = STATE_DIR / "STOP"
 PANEL_PATH = STATE_DIR / "panel.json"
@@ -30,11 +42,14 @@ OLD_FILES = [
     DESKTOP / "STOP CursiveOS.desktop",
 ]
 
-LAUNCHER_BODY = """[Desktop Entry]
+
+def _launcher_body() -> str:
+    panel = ROOT / "tools" / "cursive_panel.py"
+    return f"""[Desktop Entry]
 Type=Application
 Name=CursiveOS
 Comment=See if this computer is measuring, and stop it if you need it
-Exec=env DISPLAY=:0 python3 /home/elizabeth/CursiveOS/tools/cursive_panel.py
+Exec=env DISPLAY=:0 python3 {panel}
 Icon=utilities-system-monitor
 Terminal=false
 Categories=Utility;
@@ -75,7 +90,7 @@ def _clear_old_files() -> None:
 def ensure_launcher() -> None:
     _clear_old_files()
     DESKTOP.mkdir(parents=True, exist_ok=True)
-    LAUNCHER.write_text(LAUNCHER_BODY, encoding="utf-8")
+    LAUNCHER.write_text(_launcher_body(), encoding="utf-8")
     LAUNCHER.chmod(0o755)
     subprocess.run(
         ["gio", "set", str(LAUNCHER), "metadata::trusted", "true"],
