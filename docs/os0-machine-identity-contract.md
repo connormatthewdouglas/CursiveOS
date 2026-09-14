@@ -1,6 +1,7 @@
 # OS.0 machine identity contract
 
 Last audited: 2026-07-01.
+Platform-axis note added: 2026-09-14 (does not change the hash).
 
 ## Contract
 
@@ -51,6 +52,12 @@ These aliases currently exist in CursiveRoot and are safe to collapse onto their
 `amd-fxtm-8350-eight-core-processor-stardust` remains a standalone historical AMD FX host id for now.
 
 Reason: the live audit found one machine row and 28 run rows for that id, but no verified fingerprint-v2 canonical target. Do **not** collapse it into the current Stardust Ryzen/Arc id without evidence that it is the same physical host. It is safer to preserve it as a separate historical machine until a raw artifact, operator note, or fresh v2 fingerprint proves a target.
+
+## Platform axis (additive)
+
+Do **not** fold `platform` / `soc` / `accelerator` into `HW_ID_TUPLE`. That would fork every historical `machine_id`.
+
+When schema work happens, carry those fields beside the fingerprint. Policy: `docs/specs/platform-substrates.md`. Founder rows are `linux-x86_64-workstation`.
 
 ## Regression coverage
 
