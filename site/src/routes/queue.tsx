@@ -96,6 +96,15 @@ function QueuePage() {
       />
 
       <Card className="mb-4">
+        <CardTitle>Before public eligibility</CardTitle>
+        <p className="mt-3 text-sm text-muted">
+          A community idea or sensor reaches the public work queue only after self-clean on the submitter
+          machine and exactly one foreign confirmer. This page is operator rehearsal — not the submission
+          form. Use Ideas or Sensors to draft.
+        </p>
+      </Card>
+
+      <Card className="mb-4">
         <CardTitle>Ask for the next experiment</CardTitle>
         <CardHint>
           Default is the living archive (QD). The audited leftover library is mined out through cycle 7 —

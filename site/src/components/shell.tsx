@@ -11,6 +11,7 @@ import {
   Waypoints,
   Cpu,
   Lightbulb,
+  Gauge,
   UserPlus,
   ChevronDown,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const PRIMARY = [
   { to: "/fleet", label: "Machines", icon: Cpu },
   { to: "/queue", label: "Work", icon: ListChecks },
   { to: "/ideas", label: "Ideas", icon: Lightbulb },
+  { to: "/sensors", label: "Sensors", icon: Gauge },
   { to: "/join", label: "Join", icon: UserPlus },
 ] as const;
 

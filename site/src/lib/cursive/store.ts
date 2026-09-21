@@ -8,6 +8,16 @@ import type { RecomputeReport } from "./recompute";
 import type { PsbtIntent } from "./psbt";
 import type { Material } from "./materialize";
 import type { IdeaReview } from "./idea";
+import type { SensorReview } from "./sensor";
+import type { LadderRecord } from "./enqueue-ladder";
+
+export type WireSubmission = {
+  kind: "idea" | "sensor";
+  title: string;
+  at: string;
+  ladder: LadderRecord;
+  stub_name: string;
+};
 
 export type OperatorState = {
   localRequests: MeasurementRequest[];
@@ -24,6 +34,8 @@ export type OperatorState = {
   lastPsbt: PsbtIntent | null;
   lastMaterial: Material | null;
   ideas: Array<IdeaReview & { title: string; at: string }>;
+  sensors: Array<SensorReview & { title: string; at: string }>;
+  wireSubmissions: WireSubmission[];
   addRequest: (r: MeasurementRequest) => void;
   setKeys: (keys: IdentityKey[]) => void;
   setPolicy: (patch: Partial<RailsPolicy>) => void;
@@ -41,6 +53,8 @@ export type OperatorState = {
   setPsbt: (p: PsbtIntent | null) => void;
   setMaterial: (m: Material | null) => void;
   addIdea: (idea: IdeaReview & { title: string; at: string }) => void;
+  addSensor: (sensor: SensorReview & { title: string; at: string }) => void;
+  addWireSubmission: (row: WireSubmission) => void;
 };
 
 export const useOperator = create<OperatorState>()((set) => ({
@@ -58,6 +72,8 @@ export const useOperator = create<OperatorState>()((set) => ({
   lastPsbt: null,
   lastMaterial: null,
   ideas: [],
+  sensors: [],
+  wireSubmissions: [],
   addRequest: (r) => set((s) => ({ localRequests: [r, ...s.localRequests] })),
   setKeys: (keys) => set({ localKeys: keys }),
   setPolicy: (patch) => set((s) => ({ policy: { ...s.policy, ...patch } })),
@@ -84,4 +100,7 @@ export const useOperator = create<OperatorState>()((set) => ({
   setPsbt: (p) => set({ lastPsbt: p }),
   setMaterial: (m) => set({ lastMaterial: m }),
   addIdea: (idea) => set((s) => ({ ideas: [idea, ...s.ideas].slice(0, 20) })),
+  addSensor: (sensor) => set((s) => ({ sensors: [sensor, ...s.sensors].slice(0, 20) })),
+  addWireSubmission: (row) =>
+    set((s) => ({ wireSubmissions: [row, ...s.wireSubmissions].slice(0, 40) })),
 }));

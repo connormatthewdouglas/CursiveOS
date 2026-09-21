@@ -44,14 +44,20 @@ function JoinPage() {
           </p>
         </Card>
         <Card>
-          <CardTitle>Have a tweak in mind?</CardTitle>
+          <CardTitle>Have something to contribute?</CardTitle>
           <p className="mt-3 text-sm text-muted">
-            Do not paste sysctls into a chat and hope. File it as an idea with an undo. A machine — yours first —
-            can test it.
+            Variants go to Ideas — a reversible Linux setting with an undo. Measurements go to Sensors — what
+            to run, how to score it, what hardware it needs. Both draft on this browser; live enqueue waits on
+            a signed proposer rail.
           </p>
-          <Button asChild variant="secondary" size="sm" className="mt-4 min-h-11">
-            <Link to="/ideas">Suggest an adaptation</Link>
-          </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button asChild variant="secondary" size="sm" className="min-h-11">
+              <Link to="/ideas">Ideas (variants)</Link>
+            </Button>
+            <Button asChild variant="secondary" size="sm" className="min-h-11">
+              <Link to="/sensors">Sensors (measurements)</Link>
+            </Button>
+          </div>
         </Card>
       </div>
     </div>
