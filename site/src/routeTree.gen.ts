@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as GapsRouteImport } from './routes/gaps'
 import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as SensorsRouteImport } from './routes/sensors'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as RailsRouteImport } from './routes/rails'
@@ -38,6 +39,11 @@ const GapsRoute = GapsRouteImport.update({
 const IdeasRoute = IdeasRouteImport.update({
   id: '/ideas',
   path: '/ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SensorsRoute = SensorsRouteImport.update({
+  id: '/sensors',
+  path: '/sensors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinRoute = JoinRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/fleet': typeof FleetRoute
   '/gaps': typeof GapsRoute
   '/ideas': typeof IdeasRoute
+  '/sensors': typeof SensorsRoute
   '/join': typeof JoinRoute
   '/queue': typeof QueueRoute
   '/rails': typeof RailsRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/fleet': typeof FleetRoute
   '/gaps': typeof GapsRoute
   '/ideas': typeof IdeasRoute
+  '/sensors': typeof SensorsRoute
   '/join': typeof JoinRoute
   '/queue': typeof QueueRoute
   '/rails': typeof RailsRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/fleet': typeof FleetRoute
   '/gaps': typeof GapsRoute
   '/ideas': typeof IdeasRoute
+  '/sensors': typeof SensorsRoute
   '/join': typeof JoinRoute
   '/queue': typeof QueueRoute
   '/rails': typeof RailsRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/fleet'
     | '/gaps'
     | '/ideas'
+    | '/sensors'
     | '/join'
     | '/queue'
     | '/rails'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/fleet'
     | '/gaps'
     | '/ideas'
+    | '/sensors'
     | '/join'
     | '/queue'
     | '/rails'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/fleet'
     | '/gaps'
     | '/ideas'
+    | '/sensors'
     | '/join'
     | '/queue'
     | '/rails'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   FleetRoute: typeof FleetRoute
   GapsRoute: typeof GapsRoute
   IdeasRoute: typeof IdeasRoute
+  SensorsRoute: typeof SensorsRoute
   JoinRoute: typeof JoinRoute
   QueueRoute: typeof QueueRoute
   RailsRoute: typeof RailsRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/ideas'
       fullPath: '/ideas'
       preLoaderRoute: typeof IdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sensors': {
+      id: '/sensors'
+      path: '/sensors'
+      fullPath: '/sensors'
+      preLoaderRoute: typeof SensorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   FleetRoute: FleetRoute,
   GapsRoute: GapsRoute,
   IdeasRoute: IdeasRoute,
+  SensorsRoute: SensorsRoute,
   JoinRoute: JoinRoute,
   QueueRoute: QueueRoute,
   RailsRoute: RailsRoute,

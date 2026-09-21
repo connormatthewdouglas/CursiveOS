@@ -5,16 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHint, CardTitle } from "@/components/ui/card";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
-import { reviewIdea, type IdeaReview } from "@/lib/cursive/idea";
 import {
   buildEnqueueStub,
   createLadderDraft,
   submitToWire,
 } from "@/lib/cursive/enqueue-ladder";
-import type { KnobChannel } from "@/lib/cursive/propose";
+import { reviewSensor, type SensorFamily, type SensorReview } from "@/lib/cursive/sensor";
 import { useOperator } from "@/lib/cursive/store";
 
-export const Route = createFileRoute("/ideas")({ component: IdeasPage });
+export const Route = createFileRoute("/sensors")({ component: SensorsPage });
 
 function download(name: string, body: string) {
   const blob = new Blob([body], { type: "text/plain" });
@@ -26,33 +25,35 @@ function download(name: string, body: string) {
   URL.revokeObjectURL(url);
 }
 
-function IdeasPage() {
-  const ideas = useOperator((s) => s.ideas);
-  const addIdea = useOperator((s) => s.addIdea);
+function SensorsPage() {
+  const sensors = useOperator((s) => s.sensors);
+  const addSensor = useOperator((s) => s.addSensor);
   const wireSubmissions = useOperator((s) => s.wireSubmissions);
   const addWireSubmission = useOperator((s) => s.addWireSubmission);
-  const [review, setReview] = useState<IdeaReview | null>(null);
+  const [review, setReview] = useState<SensorReview | null>(null);
   const [title, setTitle] = useState("");
   const [submitterId, setSubmitterId] = useState("");
   const [wireMsg, setWireMsg] = useState<string | null>(null);
   const [wireErr, setWireErr] = useState<string | null>(null);
 
   function onSubmit(form: FormData) {
-    const nextTitle = String(form.get("title") || "");
-    const result = reviewIdea({
-      title: nextTitle,
-      key: String(form.get("key") || ""),
-      value: String(form.get("value") || ""),
-      undo: String(form.get("undo") || ""),
-      channel: String(form.get("channel") || "memory") as KnobChannel,
+    const nextTitle = String(form.get("name") || "");
+    const result = reviewSensor({
+      name: nextTitle,
+      family: String(form.get("family") || "performance") as SensorFamily,
+      measures: String(form.get("measures") || ""),
+      how_to_run: String(form.get("how_to_run") || ""),
+      score_mode: String(form.get("score_mode") || "numeric") as "numeric" | "pass_fail",
+      hardware_needs: String(form.get("hardware_needs") || ""),
       hypothesis: String(form.get("hypothesis") || ""),
+      package_notes: String(form.get("package_notes") || ""),
     });
     setReview(result);
     setTitle(nextTitle);
     setWireMsg(null);
     setWireErr(null);
     if (result.ok) {
-      addIdea({ ...result, title: nextTitle || result.variant_id, at: new Date().toISOString() });
+      addSensor({ ...result, title: nextTitle || result.sensor_id, at: new Date().toISOString() });
     }
   }
 
@@ -60,27 +61,27 @@ function IdeasPage() {
     setWireMsg(null);
     setWireErr(null);
     if (!review?.ok || !review.json) {
-      setWireErr("Draft a valid idea first.");
+      setWireErr("Draft a valid sensor first.");
       return;
     }
-    const draft = createLadderDraft({ id: review.variant_id, kind: "idea" });
+    const draft = createLadderDraft({ id: review.sensor_id, kind: "sensor" });
     const res = submitToWire(draft, submitterId);
     if (!res.ok) {
       setWireErr(res.reason);
       return;
     }
-    const stubName = `${review.variant_id}.enqueue-stub.json`;
+    const stubName = `${review.sensor_id}.enqueue-stub.json`;
     const stub = buildEnqueueStub({
-      kind: "idea",
-      id: review.variant_id,
-      title: title || review.variant_id,
+      kind: "sensor",
+      id: review.sensor_id,
+      title: title || review.sensor_id,
       submitter_machine_id: res.record.submitter_machine_id || submitterId.trim(),
       body: JSON.parse(review.json) as Record<string, unknown>,
     });
     download(stubName, stub);
     addWireSubmission({
-      kind: "idea",
-      title: title || review.variant_id,
+      kind: "sensor",
+      title: title || review.sensor_id,
       at: new Date().toISOString(),
       ladder: res.record,
       stub_name: stubName,
@@ -90,24 +91,24 @@ function IdeasPage() {
     );
   }
 
-  const ideaWires = wireSubmissions.filter((w) => w.kind === "idea");
+  const sensorWires = wireSubmissions.filter((w) => w.kind === "sensor");
 
   return (
     <div>
       <PageHead
-        kicker="Adaptations"
-        title="Suggest a mutation."
-        lede="If you have an idea, put it on the work wire as a reversible Linux setting. This page drafts files on your computer. It does not change founder machines, and it does not send money."
+        kicker="Measurements"
+        title="Propose a sensor."
+        lede="Sensors decide what keeps and what goes. This page drafts a measurement definition on your computer. It does not change founder machines, and it does not send money."
       />
 
       <Card className="mb-4">
         <CardTitle>The rules</CardTitle>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted">
-          <li>Must undo. If you cannot name the previous value, it is not a test.</li>
-          <li>Settings we already retired (page cluster, vfs cache pressure) are refused.</li>
-          <li>Nothing here is applied remotely. You download a script and run it on Linux, or a founder does.</li>
+          <li>Say what it measures, how to run it, and what hardware it needs.</li>
+          <li>Performance sensors score numeric fitness. Regression sensors are pass/fail gates.</li>
+          <li>Acceptance is sensor-scored fitness plus gates — not votes.</li>
           <li>
-            Acceptance is sensor-scored fitness plus gates — not votes.{" "}
+            Nothing here is applied remotely.{" "}
             <code className="font-mono text-xs">payout_eligible</code> stays false.
           </li>
         </ul>
@@ -116,32 +117,30 @@ function IdeasPage() {
       <Card className="mb-4">
         <CardTitle>Enqueue ladder</CardTitle>
         <CardHint>
-          Self-clean on the submitter machine, then exactly one foreign confirmer, then public
-          work-queue eligible. Identity is fail-closed. Draft stays local; the wire button only
-          creates a browser record and a stub file.
+          Same ladder as Ideas: self-clean on the submitter machine, then exactly one foreign
+          confirmer, then public work-queue eligible. This page only drafts and stubs.
         </CardHint>
         <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-muted">
           <li>
-            <span className="font-medium text-fg">draft</span> — form + downloads on this browser
+            <span className="font-medium text-fg">draft</span> — form + download on this browser
           </li>
           <li>
             <span className="font-medium text-fg">self_pending</span> — stub downloaded; wait for
-            self-clean on the submitter machine
+            self-clean
           </li>
           <li>
-            <span className="font-medium text-fg">self_clean → foreign_pending</span> — one other
-            machine confirms
+            <span className="font-medium text-fg">foreign confirmer</span> — one other machine
           </li>
           <li>
-            <span className="font-medium text-fg">public_eligible</span> — a signed proposer may
-            enqueue; this page still does not
+            <span className="font-medium text-fg">public_eligible</span> — signed proposer may
+            enqueue later; not from here
           </li>
         </ol>
       </Card>
 
       <Card>
-        <CardTitle>Idea</CardTitle>
-        <CardHint>Plain language first. The setting name second.</CardHint>
+        <CardTitle>Sensor</CardTitle>
+        <CardHint>Plain language first. Family and score mode second.</CardHint>
         <form
           className="mt-4 grid gap-3"
           onSubmit={(e) => {
@@ -150,44 +149,74 @@ function IdeasPage() {
           }}
         >
           <div>
-            <Label htmlFor="title">Name</Label>
-            <Input id="title" name="title" placeholder="Start reclaiming memory sooner" required />
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" name="name" placeholder="Sustained tok/s" required />
           </div>
           <div>
-            <Label htmlFor="hypothesis">What do you think will happen?</Label>
+            <Label htmlFor="hypothesis">What do you think it will detect or prove?</Label>
             <Textarea
               id="hypothesis"
               name="hypothesis"
-              placeholder="Under memory pressure, the machine should recover faster without hurting idle."
+              placeholder="Detect scheduler and cache effects once the model is warm."
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="measures">What it measures</Label>
+            <Textarea
+              id="measures"
+              name="measures"
+              placeholder="Steady-state tokens per second on a warm local model."
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="how_to_run">How to run</Label>
+            <Textarea
+              id="how_to_run"
+              name="how_to_run"
+              placeholder="./benchmarks/benchmark-inference-v0.1.sh --sustained"
               required
             />
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <div>
-              <Label htmlFor="key">Linux setting</Label>
-              <Input id="key" name="key" placeholder="vm.watermark_scale_factor" required />
+              <Label htmlFor="family">Family</Label>
+              <Select id="family" name="family" defaultValue="performance">
+                <option value="performance">Performance</option>
+                <option value="regression">Regression (gate)</option>
+                <option value="immune">Immune</option>
+                <option value="behavioral">Behavioral</option>
+                <option value="metabolic">Metabolic</option>
+              </Select>
             </div>
             <div>
-              <Label htmlFor="value">New value</Label>
-              <Input id="value" name="value" placeholder="200" required />
+              <Label htmlFor="score_mode">Score vs pass/fail</Label>
+              <Select id="score_mode" name="score_mode" defaultValue="numeric">
+                <option value="numeric">Numeric fitness</option>
+                <option value="pass_fail">Pass / fail gate</option>
+              </Select>
             </div>
             <div>
-              <Label htmlFor="undo">Undo value</Label>
-              <Input id="undo" name="undo" placeholder="10" required />
+              <Label htmlFor="hardware_needs">Hardware needs</Label>
+              <Input
+                id="hardware_needs"
+                name="hardware_needs"
+                placeholder="GPU + local inference"
+                required
+              />
             </div>
           </div>
           <div>
-            <Label htmlFor="channel">Which kind of improvement?</Label>
-            <Select id="channel" name="channel" defaultValue="memory">
-              <option value="memory">Memory under pressure</option>
-              <option value="coldstart">First response after idle</option>
-              <option value="sustained">Sustained AI speed</option>
-              <option value="network">Network</option>
-              <option value="idle">Idle power</option>
-            </Select>
+            <Label htmlFor="package_notes">Package notes (optional)</Label>
+            <Textarea
+              id="package_notes"
+              name="package_notes"
+              placeholder="Needs Ollama on 127.0.0.1:11435"
+            />
           </div>
           <Button type="submit" className="min-h-11 w-fit">
-            Draft the test
+            Draft the sensor
           </Button>
         </form>
 
@@ -197,7 +226,7 @@ function IdeasPage() {
               <>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="good">ready to download</Badge>
-                  <span className="font-mono text-sm">{review.variant_id}</span>
+                  <span className="font-mono text-sm">{review.sensor_id}</span>
                 </div>
                 <p className="mt-2 text-sm text-muted">
                   Saved on this browser only. Not sent to the live ledger. Payouts stay off.
@@ -207,20 +236,9 @@ function IdeasPage() {
                     type="button"
                     size="sm"
                     className="min-h-11"
-                    onClick={() => download(`${review.variant_id}.json`, review.json || "")}
+                    onClick={() => download(`${review.sensor_id}.json`, review.json || "")}
                   >
                     Download description
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="min-h-11"
-                    onClick={() =>
-                      download(`cursiveos-presets-${review.variant_id}.sh`, review.preset_sh || "")
-                    }
-                  >
-                    Download undoable script
                   </Button>
                 </div>
 
@@ -263,26 +281,26 @@ function IdeasPage() {
         ) : null}
       </Card>
 
-      {ideas.length ? (
+      {sensors.length ? (
         <Card className="mt-4">
           <CardTitle>Drafts on this browser</CardTitle>
           <ul className="mt-3 space-y-2 text-sm">
-            {ideas.map((idea) => (
-              <li key={idea.at} className="flex items-center justify-between gap-3">
-                <span className="font-medium">{idea.title}</span>
-                <span className="font-mono text-xs text-muted">{idea.variant_id}</span>
+            {sensors.map((sensor) => (
+              <li key={sensor.at} className="flex items-center justify-between gap-3">
+                <span className="font-medium">{sensor.title}</span>
+                <span className="font-mono text-xs text-muted">{sensor.sensor_id}</span>
               </li>
             ))}
           </ul>
         </Card>
       ) : null}
 
-      {ideaWires.length ? (
+      {sensorWires.length ? (
         <Card className="mt-4">
           <CardTitle>Wire stubs on this browser</CardTitle>
           <CardHint>Local only. Stage starts at self_pending. Not live enqueue.</CardHint>
           <ul className="mt-3 space-y-2 text-sm">
-            {ideaWires.map((w) => (
+            {sensorWires.map((w) => (
               <li key={w.at} className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">{w.title}</span>
                 <span className="flex items-center gap-2">
