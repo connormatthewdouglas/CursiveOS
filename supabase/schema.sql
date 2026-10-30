@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 1aWUTDAXuOVAZS4fnYUYbOigYMDn4gB4rj6ydfnEals2sE0tSeyeQCJjFaSjlAk
+\restrict iWOpispyj7FmiJzynq5LdDYagErwZVns7WTlFJkUURCADeNS4OkaBAKqc3kaO1c
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -3408,5 +3408,5 @@ CREATE POLICY seed_payout_reports_anon_select ON public.seed_payout_reports FOR 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 1aWUTDAXuOVAZS4fnYUYbOigYMDn4gB4rj6ydfnEals2sE0tSeyeQCJjFaSjlAk
+\unrestrict iWOpispyj7FmiJzynq5LdDYagErwZVns7WTlFJkUURCADeNS4OkaBAKqc3kaO1c
 
